@@ -17,6 +17,9 @@
 // - People Finder Quick Select
 //      Hit enter when searching with People Finder to open the first result
 
+// Notes:
+// - Currently does not work on Podium pages
+
 // ----------------------------------------------------------------------------------------
 // ---------------------------------------Main Section-------------------------------------
 // ----------------------------------------------------------------------------------------
@@ -32,6 +35,7 @@ var pageURLCheckTimer       = setInterval (
             this.lastPathStr  = location.pathname;
             this.lastQueryStr = location.search;
             this.lastHashStr  = location.hash;
+            console.log("hash change");
             setTimeout(gmMain, 100);
 
         }
@@ -58,6 +62,9 @@ function gmMain(){
             break;
         case "Enrollment Management":
             waitForKeyElements("#CandidateName", PostLinkEnrollmentManagement)
+            break;
+        case "Faculty":
+            waitForKeyElements(".bb-page-heading", PostLinkFaculty)
     }
 
     // People Finder Quick Select
@@ -73,32 +80,65 @@ function PostLinkCore(jNode)
 {
     var strURL = window.location.href
     var strLinks = "Open in: "
+    var strID = GetID(strURL);
+    if(strID == null || strID.length != 7){
+        return;
+    }
 
-    strLinks = strLinks.concat(GetLink("Academics", GetID(strURL)));
-    strLinks = strLinks.concat(GetLink("Enrollment Management", GetID(strURL)));
+    strLinks = strLinks.concat(GetLink("Academics", strID));
+    strLinks = strLinks.concat(GetLink("Enrollment Management", strID));
+    strLinks = strLinks.concat(GetLink("Faculty", strID));
     jNode.append(strLinks);
+    return;
 }
 
 function PostLinkAcademics(jNode)
 {
     var strURL = window.location.href
     var strLinks = "Open in: "
+    var strID = GetID(strURL);
+    if(strID == null || strID.length != 7){
+        return;
+    }
 
-    strLinks = strLinks.concat(GetLink("Core", GetID(strURL)));
-    strLinks = strLinks.concat(GetLink("Enrollment Management", GetID(strURL)));
+    strLinks = strLinks.concat(GetLink("Core", strID));
+    strLinks = strLinks.concat(GetLink("Enrollment Management", strID));
+    strLinks = strLinks.concat(GetLink("Faculty", strID));
     jNode.after(strLinks);
+    return;
 }
 
 function PostLinkEnrollmentManagement(jNode)
 {
     var strURL = window.location.href
     var strLinks = "Open in: "
+    var strID = GetID(strURL);
+    if(strID == null || strID.length != 7){
+        return;
+    }
 
     strLinks = strLinks.concat(GetLink("Core", GetID(strURL)));
     strLinks = strLinks.concat(GetLink("Academics", GetID(strURL)));
+    strLinks = strLinks.concat(GetLink("Faculty", strID));
     jNode.append(strLinks);
+    return;
 }
 
+function PostLinkFaculty(jNode)
+{
+    var strURL = window.location.href
+    var strLinks = "Open in: "
+    var strID = GetID(strURL);
+    if(strID == null || strID.length != 7){
+        return;
+    }
+
+    strLinks = strLinks.concat(GetLink("Core", GetID(strURL)));
+    strLinks = strLinks.concat(GetLink("Academics", GetID(strURL)));
+    strLinks = strLinks.concat(GetLink("Enrollment Management", strID));
+    jNode.after(strLinks);
+    return;
+}
 
 function GetLink(strModule, strID)
 {
@@ -121,6 +161,10 @@ function GetLink(strModule, strID)
         case "Enrollment Management":
             strLinkPrefix = "https://hanalani.myschoolapp.com/app/enrollment-management#candidate/";
             strLinkSuffix = "/contracts";
+            break;
+        case "Faculty":
+            strLinkPrefix = "https://hanalani.myschoolapp.com/app/faculty#profile/";
+            strLinkSuffix = "/progress";
     }
 
     var strLinkFull = strHTMLPrefix.concat(strLinkPrefix, strID, strLinkSuffix, strHTMLSuffix, strModule, strHTMLSuffix2);
@@ -156,6 +200,9 @@ function GetModule(strURL)
     } else if (strURL.substring(0, 58) == "https://hanalani.myschoolapp.com/app/enrollment-management")
     {
         return "Enrollment Management";
+    } else if (strURL.substring(0, 44) == "https://hanalani.myschoolapp.com/app/faculty")
+    {
+        return "Faculty";
     }
 
     return;
