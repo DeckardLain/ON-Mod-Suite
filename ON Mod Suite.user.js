@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.3
+// @version      0.3.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/app/*
@@ -82,7 +82,7 @@ function gmMain(){
             waitForKeyElements("#userName", PostLinkCore)
             break;
         case "Academics":
-            waitForKeyElements("h1:first", PostLinkAcademics)
+            waitForKeyElements("h1.bb-tile-header", PostLinkAcademics)
             break;
         case "Enrollment Management":
             waitForKeyElements("#CandidateName", PostLinkEnrollmentManagement)
