@@ -6,6 +6,7 @@
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/app/*
 // @grant        none
+// @run-at       document-end
 // @require      https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js
 // @require      https://gist.github.com/raw/2625891/waitForKeyElements.js
 // ==/UserScript==
