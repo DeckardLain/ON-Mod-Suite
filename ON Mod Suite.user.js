@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.2
+// @version      0.3
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/app/*
@@ -31,7 +31,8 @@
 // - User Module Selector
 //      Adds links to user pages for quickly switching between module views
 // - People Finder Quick Select
-//      Hit enter when searching with People Finder to open the first result
+//      Hit enter when searching with People Finder to open the first result.
+//      Use number keys 1-9 to select the nth search result
 // - Switch Roster to Faculty
 //      Class rosters opened in Academics are missing the Send Communication menu.
 //      This adds a link to quickly switch between Faculty and Academics view of the roster.
@@ -263,9 +264,38 @@ function GetID(strURL)
 function PeopleFinderQuickSelect(jNode)
 {
     $("#people-finder-search-box").keypress(function (e){
-        if(e.keyCode == 13){
-            $(".pf-user:first").click();
+        console.log(e.keyCode);
+        switch (e.keyCode)
+        {
+            case 13:
+            case 49:
+                $(".pf-user").eq(0).click();
+                break;
+            case 50:
+                $(".pf-user").eq(1).click();
+                break;
+            case 51:
+                $(".pf-user").eq(2).click();
+                break;
+            case 52:
+                $(".pf-user").eq(3).click();
+                break;
+            case 53:
+                $(".pf-user").eq(4).click();
+                break;
+            case 54:
+                $(".pf-user").eq(5).click();
+                break;
+            case 55:
+                $(".pf-user").eq(6).click();
+                break;
+            case 56:
+                $(".pf-user").eq(7).click();
+                break;
+            case 57:
+                $(".pf-user").eq(8).click();
         }
+
     })
 }
 
