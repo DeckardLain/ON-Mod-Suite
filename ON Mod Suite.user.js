@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.3.1
+// @version      0.4
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/app/*
@@ -36,6 +36,9 @@
 // - Switch Roster to Faculty
 //      Class rosters opened in Academics are missing the Send Communication menu.
 //      This adds a link to quickly switch between Faculty and Academics view of the roster.
+// - Email all parents of a student from Roster Relationships
+//      View Relationships from a student's card in a roster now includes a mailto link that includes all
+//      emails for this student's parents.
 
 // Notes:
 // - Currently does not work on Podium pages
@@ -92,9 +95,11 @@ function gmMain(){
             break;
         case "Academics-Roster":
             waitForKeyElements(".bb-page-heading", PostLinkRosterFaculty)
+            EmailAllParentsOfStudent();
             break;
         case "Faculty-Roster":
             waitForKeyElements(".bb-page-heading", PostLinkRosterAcademics)
+            EmailAllParentsOfStudent();
             break;
     }
 
@@ -329,6 +334,33 @@ function PostLinkRosterAcademics(jNode)
     strLinks = strLinks.concat(GetLink("Academics-Roster", GetID(strURL)));
     jNode.after(strLinks);
     return;
+}
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------Email All Parents of Student--------------------------------
+// ----------------------------------------------------------------------------------------
+
+function EmailAllParentsOfStudent()
+{
+    setInterval(function(){
+    waitForKeyElements(".roster-relationships", CreateEmailLink);}, 1000);
+}
+
+function CreateEmailLink(jNode)
+{
+    var strPrefix = '<div align="right"><a href="mailto:';
+    var strSuffix = '">Email All Parents of This Student</a></div>';
+    var strEmails = "";
+
+    $(".roster-relationships [href^='mailto']").each(function(index){
+        if (index != 0){
+            strEmails = strEmails.concat(";");
+        }
+        strEmails = strEmails.concat($(this).text());
+    });
+
+    var strFinal = strPrefix.concat(strEmails, strSuffix);
+    $(".bb-tile-content-section").after(strFinal);
 }
 
 // ----------------------------------------------------------------------------------------
