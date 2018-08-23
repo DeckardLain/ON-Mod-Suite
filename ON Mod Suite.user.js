@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.4
+// @version      0.5
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/app/*
@@ -39,11 +39,12 @@
 // - Email all parents of a student from Roster Relationships
 //      View Relationships from a student's card in a roster now includes a mailto link that includes all
 //      emails for this student's parents.
+// - Enroll in All
+//      Button added when editing group enrollments, primarily for LS, who add all classes for a specific
+//      homeroom.
 
 // Notes:
 // - Currently does not work on Podium pages
-// - Pages won't load when opening links in new tab.  Refresh/Reload will load the page.
-//      "Run at" must be set to document-end?
 
 // ----------------------------------------------------------------------------------------
 // ---------------------------------------Main Section-------------------------------------
@@ -101,6 +102,9 @@ function gmMain(){
             waitForKeyElements(".bb-page-heading", PostLinkRosterAcademics)
             EmailAllParentsOfStudent();
             break;
+        case "Manage Student Enrollment":
+            waitForKeyElements("#LevelNum", EnrollInAll)
+            break;
     }
 
     // People Finder Quick Select
@@ -115,6 +119,9 @@ function GetModule(strURL)
     if (strURL.substring(0, 41).toLowerCase() == "https://hanalani.myschoolapp.com/app/core")
     {
         return "Core";
+    } else if (strURL.substring(0, 70) == "https://hanalani.myschoolapp.com/app/academics#managestudentenrollment")
+    {
+        return "Manage Student Enrollment";
     } else if (strURL.substring(0, 60) == "https://hanalani.myschoolapp.com/app/academics#academicclass" && strURL.substring(73, 79) == "roster")
     {
         return "Academics-Roster";
@@ -361,6 +368,35 @@ function CreateEmailLink(jNode)
 
     var strFinal = strPrefix.concat(strEmails, strSuffix);
     $(".bb-tile-content-section").after(strFinal);
+}
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------Enroll in All-----------------------------------
+// ----------------------------------------------------------------------------------------
+
+function EnrollInAll(jNode)
+{
+    console.log($("#LevelNum").val())
+    if (!$(".custom-add-all").length){
+
+        $(".corner .white-bgc:first").append('<a class="btn btn-default custom-add-all">Enroll in All</a>');
+
+        $(".custom-add-all").click(function() {
+            if (!$("#search").val().length){
+                alert("You should filter the courses by searching first!");
+            } else
+            {
+
+                if (confirm("Are you sure you want to enroll this student in all displayed classes?")){
+                    console.log("confirmed");
+                    $(".fa-plus-circle").each(function(index) {
+                        this.click();
+                        console.log(index);
+                    });
+                }
+            }
+        });
+    }
 }
 
 // ----------------------------------------------------------------------------------------
