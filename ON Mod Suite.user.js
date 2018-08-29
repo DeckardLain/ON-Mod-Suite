@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.5
+// @version      0.5.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/app/*
@@ -45,6 +45,7 @@
 
 // Notes:
 // - Currently does not work on Podium pages
+// - Also removes Connect5 emergency contact info from contact cards
 
 // ----------------------------------------------------------------------------------------
 // ---------------------------------------Main Section-------------------------------------
@@ -109,6 +110,9 @@ function gmMain(){
 
     // People Finder Quick Select
     waitForKeyElements("#people-finder-search-box", PeopleFinderQuickSelect)
+
+    // Remove Connect5 Info
+    waitForKeyElements(".emergencyemaildetail p", RemoveConnect5Info)
 
 }
 
@@ -397,6 +401,27 @@ function EnrollInAll(jNode)
             }
         });
     }
+}
+
+// ----------------------------------------------------------------------------------------
+// ------------------------------------Remove Connect5 Info--------------------------------
+// ----------------------------------------------------------------------------------------
+
+function RemoveConnect5Info(jNode)
+{
+    var str;
+
+    setTimeout(function(){
+        $(".emergencyphonedetail p, .emergencyemaildetail p").each(function(index){
+            str = $(this).html();
+            str = str.replace("Automated call: Never", "");
+            str = str.replace("Automated call: Emergency Only", "");
+            str = str.replace("Automated email: Never", "");
+            str = str.replace("Automated email: Emergency Only", "");
+            $(this).html(str);
+            //console.log(str);
+        });
+    }, 10);
 }
 
 // ----------------------------------------------------------------------------------------
