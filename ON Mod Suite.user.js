@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.6
+// @version      0.6.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
-// @match        https://hanalani.myschoolapp.com/app/*
+// @match        https://hanalani.myschoolapp.com/*
 // @grant        none
 // @run-at       document-end
 // @require      https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js
@@ -42,17 +42,18 @@
 // - Enroll in All
 //      Button added when editing group enrollments, primarily for LS, who add all classes for a specific
 //      homeroom.
-// - Add Roster Student Count
+// - Roster Student Count
 //      Rosters (class, activity, community, and athletic groups) show total members, including teachers/
-//      coaches.  This displays the total number of students in the group, which is a more useful number.
+//      coaches.  This also displays the total number of students in the group, which is a more useful number.
 
 // Notes:
-// - Currently does not work on Podium pages
 // - Also removes Connect5 emergency contact info from contact cards
 
 // ----------------------------------------------------------------------------------------
 // ---------------------------------------Main Section-------------------------------------
 // ----------------------------------------------------------------------------------------
+
+this.$ = this.jQuery = jQuery.noConflict(true);
 
 // Check for page hashchanges
 // Borrowed from: https://stackoverflow.com/questions/18989345/how-do-i-reload-a-greasemonkey-script-when-ajax-changes-the-url-without-reloadin
@@ -435,7 +436,7 @@ function RemoveConnect5Info(jNode)
 }
 
 // ----------------------------------------------------------------------------------------
-// ---------------------------------Add Roster Student Count-------------------------------
+// -----------------------------------Roster Student Count---------------------------------
 // ----------------------------------------------------------------------------------------
 
 function AddRosterStudentCount(jNode)
