@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.5.1
+// @version      0.6
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/app/*
@@ -42,6 +42,9 @@
 // - Enroll in All
 //      Button added when editing group enrollments, primarily for LS, who add all classes for a specific
 //      homeroom.
+// - Add Roster Student Count
+//      Rosters (class, activity, community, and athletic groups) show total members, including teachers/
+//      coaches.  This displays the total number of students in the group, which is a more useful number.
 
 // Notes:
 // - Currently does not work on Podium pages
@@ -63,7 +66,6 @@ var pageURLCheckTimer       = setInterval (
             this.lastPathStr  = location.pathname;
             this.lastQueryStr = location.search;
             this.lastHashStr  = location.hash;
-            console.log("hash change");
             setTimeout(gmMain, 100);
 
         }
@@ -97,11 +99,16 @@ function gmMain(){
             break;
         case "Academics-Roster":
             waitForKeyElements(".bb-page-heading", PostLinkRosterFaculty)
+            waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
             EmailAllParentsOfStudent();
             break;
         case "Faculty-Roster":
             waitForKeyElements(".bb-page-heading", PostLinkRosterAcademics)
+            waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
             EmailAllParentsOfStudent();
+            break;
+        case "Other Roster":
+            waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
             break;
         case "Manage Student Enrollment":
             waitForKeyElements("#LevelNum", EnrollInAll)
@@ -132,6 +139,9 @@ function GetModule(strURL)
     } else if (strURL.substring(0, 58) == "https://hanalani.myschoolapp.com/app/faculty#academicclass" && strURL.substring(71, 77) == "roster")
     {
         return "Faculty-Roster";
+    } else if (strURL.substring(strURL.length-6, strURL.length) == "roster")
+    {
+        return "Other Roster";
     } else if (strURL.substring(0, 46) == "https://hanalani.myschoolapp.com/app/academics")
     {
         return "Academics";
@@ -422,6 +432,44 @@ function RemoveConnect5Info(jNode)
             //console.log(str);
         });
     }, 100);
+}
+
+// ----------------------------------------------------------------------------------------
+// ---------------------------------Add Roster Student Count-------------------------------
+// ----------------------------------------------------------------------------------------
+
+function AddRosterStudentCount(jNode)
+{
+    var memberCount = $("#roster-count").text();
+    var teacherCount = 0;
+    var nonStudentConditions = ["Teacher", "Co-Teacher", "Assistant Teacher", "Activity Leader", "Owner", "Coach"]
+
+    $(".bb-card-title").each(function(index){
+       var str = $(this).text();
+       //if (str.includes("Teacher"))
+        if(nonStudentConditions.some(el => str.includes(el)))
+       {
+           teacherCount++;
+       }
+    });
+
+    if (!($("#RosterCardContainer").length))
+    {
+        memberCount = $("h4.pull-left").text();
+        memberCount = memberCount.replace(" Members", "");
+    }
+
+    var studentCount = memberCount - teacherCount;
+    var studentCountText = "  /  ";
+    studentCountText = studentCountText.concat(studentCount, " Students");
+
+    if ($("#RosterCardContainer").length)
+    {
+        $("#RosterCardContainer").siblings("h4").append(studentCountText);
+    } else
+    {
+        $("h4.pull-left").append(studentCountText);
+    }
 }
 
 // ----------------------------------------------------------------------------------------
