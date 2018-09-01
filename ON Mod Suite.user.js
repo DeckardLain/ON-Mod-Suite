@@ -516,7 +516,7 @@ function LaunchManualAttendanceSheet()
 function AddManualAttendanceSheetToMenu()
 {
     var html = '<li><a href="javascript:void(0)" id="ManualAttendanceSheet">Manual Attendance Sheet</a></li>'
-    $(".dropdown-menu").append(html);
+    $("#roster-reports .dropdown-menu").append(html);
 }
 
 function SaveClassAndTeacher()
