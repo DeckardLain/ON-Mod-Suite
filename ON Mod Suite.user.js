@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.7
+// @version      0.7.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -36,6 +36,7 @@
 // - Switch Roster to Faculty
 //      Class rosters opened in Academics are missing the Send Communication menu.
 //      This adds a link to quickly switch between Faculty and Academics view of the roster.
+//      Updated in v0.7.1 - Send Communication menu simply added to Academics roster.
 // - Email all parents of a student from Roster Relationships
 //      View Relationships from a student's card in a roster now includes a mailto link that includes all
 //      emails for this student's parents.
@@ -364,6 +365,14 @@ function PostLinkRosterFaculty(jNode)
 
     strLinks = strLinks.concat(GetLink("Faculty-Roster", GetID(strURL)));
     jNode.after(strLinks);
+
+    // Just add the Send Communication button to the Academics version of the roster
+    waitForKeyElements("#roster-reports", function(){
+        var commHTML = '<div class="btn-group" style="margin-left:10px;">            <button class="btn  btn-default btn-sm dropdown-toggle" data-toggle="dropdown" data-original-title="" title="" aria-expanded="false">Send Communication to <span class="caret"></span></button>            <ul class="dropdown-menu">                <li><a class="btn send-message" data-message-type="2" href="#" data-original-title="" title="">Students</a></li>                <li><a class="btn send-message" data-message-type="1" href="#" data-original-title="" title="">Parents</a></li>                <li><a class="btn send-message" data-message-type="0" data-lead-section-id="'
+        commHTML = commHTML.concat(strID, '" href="#" data-original-title="" title="">All</a></li>            </ul>            </div>');
+        $("#roster-reports").before(commHTML);
+    });
+
     return;
 }
 
