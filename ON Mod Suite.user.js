@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.6.1
+// @version      0.7
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -45,6 +45,13 @@
 // - Roster Student Count
 //      Rosters (class, activity, community, and athletic groups) show total members, including teachers/
 //      coaches.  This also displays the total number of students in the group, which is a more useful number.
+// - Manual Attendance Sheet Improvements
+//      Manual Attendance Sheet report added to roster reports menu and loads the class that you ran the
+//      report from.
+// - Convert Grad Year to Grade Level
+//      Roster cards can now display current grade level instead of graduation year or both, (global setting saved
+//      as a browser cookie and selectable from a new menu added to roster pages).  Student profile pages
+//      (Core, Academics, Faculty) display the current grade level in addition to the grad year.
 
 // Notes:
 // - Also removes Connect5 emergency contact info from contact cards
@@ -114,6 +121,9 @@ function gmMain(){
         case "Manage Student Enrollment":
             waitForKeyElements("#LevelNum", EnrollInAll)
             break;
+        case "Manual Attendance Sheet Report":
+            waitForKeyElements("#L_c1i0_cb3224_ct3224_cTool_lbtnRefresh", ManualAttendanceSheet)
+            break;
     }
 
     // People Finder Quick Select
@@ -128,7 +138,10 @@ function gmMain(){
 function GetModule(strURL)
 {
 
-    if (strURL.substring(0, 41).toLowerCase() == "https://hanalani.myschoolapp.com/app/core")
+    if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
+    {
+        return "Manual Attendance Sheet Report";
+    } else if (strURL.substring(0, 41).toLowerCase() == "https://hanalani.myschoolapp.com/app/core")
     {
         return "Core";
     } else if (strURL.substring(0, 70) == "https://hanalani.myschoolapp.com/app/academics#managestudentenrollment")
@@ -175,6 +188,9 @@ function PostLinkCore(jNode)
     strLinks = strLinks.concat(GetLink("Enrollment Management", strID));
     strLinks = strLinks.concat(GetLink("Faculty", strID));
     jNode.append(strLinks);
+
+    // Add grade level to name display
+    $("#userName h1").append(GetGradeLevel($("#userName h1").text()));
     return;
 }
 
@@ -191,6 +207,9 @@ function PostLinkAcademics(jNode)
     strLinks = strLinks.concat(GetLink("Enrollment Management", strID));
     strLinks = strLinks.concat(GetLink("Faculty", strID));
     jNode.after(strLinks);
+
+    // Add grade level to name display
+    $("h1.bb-tile-header").append(GetGradeLevel($("h1.bb-tile-header").text()));
     return;
 }
 
@@ -207,6 +226,7 @@ function PostLinkEnrollmentManagement(jNode)
     strLinks = strLinks.concat(GetLink("Academics", GetID(strURL)));
     strLinks = strLinks.concat(GetLink("Faculty", strID));
     jNode.append(strLinks);
+
     return;
 }
 
@@ -223,6 +243,9 @@ function PostLinkFaculty(jNode)
     strLinks = strLinks.concat(GetLink("Academics", GetID(strURL)));
     strLinks = strLinks.concat(GetLink("Enrollment Management", strID));
     jNode.after(strLinks);
+
+    // Add grade level to name display
+    $("div.bb-page-heading").append(GetGradeLevel($("div.bb-page-heading").text()));
     return;
 }
 
@@ -430,7 +453,6 @@ function RemoveConnect5Info(jNode)
             str = str.replace("Automated email: Never", "");
             str = str.replace("Automated email: Emergency Only", "");
             $(this).html(str);
-            //console.log(str);
         });
     }, 100);
 }
@@ -471,11 +493,268 @@ function AddRosterStudentCount(jNode)
     {
         $("h4.pull-left").append(studentCountText);
     }
+
+    // Manual Attendance Sheet
+    AddManualAttendanceSheetToMenu();
+    $("#ManualAttendanceSheet").bind("click", LaunchManualAttendanceSheet);
+
+    ConvertGradYearToGradeLevel();
+
+}
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------------Manual Attendance Sheet-------------------------------
+// ----------------------------------------------------------------------------------------
+
+
+function LaunchManualAttendanceSheet()
+{
+    SaveClassAndTeacher();
+    window.open("/podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359", "_blank");
+}
+
+function AddManualAttendanceSheetToMenu()
+{
+    var html = '<li><a href="javascript:void(0)" id="ManualAttendanceSheet">Manual Attendance Sheet</a></li>'
+    $(".dropdown-menu").append(html);
+}
+
+function SaveClassAndTeacher()
+{
+    var userID;
+
+    // Save class ID to cookie
+    setCookie("ClassID", GetID(window.location.href), 1);
+
+    // Save teacher's user ID to cookie
+    $(".bb-card-title").each(function(index){
+       var str = $(this).text();
+       if (str == "Teacher")
+       {
+           userID = GetID($(this).closest("header").next().next().find(".bb-dropdown-item").html());
+           return false;
+       }
+    });
+    setCookie("TeacherID", userID, 1);
+
+    // Save class school level to cookie
+    var details = $(".lead").text();
+    if (details.includes("Upper School"))
+    {
+        setCookie("SchoolLevel", "1568", 1);
+    } else if (details.includes("Elementary"))
+    {
+        setCookie("SchoolLevel", "1567", 1);
+    } else if (details.includes("Early Childhood"))
+    {
+        setCookie("SchoolLevel", "1566", 1);
+    }
+
+    // Save term to cookie
+    if (details.includes("Fall Semester"))
+    {
+        setCookie("Term", "98719", 1);
+    } else if (details.includes("Summer Semester"))
+    {
+        setCookie("Term", "98718", 1);
+    } else if (details.includes("Spring Semester"))
+    {
+        setCookie("Term", "98720", 1);
+    } else if (details.includes("Year Long"))
+    {
+        setCookie("Term", "98725", 1);
+    } else if (details.includes("Summer Term"))
+    {
+        setCookie("Term", "98724", 1);
+    }
+
+    setCookie("ManualAttendanceSheetNewInfo", "1", 1);
+}
+
+function ManualAttendanceSheet()
+{
+    switch(getCookie("ManualAttendanceSheetNewInfo"))
+    {
+        case "1":
+            {
+                console.log($("[name='L$c1i0$cb3224$ct3224$ct3$ddl_l$ctl00']").val());
+                $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_l$ctl00']").val(getCookie("SchoolLevel"));
+                setCookie("ManualAttendanceSheetNewInfo", "2", 1);
+                setTimeout('__doPostBack(\'L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00\',\'\')', 0)
+                break;
+            }
+        case "2":
+            {
+                console.log($("[name='L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00']").val());
+                $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00']").val(getCookie("Term"));
+                setCookie("ManualAttendanceSheetNewInfo", "3", 1);
+                setTimeout('__doPostBack(\'L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00\',\'\')', 0)
+                break;
+            }
+        case "3":
+            {
+                console.log($("[name='L$c1i0$cb3224$ct3224$ct3$ddl_t$ctl00']").val());
+                $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_t$ctl00']").val(getCookie("TeacherID"));
+                setCookie("ManualAttendanceSheetNewInfo", "4", 1);
+                setTimeout('__doPostBack(\'L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00\',\'\')', 0)
+                break;
+            }
+        case "4":
+            {
+                console.log($("[name='L$c1i0$cb3224$ct3224$ct3$ddl_s$ctl00']").val());
+                $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_s$ctl00']").val(getCookie("ClassID"));
+                setCookie("ManualAttendanceSheetNewInfo", "0", 1);
+                __doPostBack('L$c1i0$cb3224$ct3224$cTool$lbtnRefresh','');
+                break;
+            }
+    }
+}
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------Convert Grad Year to Grade Level----------------------------
+// ----------------------------------------------------------------------------------------
+
+function ConvertGradYearToGradeLevel()
+{
+    // Add menu
+    $("#roster-reports").after('<div id="show-menu" class="btn-group" style="margin-left:10px;"><button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" style="display: inline-block;" data-original-title="" title="" aria-expanded="false">Show <span class="caret"></span></button><ul class="dropdown-menu"><li><a id="gradyear" href="javascript:void(0)">Grad Year</a></li><li><a id="gradelevel" href="javascript:void(0)">Grade Level</a></li><li><a id="both" href="javascript:void(0)">Both</a></li></ul></div>')
+    $("#gradyear").bind("click", function(){
+        setCookie("GradeLevelSetting", 1, 9999);
+        location.reload();
+    });
+    $("#gradelevel").bind("click", function(){
+        setCookie("GradeLevelSetting", 2, 9999);
+        location.reload();
+    });
+    $("#both").bind("click", function(){
+        setCookie("GradeLevelSetting", 3, 9999);
+        location.reload();
+    });
+
+    var grade;
+    var name;
+
+    switch (getCookie("GradeLevelSetting"))
+    {
+        case "1":
+            $("#gradyear").prepend(">");
+            break;
+        case "2":
+            $("#gradelevel").prepend(">");
+            $(".bb-card-title").each(function(index){
+                name = $(this).text();
+                grade = GetGradeLevel(name);
+                if (grade)
+                {
+                   name = name.substring(0, name.length-4);
+                   name = name.concat(grade);
+                   $(this).text(name);
+                }
+            });
+            break;
+        case "3":
+            $("#both").prepend(">");
+            $(".bb-card-title").each(function(index){
+                grade = GetGradeLevel($(this).text())
+                if (grade)
+                {
+                    $(this).append(grade);
+                }
+            });
+            break;
+        default:
+            $("#gradelevel").text(">Grade Level (Default)");
+            setCookie("GradeLevelSetting", 2, 9999);
+            $(".bb-card-title").each(function(index){
+                name = $(this).text();
+                grade = GetGradeLevel(name);
+                if (grade)
+                {
+                   name = name.substring(0, name.length-4);
+                   name = name.concat(grade);
+                   $(this).text(name);
+                }
+            });
+            break;
+    }
+
+}
+
+function GetGradeLevel(str)
+{
+    str = str.trim()
+    if (str.substring(str.length-3, str.length-2)=="'" && isInt(str.substring(str.length-2, str.length)))
+    {
+        var d = new Date();
+        var yearnum = d.getFullYear();
+        var year = yearnum.toString();
+        year = year.substring(2, 4);
+        var offset = str.substring(str.length-2, str.length) - year - ((d.getMonth() < 7) ? 0:1);
+
+        switch (offset)
+        {
+            case 0:
+                return " (12th)";
+                break;
+            case 1:
+                return " (11th)";
+                break;
+            case 2:
+                return " (10th)";
+                break;
+            case 3:
+                return " (9th)";
+                break;
+            case 4:
+                return " (8th)";
+                break;
+            case 5:
+                return " (7th)";
+                break;
+            case 6:
+                return " (6th)";
+                break;
+            case 7:
+                return " (5th)";
+                break;
+            case 8:
+                return " (4th)";
+                break;
+            case 9:
+                return " (3rd)";
+                break;
+            case 10:
+                return " (2nd)";
+                break;
+            case 11:
+                return " (1st)";
+                break;
+            case 12:
+                return " (K5)";
+                break;
+            case 13:
+                return " (K4)";
+                break;
+            case 14:
+                return " (K3)";
+                break;
+            default:
+                return null;
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------------------
 // -----------------------------------Misc. Helper Functions-------------------------------
 // ----------------------------------------------------------------------------------------
+
+function trimAtChar(str, trimAt)
+{
+    var n = str.indexOf(trimAt);
+    str = str.substring(0, n != -1 ? n : str.length);
+    str = str.trim();
+    return str;
+}
 
 function isInt(value) {
   if (isNaN(value)) {
@@ -483,4 +762,27 @@ function isInt(value) {
   }
   var x = parseFloat(value);
   return (x | 0) === x;
+}
+
+// Cookie functions borrowed from: https://www.w3schools.com/js/js_cookies.asp
+function setCookie(cname, cvalue, exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+    var expires = "expires="+d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
 }
