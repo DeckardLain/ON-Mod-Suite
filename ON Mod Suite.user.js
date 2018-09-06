@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.7.1
+// @version      0.8
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -53,6 +53,9 @@
 //      Roster cards can now display current grade level instead of graduation year or both, (global setting saved
 //      as a browser cookie and selectable from a new menu added to roster pages).  Student profile pages
 //      (Core, Academics, Faculty) display the current grade level in addition to the grad year.
+// - Advanced List User Links
+//      Advanced lists that include a User ID column will now link the User ID to their profile page.  The module
+//      and page it opens to is customizable and saved per list.
 
 // Notes:
 // - Also removes Connect5 emergency contact info from contact cards
@@ -125,6 +128,14 @@ function gmMain(){
         case "Manual Attendance Sheet Report":
             waitForKeyElements("#L_c1i0_cb3224_ct3224_cTool_lbtnRefresh", ManualAttendanceSheet)
             break;
+        case "Advanced List - Run":
+            waitForKeyElements("#L_c1i0_cb143420_ct143420_ctl05_grdResult", AddAdvancedListIDLinks(1))
+            break;
+        case "Advanced List - CopyEdit":
+            waitForKeyElements("#L_c1i0_cb143402_ct143402_ctl29_grdResult", AddAdvancedListIDLinks(2))
+            break;
+        case "Advanced List Main":
+            waitForKeyElements(".thCBarbtn:first", CreateAdvancedListDefaultButton)
     }
 
     // People Finder Quick Select
@@ -166,6 +177,15 @@ function GetModule(strURL)
     } else if (strURL.substring(0, 44) == "https://hanalani.myschoolapp.com/app/faculty")
     {
         return "Faculty";
+    } else if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=52586")
+    {
+        return "Advanced List - Run";
+    } else if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=52568")
+    {
+        return "Advanced List - CopyEdit";
+    } else if (strURL.substring(0, 60) == "https://hanalani.myschoolapp.com/podium/default.aspx?t=23189")
+    {
+        return "Advanced List Main";
     }
 
     return;
@@ -751,6 +771,290 @@ function GetGradeLevel(str)
                 return null;
         }
     }
+}
+
+// ----------------------------------------------------------------------------------------
+// -----------------------------------Advanced list ID Links-------------------------------
+// ----------------------------------------------------------------------------------------
+
+function CreateAdvancedListDefaultButton(jNode)
+{
+    var page = GetAdvancedListIDLinkSetting("Default");
+    if (page == "") // default not set
+    {
+        SetAdvancedListIDLinkSetting("Default", "Core->Access");
+        page = "Core->Access";
+    }
+    GeneratePageMenu("Default Open Users in " + page, $(".thCBarbtn:eq(1)").closest("table"))
+}
+
+function AddAdvancedListIDLinks(type)
+{
+    var listName = GetListName();
+    var page = GetAdvancedListIDLinkSetting(listName);
+    if (page == "")
+    {
+        page = GetAdvancedListIDLinkSetting("Default");
+        if (page == "") // default not set
+        {
+            SetAdvancedListIDLinkSetting("Default", "Core->Access");
+            page = "Core->Access";
+        }
+    }
+
+    GeneratePageMenu("Open Users In " + page, $(".thHistory [style='float:left;'"))
+
+    $("td").each(function(index){
+        if ($(this).text().length == 7 && isInt($(this).text()) && $(this).text() > 1000000)
+        {
+            $(this).html(GetUserLink($(this).text(), page, true));
+        }
+    });
+}
+
+function GetListName()
+{
+    var listName = $(".thHistoryLink1 ~ b").text()
+    listName = listName.replace("Edit Advanced List: ", "");
+    listName = listName.replace("Advanced List: ", "");
+    if (listName == "")
+    {
+        listName = "Default";
+    }
+    return listName;
+}
+
+function AdvancedListSetting(listName, page) {
+    var that= this;
+
+    this.listName = listName;
+    this.page = page;
+}
+
+function GetAdvancedListIDLinkSetting(listName)
+{
+    var rawSettings = getCookie("AdvancedListUserLinkSettings");
+    if (rawSettings == "")
+    {
+        return "";
+    }
+    var settings = JSON.parse(rawSettings);
+    var page = "";
+    var defaultPage;
+
+    settings.forEach(function(value){
+        if (value.listName == listName)
+        {
+            page = value.page;
+        } else if (value.listName == "Default")
+        {
+            defaultPage = value.page;
+        }
+    });
+    if (!page)
+    {
+        page = defaultPage;
+    }
+    return page;
+}
+
+function SetAdvancedListIDLinkSetting(listName, page)
+{
+    var rawSettings = getCookie("AdvancedListUserLinkSettings");
+    var settings = [];
+
+    if (rawSettings != "")
+    {
+        settings = JSON.parse(rawSettings);
+        settings.forEach(function(value){
+            if (value.listName == listName)
+            {
+                value.page = page;
+                return;
+            }
+        });
+    }
+
+    var newSetting = new AdvancedListSetting();
+    newSetting.listName = listName;
+    newSetting.page = page;
+    settings.push(newSetting);
+    setCookie("AdvancedListUserLinkSettings", JSON.stringify(settings), 9999);
+}
+
+function GetUserLink(userID, page, newWindow)
+{
+    var moduleURL;
+    var pageURL;
+    var strHTMLPrefix = '<a '
+    if (newWindow){
+        strHTMLPrefix = strHTMLPrefix + 'target="_blank" '
+    }
+    strHTMLPrefix = strHTMLPrefix + 'href="https://hanalani.myschoolapp.com/app/'
+    var strHTMLSuffix = '</a>';
+
+    switch (page)
+    {
+        case "Core->Access":
+            moduleURL = "Core#userprofile";
+            pageURL = "access";
+            break;
+        case "Core->Enrollment":
+            moduleURL = "Core#userprofile";
+            pageURL = "enrollment";
+            break;
+        case "Core->Settings":
+            moduleURL = "Core#userprofile";
+            pageURL = "settings";
+            break;
+        case "Core->Files & Forms":
+            moduleURL = "Core#userprofile";
+            pageURL = "files";
+            break;
+        case "Core->Contact Card":
+            moduleURL = "Core#userprofile";
+            pageURL = "contactcard";
+            break;
+        case "Academics->Attendance":
+            moduleURL = "academics#academicprofile";
+            pageURL = "attendance";
+            break;
+        case "Academics->Conduct":
+            moduleURL = "academics#academicprofile";
+            pageURL = "conduct";
+            break;
+        case "Academics->Enrollment":
+            moduleURL = "academics#academicprofile";
+            pageURL = "enrollment";
+            break;
+        case "Academics->Rank":
+            moduleURL = "academics#academicprofile";
+            pageURL = "grades";
+            break;
+        case "Academics->Course Requests":
+            moduleURL = "academics#academicprofile";
+            pageURL = "courserequests";
+            break;
+        case "Academics->Contact Card":
+            moduleURL = "academics#academicprofile";
+            pageURL = "contactcard";
+            break;
+        case "Enrollment Management->Record":
+            moduleURL = "enrollment-management#candidate";
+            pageURL = "record";
+            break;
+        case "Enrollment Management->Checklist":
+            moduleURL = "enrollment-management#candidate";
+            pageURL = "checklist";
+            break;
+        case "Enrollment Management->Schools":
+            moduleURL = "enrollment-management#candidate";
+            pageURL = "schools";
+            break;
+        case "Enrollment Management->Financial Aid":
+            moduleURL = "enrollment-management#candidate";
+            pageURL = "financialaid";
+            break;
+        case "Enrollment Management->Contracts":
+            moduleURL = "enrollment-management#candidate";
+            pageURL = "contracts";
+            break;
+        case "Enrollment Management->Contact Card":
+            moduleURL = "enrollment-management#candidate";
+            pageURL = "contactcard";
+            break;
+        case "Enrollment Management->Connections":
+            moduleURL = "enrollment-management#candidate";
+            pageURL = "connections";
+            break;
+        case "Faculty->Progress":
+            moduleURL = "faculty#profile";
+            pageURL = "progress";
+            break;
+        case "Faculty->Schedule":
+            moduleURL = "faculty#profile";
+            pageURL = "schedule";
+            break;
+        case "Faculty->Assignments":
+            moduleURL = "faculty#profile";
+            pageURL = "assignments";
+            break;
+        case "Faculty->Conduct":
+            moduleURL = "faculty#profile";
+            pageURL = "conduct";
+            break;
+        case "Faculty->Official Notes":
+            moduleURL = "faculty#profile";
+            pageURL = "officalnotes";
+            break;
+        case "Faculty->Contact Card":
+            moduleURL = "faculty#profile";
+            pageURL = "contactcard";
+            break;
+        case "Faculty->Medical":
+            moduleURL = "faculty#profile";
+            pageURL = "medical";
+            break;
+    }
+
+    var strHTMLFinal = strHTMLPrefix.concat(moduleURL, "/", userID, "/", pageURL, '">', userID, strHTMLSuffix)
+    return strHTMLFinal;
+}
+
+function GeneratePageMenu(label, location)
+{
+    var strHTMLPrefix = '<div id="openin-menu" class="btn-group" style="margin-left:10px;"><button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" style="display: inline-block;" data-original-title="" title="" aria-expanded="false">' + label + ' <span class="caret"></span></button><ul class="dropdown-menu">'
+    var strHTMLSuffix = '</ul></div>'
+    var strHTMLItem
+    var strHTMLFinal = strHTMLPrefix;
+    var id
+
+    var pages = [
+        "Core->Access",
+        "Core->Enrollment",
+        "Core->Settings",
+        "Core->Files and Forms",
+        "Core->Contact Card",
+        "Academics->Attendance",
+        "Academics->Conduct",
+        "Academics->Enrollment",
+        "Academics->Rank",
+        "Academics->Course Requests",
+        "Academics->Contact Card",
+        "Enrollment Management->Record",
+        "Enrollment Management->Checklist",
+        "Enrollment Management->Schools",
+        "Enrollment Management->Financial Aid",
+        "Enrollment Management->Contracts",
+        "Enrollment Management->Contact Card",
+        "Enrollment Management->Connections",
+        "Faculty->Progress",
+        "Faculty->Schedule",
+        "Faculty->Assignments",
+        "Faculty->Conduct",
+        "Faculty->Official Notes",
+        "Faculty->Contact Card",
+        "Faculty->Medical"
+        ];
+
+    pages.forEach(function(value){
+        id = value.replace(">", "");
+        strHTMLItem = '<li><a id="' + id.replace(/\s/g, "_") + '" href="javascript:void(0)">' + value + '</a></li>';
+        strHTMLFinal = strHTMLFinal + strHTMLItem;
+    });
+
+    strHTMLFinal = strHTMLFinal + strHTMLSuffix;
+
+    location.after(strHTMLFinal);
+
+    pages.forEach(function(value){
+        id = value.replace(">", "");
+        id = "#" + id.replace(/\s/g, "_");
+        $(id).bind("click", function(){
+            SetAdvancedListIDLinkSetting(GetListName(), value);
+            WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("L$c1i0$cb143420$ct143420$ctl04", "", true, "", "", false, true))
+        });
+    });
 }
 
 // ----------------------------------------------------------------------------------------
