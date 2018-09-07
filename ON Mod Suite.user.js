@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.8
+// @version      0.9
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -27,38 +27,45 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 
 
-// Completed Mods:
-// - User Module Selector
-//      Adds links to user pages for quickly switching between module views
-// - People Finder Quick Select
-//      Hit enter when searching with People Finder to open the first result.
-//      Use number keys 1-9 to select the nth search result
-// - Switch Roster to Faculty
-//      Class rosters opened in Academics are missing the Send Communication menu.
-//      This adds a link to quickly switch between Faculty and Academics view of the roster.
-//      Updated in v0.7.1 - Send Communication menu simply added to Academics roster.
-// - Email all parents of a student from Roster Relationships
-//      View Relationships from a student's card in a roster now includes a mailto link that includes all
-//      emails for this student's parents.
-// - Enroll in All
-//      Button added when editing group enrollments, primarily for LS, who add all classes for a specific
-//      homeroom.
-// - Roster Student Count
-//      Rosters (class, activity, community, and athletic groups) show total members, including teachers/
-//      coaches.  This also displays the total number of students in the group, which is a more useful number.
-// - Manual Attendance Sheet Improvements
-//      Manual Attendance Sheet report added to roster reports menu and loads the class that you ran the
-//      report from.
-// - Convert Grad Year to Grade Level
-//      Roster cards can now display current grade level instead of graduation year or both, (global setting saved
-//      as a browser cookie and selectable from a new menu added to roster pages).  Student profile pages
-//      (Core, Academics, Faculty) display the current grade level in addition to the grad year.
-// - Advanced List User Links
-//      Advanced lists that include a User ID column will now link the User ID to their profile page.  The module
-//      and page it opens to is customizable and saved per list.
+/*
+Completed Mods:
+- User Module Selector
+     Adds links to user pages for quickly switching between module views
+- People Finder Quick Select
+     Hit enter when searching with People Finder to open the first result.
+     Use number keys 1-9 to select the nth search result
+- Switch Roster to Faculty
+     Class rosters opened in Academics are missing the Send Communication menu.
+     This adds a link to quickly switch between Faculty and Academics view of the roster.
+     Updated in v0.7.1 - Send Communication menu simply added to Academics roster.
+- Email all parents of a student from Roster Relationships
+     View Relationships from a student's card in a roster now includes a mailto link that includes all
+     emails for this student's parents.
+- Enroll in All
+     Button added when editing group enrollments, primarily for LS, who add all classes for a specific
+     homeroom.
+- Roster Student Count
+     Rosters (class, activity, community, and athletic groups) show total members, including teachers/
+     coaches.  This also displays the total number of students in the group, which is a more useful number.
+- Manual Attendance Sheet Improvements
+     Manual Attendance Sheet report added to roster reports menu and loads the class that you ran the
+     report from.
+- Convert Grad Year to Grade Level
+     Roster cards can now display current grade level instead of graduation year or both, (global setting saved
+     as a browser cookie and selectable from a new menu added to roster pages).  Student profile pages
+     (Core, Academics, Faculty) display the current grade level in addition to the grad year.
+- Advanced List User Links
+     Advanced lists that include a User ID column will now link the User ID to their profile page.  The module
+     and page it opens to is customizable and saved per list.
+- Roster Student Select
+     Specific students can be selected on class rosters, and the Send Communication menu then used to email those
+     students or parents of those students.
 
-// Notes:
-// - Also removes Connect5 emergency contact info from contact cards
+
+Notes:
+- Also removes Connect5 emergency contact info from contact cards
+
+*/
 
 // ----------------------------------------------------------------------------------------
 // ---------------------------------------Main Section-------------------------------------
@@ -112,11 +119,13 @@ function gmMain(){
         case "Academics-Roster":
             waitForKeyElements(".bb-page-heading", PostLinkRosterFaculty)
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
+            waitForKeyElements(".bb-btn-secondary:first", CreateRosterCheckboxes)
             EmailAllParentsOfStudent();
             break;
         case "Faculty-Roster":
             waitForKeyElements(".bb-page-heading", PostLinkRosterAcademics)
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
+            waitForKeyElements(".bb-btn-secondary:first", CreateRosterCheckboxes)
             EmailAllParentsOfStudent();
             break;
         case "Other Roster":
@@ -422,19 +431,22 @@ function EmailAllParentsOfStudent()
 
 function CreateEmailLink(jNode)
 {
-    var strPrefix = '<div align="right"><a href="mailto:';
-    var strSuffix = '">Email All Parents of This Student</a></div>';
-    var strEmails = "";
+    if (!$("#email-parents").length)
+    {
+        var strPrefix = '<div align="right"><a href="mailto:';
+        var strSuffix = '">Email All Parents of This Student</a></div>';
+        var strEmails = "";
 
-    $(".roster-relationships [href^='mailto']").each(function(index){
-        if (index != 0){
-            strEmails = strEmails.concat(";");
-        }
-        strEmails = strEmails.concat($(this).text());
-    });
+        $(".roster-relationships [href^='mailto']").each(function(index){
+            if (index != 0){
+                strEmails = strEmails.concat(";");
+            }
+            strEmails = strEmails.concat($(this).text());
+        });
 
-    var strFinal = strPrefix.concat(strEmails, strSuffix);
-    $(".bb-tile-content-section").after(strFinal);
+        var strFinal = strPrefix.concat(strEmails, strSuffix);
+        $(".bb-tile-content-section").after(strFinal);
+    }
 }
 
 // ----------------------------------------------------------------------------------------
@@ -498,7 +510,6 @@ function AddRosterStudentCount(jNode)
 
     $(".bb-card-title").each(function(index){
        var str = $(this).text();
-       //if (str.includes("Teacher"))
         if(nonStudentConditions.some(el => str.includes(el)))
        {
            teacherCount++;
@@ -1055,6 +1066,156 @@ function GeneratePageMenu(label, location)
             WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("L$c1i0$cb143420$ct143420$ctl04", "", true, "", "", false, true))
         });
     });
+}
+
+// ----------------------------------------------------------------------------------------
+// -----------------------------------Roster Student Select--------------------------------
+// ----------------------------------------------------------------------------------------
+
+function CreateRosterCheckboxes(jNode)
+{
+    var input;
+    var cardHeader;
+    var nonStudentConditions = ["Teacher", "Co-Teacher", "Assistant Teacher", "Activity Leader", "Owner", "Coach"]
+    var selectedCount = 0;
+
+    if (!$(".Select_all").length)  // Check if the checkboxes already exist on the page
+    {
+
+        // Add menu items to Send Communication
+        $("#roster-reports").prev().find("li:eq(2)").after('<li><a id="selected-students" href="javascript:void(0)">Selected Students</a></li>');
+        $("#roster-reports").prev().find("li:eq(3)").after('<li><a id="selected-parents" href="javascript:void(0)">Selected Students\x27 Parents</a></li>');
+
+        // Create Select All checkbox
+        $("#roster-count").closest("h4").after('<label><input type="checkbox" class="Select_all">Select All</label>');
+
+        // Create checkboxes for each student's card
+        $(".bb-btn-secondary").each(function(index){
+            cardHeader = $(this).closest(".roster-card").find(".bb-card-title:first").text()
+            if(!nonStudentConditions.some(el => cardHeader.includes(el)) && !$(this).closest(".roster-relationships").length)
+                // Only if not a teacher and not for relationships popup
+            {
+                input = document.createElement("input");
+                input.type = "checkbox";
+                $(this).before(input);
+            }
+        });
+
+        // Click events for Send Communication menu items
+        $("#selected-students").bind("click", function(){
+            EmailSelectedStudents();
+        });
+        $("#selected-parents").bind("click", function(){
+            EmailSelectedParents();
+        });
+
+        // Click event for Select All, to check/uncheck all students
+        $("input[type='checkbox'].Select_all").bind("click", function(){
+            if ($(this).is(":checked"))
+            {
+                $("input[type='checkbox']").not(".Select_all").prop("checked", true);
+            } else
+            {
+                $("input[type='checkbox']").not(".Select_all").prop("checked", false);
+            }
+        });
+
+        // Create/update selected count after any checkbox click
+        $("input[type='checkbox']").bind("click", function(){
+            selectedCount = $('input[type="checkbox"]:checked').not('.Select_all').length;
+            if ($("#selected-count").length)
+            {
+                $("#selected-count").text("  [" + selectedCount + " Selected]")
+            } else
+            {
+                var selectedSpan = document.createElement("span");
+                selectedSpan.id = "selected-count";
+                selectedSpan.innerHTML = "  [" + selectedCount + " Selected]"
+                $("#roster-count").closest("h4").append(selectedSpan);
+            }
+        });
+    }
+}
+
+function EmailSelectedParents()
+{
+    var mailtoLink = "mailto:?bcc=";
+    var lastEmail;
+    var currEmail = 0;
+    var currStudent = 0;
+    var gettingEmails = false;
+    var popupOpen = false;
+    var done = false;
+    var timerID = 0;
+
+    if ($('input[type="checkbox"]:checked').not('.Select_all').length) // only if there are selected students
+    {
+        $("#roster-count").closest("h4").append('<span id="email-parents"> Gathering Parent Emails...</span>')
+
+        timerID = setInterval(function(){
+
+            if (!done) // prevent running on page after already done
+            {
+                if (currStudent < $('input[type="checkbox"]:checked').not('.Select_all').length) // loop through selected students
+                {
+                    if (!popupOpen) // if relationship popup is not open, open it
+                    {
+                        $('input[type="checkbox"]:checked').not('.Select_all').eq(currStudent).closest(".bb-context-menu").find("[href='#']")[0].click();
+                        popupOpen = true;
+                    } else
+                    {
+                        if ($(".roster-relationships [href^='mailto']").length && !gettingEmails) // avoid repeating loop when already running
+                        {
+                            gettingEmails = true;
+                            $(".roster-relationships [href^='mailto']").each(function(index){
+                                if ($(this).text() != lastEmail) // skip duplicate email addresses
+                                {
+                                    mailtoLink = mailtoLink + $(this).text() + ";";
+                                    lastEmail = $(this).text();
+                                }
+                            });
+
+                            $(".close")[0].click();
+                            popupOpen = false;
+                            currStudent++;
+                            gettingEmails = false;
+                        } else if (!$(".roster-relationships [href^='mailto']").length) // no parent emails
+                        {
+                            $(".close")[0].click();
+                            popupOpen = false;
+                            currStudent++;
+                        }
+                    }
+                } else  // done
+                {
+                    document.location.href = mailtoLink;
+                    $("#email-parents").remove();
+                    clearInterval(timerID);
+                    done = true;
+                }
+            }
+        }, 100);
+
+    } else
+    {
+        alert("No students selected!");
+    }
+}
+
+function EmailSelectedStudents()
+{
+    var mailtoLink = "mailto:?bcc=";
+
+    if ($('input[type="checkbox"]:checked').not('.Select_all').length)
+    {
+        $('input[type="checkbox"]:checked').not('.Select_all').each(function(index){
+            mailtoLink = mailtoLink + $(this).closest(".roster-card").find("[href^='mailto']").text() + ";"
+        });
+        document.location.href = mailtoLink;
+    } else
+    {
+        alert("No students selected!");
+    }
 }
 
 // ----------------------------------------------------------------------------------------
