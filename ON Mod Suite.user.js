@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.9.3
+// @version      0.9.4
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -653,7 +653,7 @@ function ManualAttendanceSheet()
 function ConvertGradYearToGradeLevel()
 {
     // Add menu
-    $("#roster-reports").after('<div id="show-menu" class="btn-group" style="margin-left:10px;"><button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" style="display: inline-block;" data-original-title="" title="" aria-expanded="false">Show <span class="caret"></span></button><ul class="dropdown-menu"><li><a id="gradyear" href="javascript:void(0)">Grad Year</a></li><li><a id="gradelevel" href="javascript:void(0)">Grade Level</a></li><li><a id="both" href="javascript:void(0)">Both</a></li></ul></div>')
+    $("#roster-reports").after('<div id="show-menu" class="btn-group" style="margin-left:10px;"><button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" style="display: inline-block;" data-original-title="" title="" aria-expanded="false">Show <span class="caret"></span></button><ul class="dropdown-menu"><li><a id="gradyear" href="javascript:void(0)">Grad Year</a></li><li><a id="gradelevel" href="javascript:void(0)">Grade Level</a></li><li><a id="both" href="javascript:void(0)">Both</a></li><li><a id="none" href="javascript:void(0)">None</a></li></ul></div>')
     $("#gradyear").bind("click", function(){
         setCookie("GradeLevelSetting", 1, 9999);
         location.reload();
@@ -664,6 +664,10 @@ function ConvertGradYearToGradeLevel()
     });
     $("#both").bind("click", function(){
         setCookie("GradeLevelSetting", 3, 9999);
+        location.reload();
+    });
+    $("#none").bind("click", function(){
+        setCookie("GradeLevelSetting", 4, 9999);
         location.reload();
     });
 
@@ -695,6 +699,18 @@ function ConvertGradYearToGradeLevel()
                 if (grade)
                 {
                     $(this).append(grade);
+                }
+            });
+            break;
+        case "4":
+            $("#none").prepend(">");
+            $(".bb-card-title").each(function(index){
+                name = $(this).text();
+                grade = GetGradeLevel(name);
+                if (grade)
+                {
+                   name = name.substring(0, name.length-4);
+                   $(this).text(name);
                 }
             });
             break;
