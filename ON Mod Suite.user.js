@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.9
+// @version      0.9.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -59,7 +59,7 @@ Completed Mods:
      and page it opens to is customizable and saved per list.
 - Roster Student Select
      Specific students can be selected on class rosters, and the Send Communication menu then used to email those
-     students or parents of those students.
+     students, parents of those students, or both.
 
 
 Notes:
@@ -1081,6 +1081,7 @@ function CreateRosterCheckboxes(jNode)
         // Add menu items to Send Communication
         $("#roster-reports").prev().find("li:eq(2)").after('<li><a id="selected-students" href="javascript:void(0)">Selected Students</a></li>');
         $("#roster-reports").prev().find("li:eq(3)").after('<li><a id="selected-parents" href="javascript:void(0)">Selected Students\x27 Parents</a></li>');
+        $("#roster-reports").prev().find("li:eq(4)").after('<li><a id="selected-students-and-parents" href="javascript:void(0)">Selected Students and Parents</a></li>');
 
         // Create Select All checkbox
         $("#roster-count").closest("h4").after('<label><input type="checkbox" class="Select_all">Select All</label>');
@@ -1102,7 +1103,10 @@ function CreateRosterCheckboxes(jNode)
             EmailSelectedStudents();
         });
         $("#selected-parents").bind("click", function(){
-            EmailSelectedParents();
+            EmailSelectedParents(false);
+        });
+        $("#selected-students-and-parents").bind("click", function(){
+            EmailSelectedParents(true);
         });
 
         // Click event for Select All, to check/uncheck all students
@@ -1133,7 +1137,7 @@ function CreateRosterCheckboxes(jNode)
     }
 }
 
-function EmailSelectedParents()
+function EmailSelectedParents(studentsToo)
 {
     var mailtoLink = "mailto:?bcc=";
     var lastEmail;
@@ -1156,6 +1160,10 @@ function EmailSelectedParents()
                 {
                     if (!popupOpen) // if relationship popup is not open, open it
                     {
+                        if (studentsToo)
+                        {
+                            mailtoLink = mailtoLink + $('input[type="checkbox"]:checked').not('.Select_all').eq(currStudent).closest(".roster-card").find("[href^='mailto']").text() + ";"
+                        }
                         $('input[type="checkbox"]:checked').not('.Select_all').eq(currStudent).closest(".bb-context-menu").find("[href='#']")[0].click();
                         popupOpen = true;
                     } else
