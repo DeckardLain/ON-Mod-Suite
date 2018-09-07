@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.9.2
+// @version      0.9.3
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -792,7 +792,7 @@ function CreateAdvancedListDefaultButton(jNode)
         SetAdvancedListIDLinkSetting("Default", "Core->Access");
         page = "Core->Access";
     }
-    GeneratePageMenu("Default Open Users in " + page, $(".thCBarbtn:eq(1)").closest("table"))
+    GeneratePageMenu("Default Open Users in " + page, $(".thCBar table table:first"))
 }
 
 function AddAdvancedListIDLinks()
