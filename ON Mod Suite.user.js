@@ -617,7 +617,6 @@ function ManualAttendanceSheet()
     {
         case "1":
             {
-                console.log($("[name='L$c1i0$cb3224$ct3224$ct3$ddl_l$ctl00']").val());
                 $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_l$ctl00']").val(getCookie("SchoolLevel"));
                 setCookie("ManualAttendanceSheetNewInfo", "2", 1);
                 setTimeout('__doPostBack(\'L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00\',\'\')', 0)
@@ -625,7 +624,6 @@ function ManualAttendanceSheet()
             }
         case "2":
             {
-                console.log($("[name='L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00']").val());
                 $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00']").val(getCookie("Term"));
                 setCookie("ManualAttendanceSheetNewInfo", "3", 1);
                 setTimeout('__doPostBack(\'L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00\',\'\')', 0)
@@ -633,7 +631,6 @@ function ManualAttendanceSheet()
             }
         case "3":
             {
-                console.log($("[name='L$c1i0$cb3224$ct3224$ct3$ddl_t$ctl00']").val());
                 $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_t$ctl00']").val(getCookie("TeacherID"));
                 setCookie("ManualAttendanceSheetNewInfo", "4", 1);
                 setTimeout('__doPostBack(\'L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00\',\'\')', 0)
@@ -641,10 +638,9 @@ function ManualAttendanceSheet()
             }
         case "4":
             {
-                console.log($("[name='L$c1i0$cb3224$ct3224$ct3$ddl_s$ctl00']").val());
                 $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_s$ctl00']").val(getCookie("ClassID"));
                 setCookie("ManualAttendanceSheetNewInfo", "0", 1);
-                __doPostBack('L$c1i0$cb3224$ct3224$cTool$lbtnRefresh','');
+                __doPostBack('L$c1i0$cb3224$ct3224$cTool$lbtnPDF','');
                 break;
             }
     }
