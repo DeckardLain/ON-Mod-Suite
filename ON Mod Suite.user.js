@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.9.1
+// @version      0.9.2
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -138,10 +138,10 @@ function gmMain(){
             waitForKeyElements("#L_c1i0_cb3224_ct3224_cTool_lbtnRefresh", ManualAttendanceSheet)
             break;
         case "Advanced List - Run":
-            waitForKeyElements("#L_c1i0_cb143420_ct143420_ctl05_grdResult", AddAdvancedListIDLinks(1))
+            waitForKeyElements("#L_c1i0_cb143420_ct143420_ctl05_grdResult", AddAdvancedListIDLinks)
             break;
         case "Advanced List - CopyEdit":
-            waitForKeyElements("#L_c1i0_cb143402_ct143402_ctl29_grdResult", AddAdvancedListIDLinks(2))
+            waitForKeyElements("#L_c1i0_cb143402_ct143402_ctl29_grdResult", AddAdvancedListIDLinks)
             break;
         case "Advanced List Main":
             waitForKeyElements(".thCBarbtn:first", CreateAdvancedListDefaultButton)
@@ -795,7 +795,7 @@ function CreateAdvancedListDefaultButton(jNode)
     GeneratePageMenu("Default Open Users in " + page, $(".thCBarbtn:eq(1)").closest("table"))
 }
 
-function AddAdvancedListIDLinks(type)
+function AddAdvancedListIDLinks()
 {
     var listName = GetListName();
     var page = GetAdvancedListIDLinkSetting(listName);
@@ -811,12 +811,20 @@ function AddAdvancedListIDLinks(type)
 
     GeneratePageMenu("Open Users In " + page, $(".thHistory [style='float:left;'"))
 
-    $("td").each(function(index){
-        if ($(this).text().length == 7 && isInt($(this).text()) && $(this).text() > 1000000)
-        {
-            $(this).html(GetUserLink($(this).text(), page, true));
-        }
-    });
+    CreateUserLinks(page);
+}
+
+function CreateUserLinks(page)
+{
+    if ($("td").length)
+    {
+        $("td").each(function(index){
+            if ($(this).text().length == 7 && isInt($(this).text()) && $(this).text() > 1000000)
+            {
+                $(this).html(GetUserLink($(this).text(), page, true));
+            }
+        });
+    }
 }
 
 function GetListName()
@@ -1010,58 +1018,61 @@ function GetUserLink(userID, page, newWindow)
 
 function GeneratePageMenu(label, location)
 {
-    var strHTMLPrefix = '<div id="openin-menu" class="btn-group" style="margin-left:10px;"><button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" style="display: inline-block;" data-original-title="" title="" aria-expanded="false">' + label + ' <span class="caret"></span></button><ul class="dropdown-menu">'
-    var strHTMLSuffix = '</ul></div>'
-    var strHTMLItem
-    var strHTMLFinal = strHTMLPrefix;
-    var id
+    if (!$("#openin-menu").length)
+    {
+        var strHTMLPrefix = '<div id="openin-menu" class="btn-group" style="margin-left:10px;"><button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" style="display: inline-block;" data-original-title="" title="" aria-expanded="false">' + label + ' <span class="caret"></span></button><ul class="dropdown-menu">'
+        var strHTMLSuffix = '</ul></div>'
+        var strHTMLItem
+        var strHTMLFinal = strHTMLPrefix;
+        var id
 
-    var pages = [
-        "Core->Access",
-        "Core->Enrollment",
-        "Core->Settings",
-        "Core->Files and Forms",
-        "Core->Contact Card",
-        "Academics->Attendance",
-        "Academics->Conduct",
-        "Academics->Enrollment",
-        "Academics->Rank",
-        "Academics->Course Requests",
-        "Academics->Contact Card",
-        "Enrollment Management->Record",
-        "Enrollment Management->Checklist",
-        "Enrollment Management->Schools",
-        "Enrollment Management->Financial Aid",
-        "Enrollment Management->Contracts",
-        "Enrollment Management->Contact Card",
-        "Enrollment Management->Connections",
-        "Faculty->Progress",
-        "Faculty->Schedule",
-        "Faculty->Assignments",
-        "Faculty->Conduct",
-        "Faculty->Official Notes",
-        "Faculty->Contact Card",
-        "Faculty->Medical"
+        var pages = [
+            "Core->Access",
+            "Core->Enrollment",
+            "Core->Settings",
+            "Core->Files and Forms",
+            "Core->Contact Card",
+            "Academics->Attendance",
+            "Academics->Conduct",
+            "Academics->Enrollment",
+            "Academics->Rank",
+            "Academics->Course Requests",
+            "Academics->Contact Card",
+            "Enrollment Management->Record",
+            "Enrollment Management->Checklist",
+            "Enrollment Management->Schools",
+            "Enrollment Management->Financial Aid",
+            "Enrollment Management->Contracts",
+            "Enrollment Management->Contact Card",
+            "Enrollment Management->Connections",
+            "Faculty->Progress",
+            "Faculty->Schedule",
+            "Faculty->Assignments",
+            "Faculty->Conduct",
+            "Faculty->Official Notes",
+            "Faculty->Contact Card",
+            "Faculty->Medical"
         ];
 
-    pages.forEach(function(value){
-        id = value.replace(">", "");
-        strHTMLItem = '<li><a id="' + id.replace(/\s/g, "_") + '" href="javascript:void(0)">' + value + '</a></li>';
-        strHTMLFinal = strHTMLFinal + strHTMLItem;
-    });
-
-    strHTMLFinal = strHTMLFinal + strHTMLSuffix;
-
-    location.after(strHTMLFinal);
-
-    pages.forEach(function(value){
-        id = value.replace(">", "");
-        id = "#" + id.replace(/\s/g, "_");
-        $(id).bind("click", function(){
-            SetAdvancedListIDLinkSetting(GetListName(), value);
-            WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("L$c1i0$cb143420$ct143420$ctl04", "", true, "", "", false, true))
+        pages.forEach(function(value){
+            id = value.replace(">", "");
+            strHTMLItem = '<li><a id="' + id.replace(/\s/g, "_") + '" href="javascript:void(0)">' + value + '</a></li>';
+            strHTMLFinal = strHTMLFinal + strHTMLItem;
         });
-    });
+
+        strHTMLFinal = strHTMLFinal + strHTMLSuffix;
+
+        location.after(strHTMLFinal);
+
+        pages.forEach(function(value){
+            id = value.replace(">", "");
+            id = "#" + id.replace(/\s/g, "_");
+            $(id).bind("click", function(){
+                SetAdvancedListIDLinkSetting(GetListName(), value);
+                WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("L$c1i0$cb143420$ct143420$ctl04", "", true, "", "", false, true))
+            });
+        });
+    }
 }
 
 // ----------------------------------------------------------------------------------------
@@ -1075,7 +1086,8 @@ function CreateRosterCheckboxes(jNode)
     var nonStudentConditions = ["Teacher", "Co-Teacher", "Assistant Teacher", "Activity Leader", "Owner", "Coach"]
     var selectedCount = 0;
 
-    if (!$(".Select_all").length)  // Check if the checkboxes already exist on the page
+    // Check if the checkboxes already exist on the page and make sure on a roster page
+    if (!$(".Select_all").length && window.location.href.substr(window.location.href.length - 6, window.location.href.length) == "roster")
     {
 
         // Add menu items to Send Communication
