@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.9.4
+// @version      0.9.5
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -116,6 +116,9 @@ function gmMain(){
         case "Faculty":
             waitForKeyElements(".bb-page-heading", PostLinkFaculty)
             break;
+        case "Extracurricular":
+            waitForKeyElements(".student-header-body", PostLinkEnrollmentManagement)
+            break;
         case "Academics-Roster":
             waitForKeyElements(".bb-page-heading", PostLinkRosterFaculty)
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
@@ -186,6 +189,9 @@ function GetModule(strURL)
     } else if (strURL.substring(0, 44) == "https://hanalani.myschoolapp.com/app/faculty")
     {
         return "Faculty";
+    } else if (strURL.substring(0, 52) == "https://hanalani.myschoolapp.com/app/extracurricular")
+    {
+        return "Extracurricular";
     } else if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=52586")
     {
         return "Advanced List - Run";
