@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.9.5
+// @version      0.9.6
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -60,6 +60,9 @@ Completed Mods:
 - Roster Student Select
      Specific students can be selected on class rosters, and the Send Communication menu then used to email those
      students, parents of those students, or both.
+- Team Roster Link to Grades
+     Team rosters now have a View Grades link for each student, for quick access to Faculty->Progress page
+     for the student.
 
 
 Notes:
@@ -131,6 +134,9 @@ function gmMain(){
             waitForKeyElements(".bb-btn-secondary:first", CreateRosterCheckboxes)
             EmailAllParentsOfStudent();
             break;
+        case "Team Roster":
+            waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
+            waitForKeyElements(".btn-contact-card:first", AddLinkToFacultyProgress)
         case "Other Roster":
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
             break;
@@ -177,6 +183,9 @@ function GetModule(strURL)
     } else if (strURL.substring(0, 58) == "https://hanalani.myschoolapp.com/app/faculty#academicclass" && strURL.substring(71, 77) == "roster")
     {
         return "Faculty-Roster";
+    } else if (strURL.substring(53, 65) == "athleticteam" && strURL.substring(strURL.length-6, strURL.length) == "roster")
+    {
+        return "Team Roster";
     } else if (strURL.substring(strURL.length-6, strURL.length) == "roster")
     {
         return "Other Roster";
@@ -308,6 +317,10 @@ function GetLink(strModule, strID)
             strLinkSuffix = "/contracts";
             break;
         case "Faculty":
+            strLinkPrefix = "https://hanalani.myschoolapp.com/app/faculty#profile/";
+            strLinkSuffix = "/progress";
+            break;
+        case "View Grades":
             strLinkPrefix = "https://hanalani.myschoolapp.com/app/faculty#profile/";
             strLinkSuffix = "/progress";
             break;
@@ -1254,6 +1267,20 @@ function EmailSelectedStudents()
     {
         alert("No students selected!");
     }
+}
+
+// ----------------------------------------------------------------------------------------
+// --------------------------------Team Roster Link to Grades------------------------------
+// ----------------------------------------------------------------------------------------
+
+function AddLinkToFacultyProgress()
+{
+     $(".btn-contact-card").each(function(index){
+         if ($(this).closest("div").attr("class") != "bb-card-actions")
+         {
+            $(this).after(GetLink("View Grades", GetID($(this).attr("href"))))
+         }
+     });
 }
 
 // ----------------------------------------------------------------------------------------
