@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.9.6
+// @version      0.10.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -63,7 +63,9 @@ Completed Mods:
 - Team Roster Link to Grades
      Team rosters now have a View Grades link for each student, for quick access to Faculty->Progress page
      for the student.
-
+- Email Multiple Classes
+     Classes can be selected on Schedule & Performance page and email sent to students, parents, or everyone in
+     selected classes.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -132,6 +134,7 @@ function gmMain(){
             waitForKeyElements(".bb-page-heading", PostLinkRosterAcademics)
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
             waitForKeyElements(".bb-btn-secondary:first", CreateRosterCheckboxes)
+            waitForKeyElements(".dropdown-toggle:first", SaveRosterEmails)
             EmailAllParentsOfStudent();
             break;
         case "Team Roster":
@@ -154,6 +157,10 @@ function gmMain(){
             break;
         case "Advanced List Main":
             waitForKeyElements(".thCBarbtn:first", CreateAdvancedListDefaultButton)
+            break;
+        case "Schedule and Performance":
+            waitForKeyElements("#accordionSchedules:first", CreateClassCheckboxes)
+            break;
     }
 
     // People Finder Quick Select
@@ -171,6 +178,9 @@ function GetModule(strURL)
     if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL == "https://hanalani.myschoolapp.com/app/faculty#myday/schedule-performance")
+    {
+        return "Schedule and Performance";
     } else if (strURL.substring(0, 41).toLowerCase() == "https://hanalani.myschoolapp.com/app/core")
     {
         return "Core";
@@ -1281,6 +1291,203 @@ function AddLinkToFacultyProgress()
             $(this).after(GetLink("View Grades", GetID($(this).attr("href"))))
          }
      });
+}
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------------Email Multiple Classes--------------------------------
+// ----------------------------------------------------------------------------------------
+
+function CreateClassCheckboxes()
+{
+    var input;
+    var link;
+    var RosterWindow;
+
+    if (!$(".Select_all").length)
+    {
+        // Create Send Communication Menu
+        if (!$("#send-communication-classes").length)
+        {
+            $(".schedule-list").before('<div id="send-communication-classes" class="btn-group" style="margin-left:10px;">            <button class="btn  btn-default btn-sm dropdown-toggle" data-toggle="dropdown" data-original-title="" title="">Send Communication to <span class="caret"></span></button>            <ul class="dropdown-menu">                <li><a id="selected-classes-students" href="javascript:void(0)">Students in Selected Classes</a></li><li><a id="selected-classes-parents" href="javascript:void(0)">Parents in Selected Classes</a></li><li><a id="selected-classes-all" href="javascript:void(0)">Everyone in Selected Classes</a></li>            </ul>            </div>')
+        }
+
+        // Create Select All checkbox
+        $(".schedule-list table thead tr th").eq(2).append('<div align="right"><label><input type="checkbox" class="Select_all">Select All</label></div>');
+
+        // Create checkboxes for each class
+        $("#accordionSchedules").find("[href]").not(".all-present").each(function(index){
+            input = document.createElement("input");
+            input.type = "checkbox";
+            input.className = "checkbox-class";
+            $(this).before(input);
+//            $(this).after('<a id="test" href="javascript:void(0)">Test</a>')
+        });
+
+        // Click event for Select All, to check/uncheck all students
+        $("input[type='checkbox'].Select_all").bind("click", function(){
+            if ($(this).is(":checked"))
+            {
+                $("input[type='checkbox']").not(".Select_all").prop("checked", true);
+            } else
+            {
+                $("input[type='checkbox']").not(".Select_all").prop("checked", false);
+            }
+        });
+
+        // Click events for Send Communication menu items
+        $("#selected-classes-students").unbind("click").bind("click", function(){
+            setCookie("SaveRosterEmailsType", "Students", 1);
+            EmailSelectedClasses();
+        });
+        $("#selected-classes-parents").unbind("click").bind("click", function(){
+            setCookie("SaveRosterEmailsType", "Parents", 1);
+            EmailSelectedClasses();
+        });
+        $("#selected-classes-all").unbind("click").bind("click", function(){
+            setCookie("SaveRosterEmailsType", "All", 1);
+            EmailSelectedClasses();
+        });
+
+        // Reset cookie in case process failed previously
+        setCookie("SaveRosterEmailsActive", "0", 1);
+
+    }
+}
+
+function EmailSelectedClasses()
+{
+    var numSelectedClasses = $('input[type="checkbox"]:checked').not('.Select_all').length
+    var currClass = 0
+    var rosterWindow
+
+    if (numSelectedClasses && confirm("A new tab/window will be opened for each class to grab the email addresses.  Click OK when ready."))
+    {
+        setCookie("SaveRosterEmailsActive", "1", 1);
+        setCookie("SaveRosterEmailsFirstClass", "1", 1);
+        setCookie("SaveRosterEmailsClassDone", "1", 1);
+
+        var timerID = setInterval(function(){
+            var url
+            var mailtoLink
+            var mailtoLinks = []
+            var emails
+            if (getCookie("SaveRosterEmailsClassDone") == 0)
+            {
+                // wait for new window to finish saving emails
+            } else
+            {
+                if (getCookie("SaveRosterEmailsFirstClass") == 0)
+                {
+                    currClass++
+                }
+
+                if (currClass < numSelectedClasses)
+                {
+                    // Open class roster to grab email addresses
+                    url = "https://hanalani.myschoolapp.com/app/faculty#academicclass/" + GetID($('input[type="checkbox"]:checked').not('.Select_all').eq(currClass).next("[href]").attr("href")) + "/0/roster"
+                    setCookie("SaveRosterEmailsClassDone", "0", 1);
+                    rosterWindow = window.open(url)
+                } else  // Done
+                {
+                    clearInterval(timerID);
+                    setCookie("SaveRosterEmailsActive", "0", 1);
+                    emails = getCookie("SaveRosterEmailsAddresses")
+
+                    // Remove duplicates from emails
+                    var emailArray = emails.split("|")
+                    var uniqueEmails = [];
+                    $.each(emailArray, function(i, el){
+                        if($.inArray(el, uniqueEmails) === -1) uniqueEmails.push(el);
+                    });
+
+                    // Split email group if larger than 2000 characters total
+                    var currEmail = 0
+                    emails = ""
+                    while (currEmail < uniqueEmails.length)
+                    {
+                        emails = emails + uniqueEmails[currEmail] + ";"
+                        if (emails.length > 1500)
+                        {
+                            emails = emails.substring(0, emails.length - uniqueEmails[currEmail].length - 2)
+                            mailtoLink = "mailto:?bcc=" + emails
+                            mailtoLinks.push(mailtoLink)
+                            emails = ""
+                        }
+                        currEmail++
+                    }
+                    mailtoLink = "mailto:?bcc=" + emails
+                    mailtoLinks.push(mailtoLink)
+                    var CurrMailtoLink = 0
+                    var confirmPrompt = "You will be sending to " + uniqueEmails.length + " recipients."
+                    if (mailtoLinks.length > 1)
+                    {
+                        confirmPrompt += "  Due to browser limitations, your recipient list will be split into " + mailtoLinks.length + " parts and a new message window created for each."
+                    }
+
+                    if(confirm(confirmPrompt))
+                    {
+                        var timerID2 = setInterval(function() {
+                            if (CurrMailtoLink < mailtoLinks.length)
+                            {
+                                document.location.href = mailtoLinks[CurrMailtoLink];
+                                CurrMailtoLink++
+                            } else
+                            {
+                                clearInterval(timerID2)
+                            }
+                        }, 500);
+                    }
+                }
+
+            }
+        }, 100);
+    } else if (!numSelectedClasses)
+    {
+        alert("No classes selected!");
+    }
+}
+
+function SaveRosterEmails()
+{
+    if (getCookie("SaveRosterEmailsActive") == 1)
+    {
+        switch (getCookie("SaveRosterEmailsType"))
+        {
+            case "Students":
+                $(".send-message").eq(0)[0].click()
+                waitForKeyElements("#email-list-textarea", GrabEmails)
+                break;
+            case "Parents":
+                $(".send-message").eq(1)[0].click()
+                waitForKeyElements("#email-list-textarea", GrabEmails)
+                break;
+            case "All":
+                $(".send-message").eq(2)[0].click()
+                waitForKeyElements("#email-list-textarea", GrabEmails)
+                break;
+        }
+    }
+}
+
+function GrabEmails()
+{
+    if (getCookie("SaveRosterEmailsActive") == 1)
+    {
+        var str;
+
+        if (getCookie("SaveRosterEmailsFirstClass") == 1)
+        {
+            str = $("#email-list-textarea").text();
+            setCookie("SaveRosterEmailsFirstClass", "0", 1);
+        } else
+        {
+            str = getCookie("SaveRosterEmailsAddresses") + "| " + $("#email-list-textarea").text()
+        }
+        str = str.replace(/,/g, "|")  // Commas and semicolons are not allowed in cookie values
+        setCookie("SaveRosterEmailsAddresses", str, 1)
+        setCookie("SaveRosterEmailsClassDone", "1", 1)
+        window.close()
+    }
 }
 
 // ----------------------------------------------------------------------------------------
