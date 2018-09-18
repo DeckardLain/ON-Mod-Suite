@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.10.0
+// @version      0.10.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -1475,18 +1475,25 @@ function GrabEmails()
     {
         var str;
 
-        if (getCookie("SaveRosterEmailsFirstClass") == 1)
+        if ($("#email-list-textarea").text().length)  // Make sure there are emails in the box
         {
-            str = $("#email-list-textarea").text();
-            setCookie("SaveRosterEmailsFirstClass", "0", 1);
+            if (getCookie("SaveRosterEmailsFirstClass") == 1)
+            {
+                str = $("#email-list-textarea").text();
+                setCookie("SaveRosterEmailsFirstClass", "0", 1);
+            } else
+            {
+                str = getCookie("SaveRosterEmailsAddresses") + "| " + $("#email-list-textarea").text()
+            }
+            str = str.replace(/,/g, "|")  // Commas and semicolons are not allowed in cookie values
+            setCookie("SaveRosterEmailsAddresses", str, 1)
+            setCookie("SaveRosterEmailsClassDone", "1", 1)
+            window.close()
         } else
         {
-            str = getCookie("SaveRosterEmailsAddresses") + "| " + $("#email-list-textarea").text()
+            // Box of emails is empty.  Reload page to try again
+            location.reload()
         }
-        str = str.replace(/,/g, "|")  // Commas and semicolons are not allowed in cookie values
-        setCookie("SaveRosterEmailsAddresses", str, 1)
-        setCookie("SaveRosterEmailsClassDone", "1", 1)
-        window.close()
     }
 }
 
