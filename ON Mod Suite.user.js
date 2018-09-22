@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      0.10.1
+// @version      1.0.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -66,6 +66,12 @@ Completed Mods:
 - Email Multiple Classes
      Classes can be selected on Schedule & Performance page and email sent to students, parents, or everyone in
      selected classes.
+- Classes Menu Sort Order
+     Classes menu can be sorted by period instead of the default alphabetical order.  See the new Settings page on
+     the resource board or click the link at the bottom of any page on the site.
+- Classes Menu Default Page
+     The default page that classes open to from the Classes menu can be changed to Topics, Assignments, Schedule, or
+     Roster instead of the default Bulletin Board.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -109,6 +115,9 @@ function gmMain(){
 
     switch(GetModule(strURL))
     {
+        case "Settings":
+            waitForKeyElements(".conDefault b:first", GenerateSettingsPage)
+            break;
         case "Core":
             waitForKeyElements("#userName", PostLinkCore)
             break;
@@ -120,6 +129,7 @@ function gmMain(){
             break;
         case "Faculty":
             waitForKeyElements(".bb-page-heading", PostLinkFaculty)
+            waitForKeyElements("#group-header-Classes", ClassesMenuSortOrder)
             break;
         case "Extracurricular":
             waitForKeyElements(".student-header-body", PostLinkEnrollmentManagement)
@@ -135,6 +145,7 @@ function gmMain(){
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
             waitForKeyElements(".bb-btn-secondary:first", CreateRosterCheckboxes)
             waitForKeyElements(".dropdown-toggle:first", SaveRosterEmails)
+            waitForKeyElements("#group-header-Classes", ClassesMenuSortOrder)
             EmailAllParentsOfStudent();
             break;
         case "Team Roster":
@@ -160,6 +171,7 @@ function gmMain(){
             break;
         case "Schedule and Performance":
             waitForKeyElements("#accordionSchedules:first", CreateClassCheckboxes)
+            waitForKeyElements("#group-header-Classes", ClassesMenuSortOrder)
             break;
     }
 
@@ -168,6 +180,9 @@ function gmMain(){
 
     // Remove Connect5 Info
     waitForKeyElements(".emergencyemaildetail p", RemoveConnect5Info)
+
+    // Page footer
+    waitForKeyElements("#site-footer-fixed", AddPageFooter)
 
 }
 
@@ -178,6 +193,9 @@ function GetModule(strURL)
     if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL == "https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184")
+    {
+        return "Settings";
     } else if (strURL == "https://hanalani.myschoolapp.com/app/faculty#myday/schedule-performance")
     {
         return "Schedule and Performance";
@@ -225,6 +243,13 @@ function GetModule(strURL)
     return;
 }
 
+function AddPageFooter()
+{
+    if (window.location.href != "https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184")
+    {
+        $("body").append('<div align="center" style="font-size:12px">This site experience enhanced by ON Mod Suite.  Click <a href="https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184" target="_blank">here</a> to change settings.</div>')
+    }
+}
 
 // ----------------------------------------------------------------------------------------
 // -----------------------------------User Module Selector---------------------------------
@@ -1495,6 +1520,216 @@ function GrabEmails()
             location.reload()
         }
     }
+}
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------------Classes Menu Sort Order-------------------------------
+// ----------------------------------------------------------------------------------------
+
+function ClassesMenuSortOrder(jNode)
+{
+    // Get cookie value
+    if (getCookie("ClassesMenuSortOrder") == "period")
+    {
+        // Sort class list
+        jNode.siblings(".subnav").find("ul:first").html(
+            jNode.siblings(".subnav").find("ul:first").children("li").sort(function (a, b) {
+                return GetPeriodSortOrder(GetPeriod($(a).find(".title").text())) - GetPeriodSortOrder(GetPeriod($(b).find(".title").text()));
+            })
+                                             );
+
+        // Rename menu items to put period in front
+        jNode.siblings(".subnav").find("ul:first").children("li").each(function (index) {
+            $(this).find(".title").text("[" + GetPeriod($(this).find(".title").text()) + "] " + $(this).find(".title").text().substring(0, $(this).find(".title").text().indexOf("(")))
+        });
+    }
+
+    UpdateClassMenuLinks()
+}
+
+function GetPeriodSortOrder(period)
+{
+    switch (period.substring(0, 2))
+    {
+        case "HR":
+            return 1;
+            break;
+        case "P1":
+        case "D1":
+            return 2;
+            break;
+        case "P2":
+        case "D2":
+            return 3;
+            break;
+        case "P3":
+        case "D3":
+            return 4;
+            break;
+        case "P4":
+        case "D4":
+            return 5;
+            break;
+        case "Fl":
+            return 6;
+            break;
+        case "P5":
+        case "D5":
+            return 7;
+            break;
+        case "P6":
+        case "D6":
+            return 8;
+            break;
+        case "P7":
+        case "D7":
+            return 9;
+            break;
+        case "P8":
+            return 10;
+            break;
+        case "AS":
+            return 11;
+            break;
+        default:
+            return 99;
+    }
+}
+
+function GetPeriod(className)
+{
+    return className.substring(className.indexOf("(")+1, className.indexOf(")"))
+}
+
+// ----------------------------------------------------------------------------------------
+// ------------------------------------Default Class Page----------------------------------
+// ----------------------------------------------------------------------------------------
+
+function UpdateClassMenuLinks()
+{
+    var page = getCookie("ClassesDefaultPage")
+
+    $("#group-header-Classes").siblings(".subnav").find("a").attr("href", function(index, value){
+        if (GetID(value))
+        {
+            return GetClassPage(GetID(value), page)
+        } else
+        {
+            return value
+        }
+    });
+}
+
+function GetClassPage(classID, page)
+{
+    var urlPrefix = "https://hanalani.myschoolapp.com/app/faculty#academicclass/"
+    var urlMiddle = "/0/"
+
+    switch (page)
+    {
+        case "bulletinboard":
+            return urlPrefix + classID + urlMiddle + "bulletinboard"
+            break;
+        case "topics":
+            return urlPrefix + classID + urlMiddle + "topics"
+            break;
+        case "assignments":
+            return urlPrefix + classID + urlMiddle + "assignments"
+            break;
+        case "schedule":
+            return urlPrefix + classID + urlMiddle + "schedule"
+            break;
+        case "roster":
+            return urlPrefix + classID + urlMiddle + "roster"
+            break;
+        default:
+            return urlPrefix + classID + urlMiddle + "bulletinboard"
+    }
+}
+
+// ----------------------------------------------------------------------------------------
+// ---------------------------------------Settings Page------------------------------------
+// ----------------------------------------------------------------------------------------
+
+function GenerateSettingsPage(jNode)
+{
+    var str
+    // Build Page
+    jNode.text(" ")
+    jNode.parent().append('<style scoped>th, td { padding: 10px; } form label {font-weight:normal;}</style><table id="settings-table"><tr><td valign="top">Classes menu sort order</td><td><input type="radio" id="ClassSortByName" name="class-sort" value="name"><label for="ClassSortByName">By Name</label><br><input type="radio" id="ClassSortByPeriod" name="class-sort" value="period"><label for="ClassSortByPeriod">By Period</label></td></tr></table>')
+
+    // Default Class Page
+    str = '<tr><td valign="top">Classes menu default page</td>'
+    str += '<td><input type="radio" id="ClassPageDefaultBulletinBoard" name="class-default-page" value="bulletinboard"><label for="ClassPageDefaultBulletinBoard">Bulletin Board</label><br>'
+    str += '<input type="radio" id="ClassPageDefaultTopics" name="class-default-page" value="topics"><label for="ClassPageDefaultTopics">Topics</label><br>'
+    str += '<input type="radio" id="ClassPageDefaultAssignments" name="class-default-page" value="assignments"><label for="ClassPageDefaultAssignments">Assignments</label><br>'
+    str += '<input type="radio" id="ClassPageDefaultSchedule" name="class-default-page" value="schedule"><label for="ClassPageDefaultSchedule">Schedule</label><br>'
+    str += '<input type="radio" id="ClassPageDefaultRoster" name="class-default-page" value="roster"><label for="ClassPageDefaultRoster">Roster</label><br>'
+    str += '</td></tr>'
+    $("#settings-table").append(str)
+
+    // ----------------------------------------------------------------------------------------
+    // Get existing settings
+
+    // Classes Menu Sort Order
+    switch (getCookie("ClassesMenuSortOrder"))
+    {
+        case "name":
+            $("#ClassSortByName").prop("checked", true)
+            break;
+        case "period":
+            $("#ClassSortByPeriod").prop("checked", true)
+            break;
+        default:
+            $("#ClassSortByName").prop("checked", true)
+            $("#ClassSortByName ~ label:first").text("By Name (default)")
+    }
+
+    // Default Class Page
+    switch (getCookie("ClassesDefaultPage"))
+    {
+        case "bulletinboard":
+            $("#ClassPageDefaultBulletinBoard").prop("checked", true)
+            break;
+        case "topics":
+            $("#ClassPageDefaultTopics").prop("checked", true)
+            break;
+        case "assignments":
+            $("#ClassPageDefaultAssignments").prop("checked", true)
+            break;
+        case "schedule":
+            $("#ClassPageDefaultSchedule").prop("checked", true)
+            break;
+        case "roster":
+            $("#ClassPageDefaultRoster").prop("checked", true)
+            break;
+        default:
+            $("#ClassPageDefaultBulletinBoard").prop("checked", true)
+            $("#ClassPageDefaultBulletinBoard ~ label:first").text("Bulletin Board (default)")
+    }
+
+    // Save changes
+    $("#ClassSortByName").unbind("click").bind("click", function(){
+        setCookie("ClassesMenuSortOrder", "name", 9999)
+    });
+    $("#ClassSortByPeriod").unbind("click").bind("click", function(){
+        setCookie("ClassesMenuSortOrder", "period", 9999)
+    });
+    $("#ClassPageDefaultBulletinBoard").unbind("click").bind("click", function(){
+        setCookie("ClassesDefaultPage", "bulletinboard", 9999)
+    });
+    $("#ClassPageDefaultTopics").unbind("click").bind("click", function(){
+        setCookie("ClassesDefaultPage", "topics", 9999)
+    });
+    $("#ClassPageDefaultAssignments").unbind("click").bind("click", function(){
+        setCookie("ClassesDefaultPage", "assignments", 9999)
+    });
+    $("#ClassPageDefaultSchedule").unbind("click").bind("click", function(){
+        setCookie("ClassesDefaultPage", "schedule", 9999)
+    });
+    $("#ClassPageDefaultRoster").unbind("click").bind("click", function(){
+        setCookie("ClassesDefaultPage", "roster", 9999)
+    });
 }
 
 // ----------------------------------------------------------------------------------------
