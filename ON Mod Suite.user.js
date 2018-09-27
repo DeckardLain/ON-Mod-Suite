@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.0.0
+// @version      1.0.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -120,9 +120,11 @@ function gmMain(){
             break;
         case "Core":
             waitForKeyElements("#userName", PostLinkCore)
+            waitForKeyElements(".bb-page-heading", PostLinkCore)
             break;
         case "Academics":
             waitForKeyElements("h1.bb-tile-header", PostLinkAcademics)
+            waitForKeyElements(".bb-page-heading", PostLinkFaculty)
             break;
         case "Enrollment Management":
             waitForKeyElements("#CandidateName", PostLinkEnrollmentManagement)
@@ -264,10 +266,15 @@ function PostLinkCore(jNode)
         return;
     }
 
+    if (strURL.substring(0, 49) == "https://hanalani.myschoolapp.com/app/core#profile")
+    {
+        strLinks = strLinks.concat(GetLink("Core", strID));
+    }
     strLinks = strLinks.concat(GetLink("Academics", strID));
     strLinks = strLinks.concat(GetLink("Enrollment Management", strID));
     strLinks = strLinks.concat(GetLink("Faculty", strID));
-    jNode.append(strLinks);
+
+    jNode.after(strLinks);
 
     // Add grade level to name display
     $("#userName h1").append(GetGradeLevel($("#userName h1").text()));
