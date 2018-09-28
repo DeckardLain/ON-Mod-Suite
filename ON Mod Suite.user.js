@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.0.1
+// @version      1.1.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -72,6 +72,9 @@ Completed Mods:
 - Classes Menu Default Page
      The default page that classes open to from the Classes menu can be changed to Topics, Assignments, Schedule, or
      Roster instead of the default Bulletin Board.
+- Reverse Attendance Default
+     Adds option on the Record Attendance screen to set all students to Unexcused Absence, then allowing the teacher to
+     one-click mark students as Present.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -128,6 +131,7 @@ function gmMain(){
             break;
         case "Enrollment Management":
             waitForKeyElements("#CandidateName", PostLinkEnrollmentManagement)
+            waitForKeyElements(".bb-page-heading", PostLinkEnrollmentManagement)
             break;
         case "Faculty":
             waitForKeyElements(".bb-page-heading", PostLinkFaculty)
@@ -174,6 +178,7 @@ function gmMain(){
         case "Schedule and Performance":
             waitForKeyElements("#accordionSchedules:first", CreateClassCheckboxes)
             waitForKeyElements("#group-header-Classes", ClassesMenuSortOrder)
+            waitForKeyElements(".bb-dialog-header", ReverseAttendanceDefault)
             break;
     }
 
@@ -312,7 +317,15 @@ function PostLinkEnrollmentManagement(jNode)
     strLinks = strLinks.concat(GetLink("Core", GetID(strURL)));
     strLinks = strLinks.concat(GetLink("Academics", GetID(strURL)));
     strLinks = strLinks.concat(GetLink("Faculty", strID));
-    jNode.append(strLinks);
+
+    if (strURL.substring(0, 66) == "https://hanalani.myschoolapp.com/app/enrollment-management#profile")
+    {
+        strLinks = strLinks.concat(GetLink("Enrollment Management", strID));
+        jNode.after(strLinks);
+    } else
+    {
+        jNode.append(strLinks);
+    }
 
     return;
 }
@@ -1737,6 +1750,43 @@ function GenerateSettingsPage(jNode)
     $("#ClassPageDefaultRoster").unbind("click").bind("click", function(){
         setCookie("ClassesDefaultPage", "roster", 9999)
     });
+}
+
+// ----------------------------------------------------------------------------------------
+// ---------------------------------Reverse Attendance Default-----------------------------
+// ----------------------------------------------------------------------------------------
+
+function ReverseAttendanceDefault(jNode)
+{
+    if (jNode.text() == "Record Attendance")
+    {
+        $(".modal-body").prepend('<a href="javascript:void(0)" id="reverse-attendance">Click to set all students to Unexcused Absence</a>')
+
+        $("#reverse-attendance").unbind("click").bind("click", function(){
+            if ($(".slide").find("th").text().trim().substring(0, 8) == "Homeroom")
+            {
+                // If Homeroom, choose the Homeroom code
+                $(".form-control:contains('Attended Class'):not(:disabled)").val("3385")
+            } else
+            {
+                // Otherwise, choose the Class code
+                $(".form-control:contains('Attended Class'):not(:disabled)").val("3996")
+            }
+
+            // Create links for marking as Present
+            if (!$(".mark-present").length)
+            {
+                $(".table-condensed tbody tr").each(function() {
+                    $(this).find("td").eq(1).append('<br><a href="javascript:void(0)" class="mark-present"> Present--&gt</a>')
+                });
+            }
+        });
+
+        // Click handler for Present link
+        $(document).on('click', ".mark-present", function(){
+            $(this).parents("tr").find("select").val("3384")
+        });
+    }
 }
 
 // ----------------------------------------------------------------------------------------
