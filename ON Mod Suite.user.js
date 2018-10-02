@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.1.0
+// @version      1.1.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -1560,7 +1560,10 @@ function ClassesMenuSortOrder(jNode)
 
         // Rename menu items to put period in front
         jNode.siblings(".subnav").find("ul:first").children("li").each(function (index) {
-            $(this).find(".title").text("[" + GetPeriod($(this).find(".title").text()) + "] " + $(this).find(".title").text().substring(0, $(this).find(".title").text().indexOf("(")))
+            if ($(this).find(".title").text().indexOf("(") != -1)
+            {
+                $(this).find(".title").text("[" + GetPeriod($(this).find(".title").text()) + "] " + $(this).find(".title").text().substring(0, $(this).find(".title").text().indexOf("(")))
+            }
         });
     }
 
@@ -1569,56 +1572,68 @@ function ClassesMenuSortOrder(jNode)
 
 function GetPeriodSortOrder(period)
 {
-    switch (period.substring(0, 2))
+    if (period)
     {
-        case "HR":
-            return 1;
-            break;
-        case "P1":
-        case "D1":
-            return 2;
-            break;
-        case "P2":
-        case "D2":
-            return 3;
-            break;
-        case "P3":
-        case "D3":
-            return 4;
-            break;
-        case "P4":
-        case "D4":
-            return 5;
-            break;
-        case "Fl":
-            return 6;
-            break;
-        case "P5":
-        case "D5":
-            return 7;
-            break;
-        case "P6":
-        case "D6":
-            return 8;
-            break;
-        case "P7":
-        case "D7":
-            return 9;
-            break;
-        case "P8":
-            return 10;
-            break;
-        case "AS":
-            return 11;
-            break;
-        default:
-            return 99;
+        switch (period.substring(0, 2))
+        {
+            case "HR":
+                return 1;
+                break;
+            case "P1":
+            case "D1":
+                return 2;
+                break;
+            case "P2":
+            case "D2":
+                return 3;
+                break;
+            case "P3":
+            case "D3":
+                return 4;
+                break;
+            case "P4":
+            case "D4":
+                return 5;
+                break;
+            case "Fl":
+                return 6;
+                break;
+            case "P5":
+            case "D5":
+                return 7;
+                break;
+            case "P6":
+            case "D6":
+                return 8;
+                break;
+            case "P7":
+            case "D7":
+                return 9;
+                break;
+            case "P8":
+                return 10;
+                break;
+            case "AS":
+                return 11;
+                break;
+            default:
+                return 99;
+        }
+    } else
+    {
+        return 99;
     }
 }
 
 function GetPeriod(className)
 {
-    return className.substring(className.indexOf("(")+1, className.indexOf(")"))
+    if (className.indexOf("(") == -1)
+    {
+        return null
+    } else
+    {
+        return className.substring(className.indexOf("(")+1, className.indexOf(")"))
+    }
 }
 
 // ----------------------------------------------------------------------------------------
@@ -1675,6 +1690,7 @@ function GenerateSettingsPage(jNode)
 {
     var str
     // Build Page
+    document.title = "ON Mod Suite Settings"
     jNode.text(" ")
     jNode.parent().append('<style scoped>th, td { padding: 10px; } form label {font-weight:normal;}</style><table id="settings-table"><tr><td valign="top">Classes menu sort order</td><td><input type="radio" id="ClassSortByName" name="class-sort" value="name"><label for="ClassSortByName">By Name</label><br><input type="radio" id="ClassSortByPeriod" name="class-sort" value="period"><label for="ClassSortByPeriod">By Period</label></td></tr></table>')
 
