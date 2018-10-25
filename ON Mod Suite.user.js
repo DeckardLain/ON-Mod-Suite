@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.1.1
+// @version      1.1.2
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -75,6 +75,9 @@ Completed Mods:
 - Reverse Attendance Default
      Adds option on the Record Attendance screen to set all students to Unexcused Absence, then allowing the teacher to
      one-click mark students as Present.
+- Page Number Navigation
+     Various Podium pages that contain lists, such as Advanced Lists, have Back/Next and page number links for navigation,
+     but only at the top of the page.  This copies the navigation area to the bottom of the page as well.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -190,6 +193,10 @@ function gmMain(){
 
     // Page footer
     waitForKeyElements("#site-footer-fixed", AddPageFooter)
+
+    // Page Number Navigation
+    waitForKeyElements(".thCBarlink:first", CopyPageNumberNavigation)
+//    waitForKeyElements("#ct143626_pgr", CopyPageNumberNavigation)
 
 }
 
@@ -602,10 +609,16 @@ function AddRosterStudentCount(jNode)
 
     if ($("#RosterCardContainer").length)
     {
-        $("#RosterCardContainer").siblings("h4").append(studentCountText);
+        if (!$("#RosterCardContainer").siblings("h4").text().includes("Students"))
+        {
+            $("#RosterCardContainer").siblings("h4").append(studentCountText);
+        }
     } else
     {
-        $("h4.pull-left").append(studentCountText);
+        if (!$("h4.pull-left").includes("Students"))
+        {
+            $("h4.pull-left").append(studentCountText);
+        }
     }
 
     // Manual Attendance Sheet
@@ -726,84 +739,86 @@ function ManualAttendanceSheet()
 
 function ConvertGradYearToGradeLevel()
 {
-    // Add menu
-    $("#roster-reports").after('<div id="show-menu" class="btn-group" style="margin-left:10px;"><button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" style="display: inline-block;" data-original-title="" title="" aria-expanded="false">Show <span class="caret"></span></button><ul class="dropdown-menu"><li><a id="gradyear" href="javascript:void(0)">Grad Year</a></li><li><a id="gradelevel" href="javascript:void(0)">Grade Level</a></li><li><a id="both" href="javascript:void(0)">Both</a></li><li><a id="none" href="javascript:void(0)">None</a></li></ul></div>')
-    $("#gradyear").bind("click", function(){
-        setCookie("GradeLevelSetting", 1, 9999);
-        location.reload();
-    });
-    $("#gradelevel").bind("click", function(){
-        setCookie("GradeLevelSetting", 2, 9999);
-        location.reload();
-    });
-    $("#both").bind("click", function(){
-        setCookie("GradeLevelSetting", 3, 9999);
-        location.reload();
-    });
-    $("#none").bind("click", function(){
-        setCookie("GradeLevelSetting", 4, 9999);
-        location.reload();
-    });
-
-    var grade;
-    var name;
-
-    switch (getCookie("GradeLevelSetting"))
+    if (!$("#show-menu").length)
     {
-        case "1":
-            $("#gradyear").prepend(">");
-            break;
-        case "2":
-            $("#gradelevel").prepend(">");
-            $(".bb-card-title").each(function(index){
-                name = $(this).text();
-                grade = GetGradeLevel(name);
-                if (grade)
-                {
-                   name = name.substring(0, name.length-4);
-                   name = name.concat(grade);
-                   $(this).text(name);
-                }
-            });
-            break;
-        case "3":
-            $("#both").prepend(">");
-            $(".bb-card-title").each(function(index){
-                grade = GetGradeLevel($(this).text())
-                if (grade)
-                {
-                    $(this).append(grade);
-                }
-            });
-            break;
-        case "4":
-            $("#none").prepend(">");
-            $(".bb-card-title").each(function(index){
-                name = $(this).text();
-                grade = GetGradeLevel(name);
-                if (grade)
-                {
-                   name = name.substring(0, name.length-4);
-                   $(this).text(name);
-                }
-            });
-            break;
-        default:
-            $("#gradelevel").text(">Grade Level (Default)");
-            setCookie("GradeLevelSetting", 2, 9999);
-            $(".bb-card-title").each(function(index){
-                name = $(this).text();
-                grade = GetGradeLevel(name);
-                if (grade)
-                {
-                   name = name.substring(0, name.length-4);
-                   name = name.concat(grade);
-                   $(this).text(name);
-                }
-            });
-            break;
+        // Add menu
+        $("#roster-reports").after('<div id="show-menu" class="btn-group" style="margin-left:10px;"><button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" style="display: inline-block;" data-original-title="" title="" aria-expanded="false">Show <span class="caret"></span></button><ul class="dropdown-menu"><li><a id="gradyear" href="javascript:void(0)">Grad Year</a></li><li><a id="gradelevel" href="javascript:void(0)">Grade Level</a></li><li><a id="both" href="javascript:void(0)">Both</a></li><li><a id="none" href="javascript:void(0)">None</a></li></ul></div>')
     }
+        $("#gradyear").bind("click", function(){
+            setCookie("GradeLevelSetting", 1, 9999);
+            location.reload();
+        });
+        $("#gradelevel").bind("click", function(){
+            setCookie("GradeLevelSetting", 2, 9999);
+            location.reload();
+        });
+        $("#both").bind("click", function(){
+            setCookie("GradeLevelSetting", 3, 9999);
+            location.reload();
+        });
+        $("#none").bind("click", function(){
+            setCookie("GradeLevelSetting", 4, 9999);
+            location.reload();
+        });
 
+        var grade;
+        var name;
+
+        switch (getCookie("GradeLevelSetting"))
+        {
+            case "1":
+                $("#gradyear").prepend(">");
+                break;
+            case "2":
+                $("#gradelevel").prepend(">");
+                $(".bb-card-title").each(function(index){
+                    name = $(this).text();
+                    grade = GetGradeLevel(name);
+                    if (grade)
+                    {
+                        name = name.substring(0, name.length-4);
+                        name = name.concat(grade);
+                        $(this).text(name);
+                    }
+                });
+                break;
+            case "3":
+                $("#both").prepend(">");
+                $(".bb-card-title").each(function(index){
+                    grade = GetGradeLevel($(this).text())
+                    if (grade)
+                    {
+                        $(this).append(grade);
+                    }
+                });
+                break;
+            case "4":
+                $("#none").prepend(">");
+                $(".bb-card-title").each(function(index){
+                    name = $(this).text();
+                    grade = GetGradeLevel(name);
+                    if (grade)
+                    {
+                        name = name.substring(0, name.length-4);
+                        $(this).text(name);
+                    }
+                });
+                break;
+            default:
+                $("#gradelevel").text(">Grade Level (Default)");
+                setCookie("GradeLevelSetting", 2, 9999);
+                $(".bb-card-title").each(function(index){
+                    name = $(this).text();
+                    grade = GetGradeLevel(name);
+                    if (grade)
+                    {
+                        name = name.substring(0, name.length-4);
+                        name = name.concat(grade);
+                        $(this).text(name);
+                    }
+                });
+                break;
+        }
 }
 
 function GetGradeLevel(str)
@@ -1803,6 +1818,22 @@ function ReverseAttendanceDefault(jNode)
             $(this).parents("tr").find("select").val("3384")
         });
     }
+}
+
+// ----------------------------------------------------------------------------------------
+// -----------------------------------Page Number Navigation-------------------------------
+// ----------------------------------------------------------------------------------------
+
+function CopyPageNumberNavigation(jNode)
+{
+    if (!$("#bottom-page-navigation").length)
+    {
+        $("#lPg").append(jNode.closest("table").clone().attr("id", "bottom-page-navigation"));
+    } else
+    {
+        $("#bottom-page-navigation").replaceWith(jNode.closest("table").clone().attr("id", "bottom-page-navigation"))
+    }
+    window.scrollTo(0, 0);
 }
 
 // ----------------------------------------------------------------------------------------
