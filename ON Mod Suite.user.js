@@ -1986,7 +1986,7 @@ function AddAdvancedListFavorite(listID, listName)
         newFavorite.listName = listName;
         favorites.push(newFavorite);
         setCookie("AdvancedListFavorites", JSON.stringify(favorites), 9999);
-        alert(listName + " added to favorites.")
+        alert(listName + " added to favorites.  View your favorites on Core->Dashboard.")
     }
 
 
