@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.1.2
+// @version      1.2.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -78,6 +78,8 @@ Completed Mods:
 - Page Number Navigation
      Various Podium pages that contain lists, such as Advanced Lists, have Back/Next and page number links for navigation,
      but only at the top of the page.  This copies the navigation area to the bottom of the page as well.
+- Advanced List Favorites
+     Advanced lists can be individually added to a list of favorite lists that you can Copy or Run from the Core Dashboard.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -177,11 +179,16 @@ function gmMain(){
             break;
         case "Advanced List Main":
             waitForKeyElements(".thCBarbtn:first", CreateAdvancedListDefaultButton)
+            CheckIfRunningFavorite()
+            waitForKeyElements(".cal2listdayitem:first", CreateAddToFavoritesLink)
             break;
         case "Schedule and Performance":
             waitForKeyElements("#accordionSchedules:first", CreateClassCheckboxes)
             waitForKeyElements("#group-header-Classes", ClassesMenuSortOrder)
             waitForKeyElements(".bb-dialog-header", ReverseAttendanceDefault)
+            break;
+        case "Core Dashboard":
+            waitForKeyElements(".col-md-9:first", AdvancedListFavorites)
             break;
     }
 
@@ -196,7 +203,7 @@ function gmMain(){
 
     // Page Number Navigation
     waitForKeyElements(".thCBarlink:first", CopyPageNumberNavigation)
-//    waitForKeyElements("#ct143626_pgr", CopyPageNumberNavigation)
+    waitForKeyElements(".thCBarlinkD:first", CopyPageNumberNavigation)
 
 }
 
@@ -207,6 +214,9 @@ function GetModule(strURL)
     if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL == "https://hanalani.myschoolapp.com/app/core#dashboard/system")
+    {
+        return "Core Dashboard";
     } else if (strURL == "https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184")
     {
         return "Settings";
@@ -1834,6 +1844,152 @@ function CopyPageNumberNavigation(jNode)
         $("#bottom-page-navigation").replaceWith(jNode.closest("table").clone().attr("id", "bottom-page-navigation"))
     }
     window.scrollTo(0, 0);
+}
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------------Advanced List Favorites-------------------------------
+// ----------------------------------------------------------------------------------------
+
+function AdvancedListFavorites()
+{
+    $(".col-md-9").append('<h1>Favorite Lists</h><br>')
+
+    var rawFavorites = getCookie("AdvancedListFavorites");
+
+    if (rawFavorites =="")
+    {
+        $(".col-md-9").append("No favorites yet. Go to Advanced Lists to add some.")
+        return;
+    }
+
+    var favorites = JSON.parse(rawFavorites);
+    var favoriteHTML
+
+    if (!favorites.length)
+    {
+        $(".col-md-9").append("No favorites yet. Go to Advanced Lists to add some.")
+    } else
+    {
+
+        favorites.forEach(function(value){
+            favoriteHTML = value.listName + ' | <a href="javascript:void(0)" class="fav-list-copy" data-id="' + value.listID + '" data-name="' + value.listName + '">Copy</a>' + ' | <a href="javascript:void(0)" class="fav-list-run" data-id="' + value.listID + '" data-name="' + value.listName + '">Run</a>' + ' | <a href="javascript:void(0)" class="fav-list-remove" data-id="' + value.listID + '" data-name="' + value.listName + '">Remove from Favorites</a><br>'
+            $(".col-md-9").append(favoriteHTML)
+        });
+
+        $(document).on('click', ".fav-list-copy", function(){
+            setCookie("FavoriteListRunID", $(this).attr("data-id"), 1)
+            setCookie("FavoriteListRunName", $(this).attr("data-name"), 1)
+            setCookie("FavoriteListRunType", "Copy", 1)
+            window.open("https://hanalani.myschoolapp.com/podium/default.aspx?t=23189&wapp=1")
+        });
+
+        $(document).on('click', ".fav-list-run", function(){
+            setCookie("FavoriteListRunID", $(this).attr("data-id"), 1)
+            setCookie("FavoriteListRunName", $(this).attr("data-name"), 1)
+            setCookie("FavoriteListRunType", "Run", 1)
+            window.open("https://hanalani.myschoolapp.com/podium/default.aspx?t=23189&wapp=1")
+        });
+
+        $(document).on('click', ".fav-list-remove", function(){
+            var rawFavorites = getCookie("AdvancedListFavorites");
+            var favorites = [];
+
+            if (rawFavorites != "")
+            {
+                favorites = JSON.parse(rawFavorites);
+                var index = favorites.findIndex(x => x.ListID === $(this).attr("data-id"))
+                if (index)
+                {
+                    favorites.splice(index, 1)
+                    setCookie("AdvancedListFavorites", JSON.stringify(favorites), 9999);
+                    alert($(this).attr("data-name") + " removed from favorites.")
+                    location.reload()
+                }
+            }
+        });
+    }
+}
+
+function CheckIfRunningFavorite()
+{
+    // Loads when Advanced List Main Page loads
+    var FavoriteListID
+    var FavoriteListName
+    var FavoriteListType
+
+    FavoriteListID = getCookie("FavoriteListRunID")
+    FavoriteListName = getCookie("FavoriteListRunName")
+    FavoriteListType = getCookie("FavoriteListRunType")
+
+    if (FavoriteListID.length)
+    {
+        setCookie("FavoriteListRunID", "", 1)
+        setCookie("FavoriteListRunName", "", 1)
+        if (FavoriteListType == "Copy")
+        {
+            __pdL('52568', 'Copy Advanced List: ' + FavoriteListName, '1', '~slid=' + FavoriteListID + '~copy=1', '', 'False', '0', '', 'default.aspx')
+        } else if(FavoriteListType == "Run")
+        {
+            __pdL('52586', 'Advanced List: ' + FavoriteListName, '1', '~slid=' + FavoriteListID + '~ml=False~sln=' + FavoriteListName, '', 'False', '0', '', 'default.aspx')
+        }
+        setCookie("FavoriteListRunType", "", 1)
+    }
+}
+
+function CreateAddToFavoritesLink()
+{
+    var ListName
+    var ListID
+    var pos
+    var link
+
+    $(".cal2listdayitem, .cal2listdayitemalt").each(function(){
+        ListName = $(this).find(".cal2listdayitemtext:first").text().trim()
+        pos = $(this).find(".cal2listdayitemtext").eq(1).children("a:last").attr("href").indexOf("slid")
+        ListID = $(this).find(".cal2listdayitemtext").eq(1).children("a:last").attr("href").substring(pos+5, pos+10)
+        link = ' | <a href="javascript:void(0)" class="add-list-to-favorites" data-id="' + ListID + '" data-name="' + ListName + '">Add to Favorites</a>'
+        $(this).find(".cal2listdayitemtext").eq(1).append(link)
+    });
+
+    //$(document).on('click', ".add-list-to-favorites", function(){
+    $(".add-list-to-favorites").unbind("click").bind("click", function(){
+        AddAdvancedListFavorite($(this).attr("data-id"), $(this).attr("data-name"))
+    });
+}
+
+function AdvancedListFavorite(listID, listName)
+{
+    var that=this;
+    this.listID = listID;
+    this.listName = listName;
+}
+
+function AddAdvancedListFavorite(listID, listName)
+{
+    var rawFavorites = getCookie("AdvancedListFavorites");
+    var favorites = [];
+
+    if (rawFavorites != "")
+    {
+        favorites = JSON.parse(rawFavorites);
+    }
+
+    var index = favorites.findIndex(x => x.ListID === listID)
+
+    if (index != -1)
+    {
+        alert(listName + " is already in favorites.")
+    } else
+    {
+        var newFavorite = new AdvancedListFavorite();
+        newFavorite.listID = listID;
+        newFavorite.listName = listName;
+        favorites.push(newFavorite);
+        setCookie("AdvancedListFavorites", JSON.stringify(favorites), 9999);
+        alert(listName + " added to favorites.")
+    }
+
+
 }
 
 // ----------------------------------------------------------------------------------------
