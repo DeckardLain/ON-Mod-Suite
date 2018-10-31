@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.2.0
+// @version      1.2.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -271,7 +271,7 @@ function AddPageFooter()
 {
     if (window.location.href != "https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184")
     {
-        $("body").append('<div align="center" style="font-size:12px">This site experience enhanced by ON Mod Suite.  Click <a href="https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184" target="_blank">here</a> to change settings.</div>')
+        $("body").append('<div align="center" style="font-size:12px">This site experience enhanced by ON Mod Suite. | Copyright (C) 2018 Hanalani Schools | Click <a href="https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184" target="_blank">here</a> to change settings.</div>')
     }
 }
 
@@ -661,7 +661,7 @@ function SaveClassAndTeacher()
     var userID;
 
     // Save class ID to cookie
-    setCookie("ClassID", GetID(window.location.href), 1);
+    localStorage.setItem("ClassID", GetID(window.location.href));
 
     // Save teacher's user ID to cookie
     $(".bb-card-title").each(function(index){
@@ -672,71 +672,71 @@ function SaveClassAndTeacher()
            return false;
        }
     });
-    setCookie("TeacherID", userID, 1);
+    localStorage.setItem("TeacherID", userID);
 
     // Save class school level to cookie
     var details = $(".lead").text();
     if (details.includes("Upper School"))
     {
-        setCookie("SchoolLevel", "1568", 1);
+        localStorage.setItem("SchoolLevel", "1568");
     } else if (details.includes("Elementary"))
     {
-        setCookie("SchoolLevel", "1567", 1);
+        localStorage.setItem("SchoolLevel", "1567");
     } else if (details.includes("Early Childhood"))
     {
-        setCookie("SchoolLevel", "1566", 1);
+        localStorage.setItem("SchoolLevel", "1566");
     }
 
     // Save term to cookie
     if (details.includes("Fall Semester"))
     {
-        setCookie("Term", "98719", 1);
+        localStorage.setItem("Term", "98719");
     } else if (details.includes("Summer Semester"))
     {
-        setCookie("Term", "98718", 1);
+        localStorage.setItem("Term", "98718");
     } else if (details.includes("Spring Semester"))
     {
-        setCookie("Term", "98720", 1);
+        localStorage.setItem("Term", "98720");
     } else if (details.includes("Year Long"))
     {
-        setCookie("Term", "98725", 1);
+        localStorage.setItem("Term", "98725");
     } else if (details.includes("Summer Term"))
     {
-        setCookie("Term", "98724", 1);
+        localStorage.setItem("Term", "98724");
     }
 
-    setCookie("ManualAttendanceSheetNewInfo", "1", 1);
+    localStorage.setItem("ManualAttendanceSheetNewInfo", "1");
 }
 
 function ManualAttendanceSheet()
 {
-    switch(getCookie("ManualAttendanceSheetNewInfo"))
+    switch(localStorage.getItem("ManualAttendanceSheetNewInfo"))
     {
         case "1":
             {
-                $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_l$ctl00']").val(getCookie("SchoolLevel"));
-                setCookie("ManualAttendanceSheetNewInfo", "2", 1);
+                $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_l$ctl00']").val(localStorage.getItem("SchoolLevel"));
+                localStorage.setItem("ManualAttendanceSheetNewInfo", "2");
                 setTimeout('__doPostBack(\'L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00\',\'\')', 0)
                 break;
             }
         case "2":
             {
-                $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00']").val(getCookie("Term"));
-                setCookie("ManualAttendanceSheetNewInfo", "3", 1);
+                $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00']").val(localStorage.getItem("Term"));
+                localStorage.setItem("ManualAttendanceSheetNewInfo", "3");
                 setTimeout('__doPostBack(\'L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00\',\'\')', 0)
                 break;
             }
         case "3":
             {
-                $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_t$ctl00']").val(getCookie("TeacherID"));
-                setCookie("ManualAttendanceSheetNewInfo", "4", 1);
+                $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_t$ctl00']").val(localStorage.getItem("TeacherID"));
+                localStorage.setItem("ManualAttendanceSheetNewInfo", "4");
                 setTimeout('__doPostBack(\'L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00\',\'\')', 0)
                 break;
             }
         case "4":
             {
-                $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_s$ctl00']").val(getCookie("ClassID"));
-                setCookie("ManualAttendanceSheetNewInfo", "0", 1);
+                $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_s$ctl00']").val(localStorage.getItem("ClassID"));
+                localStorage.setItem("ManualAttendanceSheetNewInfo", "0");
                 __doPostBack('L$c1i0$cb3224$ct3224$cTool$lbtnPDF','');
                 break;
             }
@@ -755,26 +755,26 @@ function ConvertGradYearToGradeLevel()
         $("#roster-reports").after('<div id="show-menu" class="btn-group" style="margin-left:10px;"><button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" style="display: inline-block;" data-original-title="" title="" aria-expanded="false">Show <span class="caret"></span></button><ul class="dropdown-menu"><li><a id="gradyear" href="javascript:void(0)">Grad Year</a></li><li><a id="gradelevel" href="javascript:void(0)">Grade Level</a></li><li><a id="both" href="javascript:void(0)">Both</a></li><li><a id="none" href="javascript:void(0)">None</a></li></ul></div>')
     }
         $("#gradyear").bind("click", function(){
-            setCookie("GradeLevelSetting", 1, 9999);
+            localStorage.setItem("GradeLevelSetting", 1);
             location.reload();
         });
         $("#gradelevel").bind("click", function(){
-            setCookie("GradeLevelSetting", 2, 9999);
+            localStorage.setItem("GradeLevelSetting", 2);
             location.reload();
         });
         $("#both").bind("click", function(){
-            setCookie("GradeLevelSetting", 3, 9999);
+            localStorage.setItem("GradeLevelSetting", 3);
             location.reload();
         });
         $("#none").bind("click", function(){
-            setCookie("GradeLevelSetting", 4, 9999);
+            localStorage.setItem("GradeLevelSetting", 4);
             location.reload();
         });
 
         var grade;
         var name;
 
-        switch (getCookie("GradeLevelSetting"))
+        switch (localStorage.getItem("GradeLevelSetting"))
         {
             case "1":
                 $("#gradyear").prepend(">");
@@ -816,7 +816,7 @@ function ConvertGradYearToGradeLevel()
                 break;
             default:
                 $("#gradelevel").text(">Grade Level (Default)");
-                setCookie("GradeLevelSetting", 2, 9999);
+                localStorage.setItem("GradeLevelSetting", 2);
                 $(".bb-card-title").each(function(index){
                     name = $(this).text();
                     grade = GetGradeLevel(name);
@@ -963,8 +963,8 @@ function AdvancedListSetting(listName, page) {
 
 function GetAdvancedListIDLinkSetting(listName)
 {
-    var rawSettings = getCookie("AdvancedListUserLinkSettings");
-    if (rawSettings == "")
+    var rawSettings = localStorage.getItem("AdvancedListUserLinkSettings");
+    if (rawSettings == null)
     {
         return "";
     }
@@ -990,10 +990,10 @@ function GetAdvancedListIDLinkSetting(listName)
 
 function SetAdvancedListIDLinkSetting(listName, page)
 {
-    var rawSettings = getCookie("AdvancedListUserLinkSettings");
+    var rawSettings = localStorage.getItem("AdvancedListUserLinkSettings");
     var settings = [];
 
-    if (rawSettings != "")
+    if (rawSettings != null)
     {
         settings = JSON.parse(rawSettings);
         settings.forEach(function(value){
@@ -1009,7 +1009,7 @@ function SetAdvancedListIDLinkSetting(listName, page)
     newSetting.listName = listName;
     newSetting.page = page;
     settings.push(newSetting);
-    setCookie("AdvancedListUserLinkSettings", JSON.stringify(settings), 9999);
+    localStorage.setItem("AdvancedListUserLinkSettings", JSON.stringify(settings));
 }
 
 function GetUserLink(userID, page, newWindow)
@@ -1406,20 +1406,20 @@ function CreateClassCheckboxes()
 
         // Click events for Send Communication menu items
         $("#selected-classes-students").unbind("click").bind("click", function(){
-            setCookie("SaveRosterEmailsType", "Students", 1);
+            localStorage.setItem("SaveRosterEmailsType", "Students");
             EmailSelectedClasses();
         });
         $("#selected-classes-parents").unbind("click").bind("click", function(){
-            setCookie("SaveRosterEmailsType", "Parents", 1);
+            localStorage.setItem("SaveRosterEmailsType", "Parents");
             EmailSelectedClasses();
         });
         $("#selected-classes-all").unbind("click").bind("click", function(){
-            setCookie("SaveRosterEmailsType", "All", 1);
+            localStorage.setItem("SaveRosterEmailsType", "All");
             EmailSelectedClasses();
         });
 
         // Reset cookie in case process failed previously
-        setCookie("SaveRosterEmailsActive", "0", 1);
+        localStorage.setItem("SaveRosterEmailsActive", "0");
 
     }
 }
@@ -1432,21 +1432,21 @@ function EmailSelectedClasses()
 
     if (numSelectedClasses && confirm("A new tab/window will be opened for each class to grab the email addresses.  Click OK when ready."))
     {
-        setCookie("SaveRosterEmailsActive", "1", 1);
-        setCookie("SaveRosterEmailsFirstClass", "1", 1);
-        setCookie("SaveRosterEmailsClassDone", "1", 1);
+        localStorage.setItem("SaveRosterEmailsActive", "1");
+        localStorage.setItem("SaveRosterEmailsFirstClass", "1");
+        localStorage.setItem("SaveRosterEmailsClassDone", "1");
 
         var timerID = setInterval(function(){
             var url
             var mailtoLink
             var mailtoLinks = []
             var emails
-            if (getCookie("SaveRosterEmailsClassDone") == 0)
+            if (localStorage.getItem("SaveRosterEmailsClassDone") == 0)
             {
                 // wait for new window to finish saving emails
             } else
             {
-                if (getCookie("SaveRosterEmailsFirstClass") == 0)
+                if (localStorage.getItem("SaveRosterEmailsFirstClass") == 0)
                 {
                     currClass++
                 }
@@ -1455,13 +1455,13 @@ function EmailSelectedClasses()
                 {
                     // Open class roster to grab email addresses
                     url = "https://hanalani.myschoolapp.com/app/faculty#academicclass/" + GetID($('input[type="checkbox"]:checked').not('.Select_all').eq(currClass).next("[href]").attr("href")) + "/0/roster"
-                    setCookie("SaveRosterEmailsClassDone", "0", 1);
+                    localStorage.setItem("SaveRosterEmailsClassDone", "0");
                     rosterWindow = window.open(url)
                 } else  // Done
                 {
                     clearInterval(timerID);
-                    setCookie("SaveRosterEmailsActive", "0", 1);
-                    emails = getCookie("SaveRosterEmailsAddresses")
+                    localStorage.setItem("SaveRosterEmailsActive", "0");
+                    emails = localStorage.getItem("SaveRosterEmailsAddresses")
 
                     // Remove duplicates from emails
                     var emailArray = emails.split("|")
@@ -1519,9 +1519,9 @@ function EmailSelectedClasses()
 
 function SaveRosterEmails()
 {
-    if (getCookie("SaveRosterEmailsActive") == 1)
+    if (localStorage.getItem("SaveRosterEmailsActive") == 1)
     {
-        switch (getCookie("SaveRosterEmailsType"))
+        switch (localStorage.getItem("SaveRosterEmailsType"))
         {
             case "Students":
                 $(".send-message").eq(0)[0].click()
@@ -1541,23 +1541,23 @@ function SaveRosterEmails()
 
 function GrabEmails()
 {
-    if (getCookie("SaveRosterEmailsActive") == 1)
+    if (localStorage.getItem("SaveRosterEmailsActive") == 1)
     {
         var str;
 
         if ($("#email-list-textarea").text().length)  // Make sure there are emails in the box
         {
-            if (getCookie("SaveRosterEmailsFirstClass") == 1)
+            if (localStorage.getItem("SaveRosterEmailsFirstClass") == 1)
             {
                 str = $("#email-list-textarea").text();
-                setCookie("SaveRosterEmailsFirstClass", "0", 1);
+                localStorage.setItem("SaveRosterEmailsFirstClass", "0");
             } else
             {
-                str = getCookie("SaveRosterEmailsAddresses") + "| " + $("#email-list-textarea").text()
+                str = localStorage.getItem("SaveRosterEmailsAddresses") + "| " + $("#email-list-textarea").text()
             }
             str = str.replace(/,/g, "|")  // Commas and semicolons are not allowed in cookie values
-            setCookie("SaveRosterEmailsAddresses", str, 1)
-            setCookie("SaveRosterEmailsClassDone", "1", 1)
+            localStorage.setItem("SaveRosterEmailsAddresses", str)
+            localStorage.setItem("SaveRosterEmailsClassDone", "1")
             window.close()
         } else
         {
@@ -1573,8 +1573,8 @@ function GrabEmails()
 
 function ClassesMenuSortOrder(jNode)
 {
-    // Get cookie value
-    if (getCookie("ClassesMenuSortOrder") == "period")
+    // Get saved value
+    if (localStorage.getItem("ClassesMenuSortOrder") == "period")
     {
         // Sort class list
         jNode.siblings(".subnav").find("ul:first").html(
@@ -1667,7 +1667,7 @@ function GetPeriod(className)
 
 function UpdateClassMenuLinks()
 {
-    var page = getCookie("ClassesDefaultPage")
+    var page = localStorage.getItem("ClassesDefaultPage")
 
     $("#group-header-Classes").siblings(".subnav").find("a").attr("href", function(index, value){
         if (GetID(value))
@@ -1733,7 +1733,7 @@ function GenerateSettingsPage(jNode)
     // Get existing settings
 
     // Classes Menu Sort Order
-    switch (getCookie("ClassesMenuSortOrder"))
+    switch (localStorage.getItem("ClassesMenuSortOrder"))
     {
         case "name":
             $("#ClassSortByName").prop("checked", true)
@@ -1747,7 +1747,7 @@ function GenerateSettingsPage(jNode)
     }
 
     // Default Class Page
-    switch (getCookie("ClassesDefaultPage"))
+    switch (localStorage.getItem("ClassesDefaultPage"))
     {
         case "bulletinboard":
             $("#ClassPageDefaultBulletinBoard").prop("checked", true)
@@ -1771,25 +1771,25 @@ function GenerateSettingsPage(jNode)
 
     // Save changes
     $("#ClassSortByName").unbind("click").bind("click", function(){
-        setCookie("ClassesMenuSortOrder", "name", 9999)
+        localStorage.setItem("ClassesMenuSortOrder", "name")
     });
     $("#ClassSortByPeriod").unbind("click").bind("click", function(){
-        setCookie("ClassesMenuSortOrder", "period", 9999)
+        localStorage.setItem("ClassesMenuSortOrder", "period")
     });
     $("#ClassPageDefaultBulletinBoard").unbind("click").bind("click", function(){
-        setCookie("ClassesDefaultPage", "bulletinboard", 9999)
+        localStorage.setItem("ClassesDefaultPage", "bulletinboard")
     });
     $("#ClassPageDefaultTopics").unbind("click").bind("click", function(){
-        setCookie("ClassesDefaultPage", "topics", 9999)
+        localStorage.setItem("ClassesDefaultPage", "topics")
     });
     $("#ClassPageDefaultAssignments").unbind("click").bind("click", function(){
-        setCookie("ClassesDefaultPage", "assignments", 9999)
+        localStorage.setItem("ClassesDefaultPage", "assignments")
     });
     $("#ClassPageDefaultSchedule").unbind("click").bind("click", function(){
-        setCookie("ClassesDefaultPage", "schedule", 9999)
+        localStorage.setItem("ClassesDefaultPage", "schedule")
     });
     $("#ClassPageDefaultRoster").unbind("click").bind("click", function(){
-        setCookie("ClassesDefaultPage", "roster", 9999)
+        localStorage.setItem("ClassesDefaultPage", "roster")
     });
 }
 
@@ -1854,9 +1854,9 @@ function AdvancedListFavorites()
 {
     $(".col-md-9").append('<h1>Favorite Lists</h><br>')
 
-    var rawFavorites = getCookie("AdvancedListFavorites");
+    var rawFavorites = localStorage.getItem("AdvancedListFavorites");
 
-    if (rawFavorites =="")
+    if (rawFavorites == null)
     {
         $(".col-md-9").append("No favorites yet. Go to Advanced Lists to add some.")
         return;
@@ -1877,31 +1877,31 @@ function AdvancedListFavorites()
         });
 
         $(document).on('click', ".fav-list-copy", function(){
-            setCookie("FavoriteListRunID", $(this).attr("data-id"), 1)
-            setCookie("FavoriteListRunName", $(this).attr("data-name"), 1)
-            setCookie("FavoriteListRunType", "Copy", 1)
+            localStorage.setItem("FavoriteListRunID", $(this).attr("data-id"))
+            localStorage.setItem("FavoriteListRunName", $(this).attr("data-name"))
+            localStorage.setItem("FavoriteListRunType", "Copy")
             window.open("https://hanalani.myschoolapp.com/podium/default.aspx?t=23189&wapp=1")
         });
 
         $(document).on('click', ".fav-list-run", function(){
-            setCookie("FavoriteListRunID", $(this).attr("data-id"), 1)
-            setCookie("FavoriteListRunName", $(this).attr("data-name"), 1)
-            setCookie("FavoriteListRunType", "Run", 1)
+            localStorage.setItem("FavoriteListRunID", $(this).attr("data-id"))
+            localStorage.setItem("FavoriteListRunName", $(this).attr("data-name"))
+            localStorage.setItem("FavoriteListRunType", "Run")
             window.open("https://hanalani.myschoolapp.com/podium/default.aspx?t=23189&wapp=1")
         });
 
         $(document).on('click', ".fav-list-remove", function(){
-            var rawFavorites = getCookie("AdvancedListFavorites");
+            var rawFavorites = localStorage.getItem("AdvancedListFavorites");
             var favorites = [];
 
-            if (rawFavorites != "")
+            if (rawFavorites != null)
             {
                 favorites = JSON.parse(rawFavorites);
                 var index = favorites.findIndex(x => x.ListID === $(this).attr("data-id"))
                 if (index)
                 {
                     favorites.splice(index, 1)
-                    setCookie("AdvancedListFavorites", JSON.stringify(favorites), 9999);
+                    localStorage.setItem("AdvancedListFavorites", JSON.stringify(favorites));
                     alert($(this).attr("data-name") + " removed from favorites.")
                     location.reload()
                 }
@@ -1917,14 +1917,14 @@ function CheckIfRunningFavorite()
     var FavoriteListName
     var FavoriteListType
 
-    FavoriteListID = getCookie("FavoriteListRunID")
-    FavoriteListName = getCookie("FavoriteListRunName")
-    FavoriteListType = getCookie("FavoriteListRunType")
+    FavoriteListID = localStorage.getItem("FavoriteListRunID")
+    FavoriteListName = localStorage.getItem("FavoriteListRunName")
+    FavoriteListType = localStorage.getItem("FavoriteListRunType")
 
-    if (FavoriteListID.length)
+    if (FavoriteListID != null)
     {
-        setCookie("FavoriteListRunID", "", 1)
-        setCookie("FavoriteListRunName", "", 1)
+        localStorage.setItem("FavoriteListRunID", "")
+        localStorage.setItem("FavoriteListRunName", "")
         if (FavoriteListType == "Copy")
         {
             __pdL('52568', 'Copy Advanced List: ' + FavoriteListName, '1', '~slid=' + FavoriteListID + '~copy=1', '', 'False', '0', '', 'default.aspx')
@@ -1932,7 +1932,7 @@ function CheckIfRunningFavorite()
         {
             __pdL('52586', 'Advanced List: ' + FavoriteListName, '1', '~slid=' + FavoriteListID + '~ml=False~sln=' + FavoriteListName, '', 'False', '0', '', 'default.aspx')
         }
-        setCookie("FavoriteListRunType", "", 1)
+        localStorage.removeItem("FavoriteListRunType")
     }
 }
 
@@ -1966,10 +1966,10 @@ function AdvancedListFavorite(listID, listName)
 
 function AddAdvancedListFavorite(listID, listName)
 {
-    var rawFavorites = getCookie("AdvancedListFavorites");
+    var rawFavorites = localStorage.getItem("AdvancedListFavorites");
     var favorites = [];
 
-    if (rawFavorites != "")
+    if (rawFavorites != null)
     {
         favorites = JSON.parse(rawFavorites);
     }
@@ -1985,7 +1985,7 @@ function AddAdvancedListFavorite(listID, listName)
         newFavorite.listID = listID;
         newFavorite.listName = listName;
         favorites.push(newFavorite);
-        setCookie("AdvancedListFavorites", JSON.stringify(favorites), 9999);
+        localStorage.setItem("AdvancedListFavorites", JSON.stringify(favorites));
         alert(listName + " added to favorites.  View your favorites on Core->Dashboard.")
     }
 
