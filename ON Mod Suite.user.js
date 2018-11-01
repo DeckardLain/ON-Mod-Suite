@@ -435,7 +435,6 @@ function GetID(strURL)
 function PeopleFinderQuickSelect(jNode)
 {
     $("#people-finder-search-box").keypress(function (e){
-        console.log(e.keyCode);
         switch (e.keyCode)
         {
             case 13:
@@ -1852,61 +1851,64 @@ function CopyPageNumberNavigation(jNode)
 
 function AdvancedListFavorites()
 {
-    $(".col-md-9").append('<h1>Favorite Lists</h><br>')
-
-    var rawFavorites = localStorage.getItem("AdvancedListFavorites");
-
-    if (rawFavorites == null)
+    if (location.href == "https://hanalani.myschoolapp.com/app/core#dashboard/system")
     {
-        $(".col-md-9").append("No favorites yet. Go to Advanced Lists to add some.")
-        return;
-    }
+        $(".col-md-9").append('<h1>Favorite Lists</h><br>')
 
-    var favorites = JSON.parse(rawFavorites);
-    var favoriteHTML
+        var rawFavorites = localStorage.getItem("AdvancedListFavorites");
 
-    if (!favorites.length)
-    {
-        $(".col-md-9").append("No favorites yet. Go to Advanced Lists to add some.")
-    } else
-    {
+        if (rawFavorites == null)
+        {
+            $(".col-md-9").append("No favorites yet. Go to Advanced Lists to add some.")
+            return;
+        }
 
-        favorites.forEach(function(value){
-            favoriteHTML = value.listName + ' | <a href="javascript:void(0)" class="fav-list-copy" data-id="' + value.listID + '" data-name="' + value.listName + '">Copy</a>' + ' | <a href="javascript:void(0)" class="fav-list-run" data-id="' + value.listID + '" data-name="' + value.listName + '">Run</a>' + ' | <a href="javascript:void(0)" class="fav-list-remove" data-id="' + value.listID + '" data-name="' + value.listName + '">Remove from Favorites</a><br>'
-            $(".col-md-9").append(favoriteHTML)
-        });
+        var favorites = JSON.parse(rawFavorites);
+        var favoriteHTML
 
-        $(document).on('click', ".fav-list-copy", function(){
-            localStorage.setItem("FavoriteListRunID", $(this).attr("data-id"))
-            localStorage.setItem("FavoriteListRunName", $(this).attr("data-name"))
-            localStorage.setItem("FavoriteListRunType", "Copy")
-            window.open("https://hanalani.myschoolapp.com/podium/default.aspx?t=23189&wapp=1")
-        });
+        if (!favorites.length)
+        {
+            $(".col-md-9").append("No favorites yet. Go to Advanced Lists to add some.")
+        } else
+        {
 
-        $(document).on('click', ".fav-list-run", function(){
-            localStorage.setItem("FavoriteListRunID", $(this).attr("data-id"))
-            localStorage.setItem("FavoriteListRunName", $(this).attr("data-name"))
-            localStorage.setItem("FavoriteListRunType", "Run")
-            window.open("https://hanalani.myschoolapp.com/podium/default.aspx?t=23189&wapp=1")
-        });
+            favorites.forEach(function(value){
+                favoriteHTML = value.listName + ' | <a href="javascript:void(0)" class="fav-list-copy" data-id="' + value.listID + '" data-name="' + value.listName + '">Copy</a>' + ' | <a href="javascript:void(0)" class="fav-list-run" data-id="' + value.listID + '" data-name="' + value.listName + '">Run</a>' + ' | <a href="javascript:void(0)" class="fav-list-remove" data-id="' + value.listID + '" data-name="' + value.listName + '">Remove from Favorites</a><br>'
+                $(".col-md-9").append(favoriteHTML)
+            });
 
-        $(document).on('click', ".fav-list-remove", function(){
-            var rawFavorites = localStorage.getItem("AdvancedListFavorites");
-            var favorites = [];
+            $(document).on('click', ".fav-list-copy", function(){
+                localStorage.setItem("FavoriteListRunID", $(this).attr("data-id"))
+                localStorage.setItem("FavoriteListRunName", $(this).attr("data-name"))
+                localStorage.setItem("FavoriteListRunType", "Copy")
+                window.open("https://hanalani.myschoolapp.com/podium/default.aspx?t=23189&wapp=1")
+            });
 
-            if (rawFavorites != null)
-            {
-                favorites = JSON.parse(rawFavorites);
-                var index = favorites.findIndex(x => x.ListID === $(this).attr("data-id"))
-                if (index)
+            $(document).on('click', ".fav-list-run", function(){
+                localStorage.setItem("FavoriteListRunID", $(this).attr("data-id"))
+                localStorage.setItem("FavoriteListRunName", $(this).attr("data-name"))
+                localStorage.setItem("FavoriteListRunType", "Run")
+                window.open("https://hanalani.myschoolapp.com/podium/default.aspx?t=23189&wapp=1")
+            });
+
+            $(document).on('click', ".fav-list-remove", function(){
+                var rawFavorites = localStorage.getItem("AdvancedListFavorites");
+                var favorites = [];
+
+                if (rawFavorites != null)
                 {
-                    favorites.splice(index, 1)
-                    localStorage.setItem("AdvancedListFavorites", JSON.stringify(favorites));
-                    alert($(this).attr("data-name") + " removed from favorites.")
-                    location.reload()
+                    favorites = JSON.parse(rawFavorites);
+                    var index = favorites.findIndex(x => x.ListID === $(this).attr("data-id"))
+                    if (index)
+                    {
+                        favorites.splice(index, 1)
+                        localStorage.setItem("AdvancedListFavorites", JSON.stringify(favorites));
+                        alert($(this).attr("data-name") + " removed from favorites.")
+                        location.reload()
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 }
 
@@ -2012,25 +2014,3 @@ function isInt(value) {
   return (x | 0) === x;
 }
 
-// Cookie functions borrowed from: https://www.w3schools.com/js/js_cookies.asp
-function setCookie(cname, cvalue, exdays) {
-    var d = new Date();
-    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
-    var expires = "expires="+d.toUTCString();
-    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
-}
-
-function getCookie(cname) {
-    var name = cname + "=";
-    var ca = document.cookie.split(';');
-    for(var i = 0; i < ca.length; i++) {
-        var c = ca[i];
-        while (c.charAt(0) == ' ') {
-            c = c.substring(1);
-        }
-        if (c.indexOf(name) == 0) {
-            return c.substring(name.length, c.length);
-        }
-    }
-    return "";
-}
