@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.2.2
+// @version      1.2.3
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -269,9 +269,10 @@ function GetModule(strURL)
 
 function AddPageFooter()
 {
+    console.log(GM_info.script.version)
     if (window.location.href != "https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184")
     {
-        $("body").append('<div align="center" style="font-size:12px">This site experience enhanced by ON Mod Suite. | Copyright © 2018 Hanalani Schools | Click <a href="https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184" target="_blank">here</a> to change settings.</div>')
+        $("body").append('<div align="center" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018 Hanalani Schools | Click <a href="https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184" target="_blank">here</a> to change settings.</div>')
     }
 }
 
@@ -1817,7 +1818,10 @@ function ReverseAttendanceDefault(jNode)
             if (!$(".mark-present").length)
             {
                 $(".table-condensed tbody tr").each(function() {
-                    $(this).find("td").eq(1).append('<br><a href="javascript:void(0)" class="mark-present"> Present--&gt</a>')
+                    if (!$(this).find("select").attr("disabled"))
+                    {
+                        $(this).find("td").eq(1).append('<br><a href="javascript:void(0)" class="mark-present"> Present--&gt</a>')
+                    }
                 });
             }
         });
