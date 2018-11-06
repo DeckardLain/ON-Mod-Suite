@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.2.3
+// @version      1.3.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -29,57 +29,82 @@
 
 /*
 Completed Mods:
-- User Module Selector
+1 - User Module Selector
      Adds links to user pages for quickly switching between module views
-- People Finder Quick Select
+
+2 - People Finder Quick Select
      Hit enter when searching with People Finder to open the first result.
      Use number keys 1-9 to select the nth search result
-- Switch Roster to Faculty
+
+3 - Switch Roster to Faculty
      Class rosters opened in Academics are missing the Send Communication menu.
      This adds a link to quickly switch between Faculty and Academics view of the roster.
      Updated in v0.7.1 - Send Communication menu simply added to Academics roster.
-- Email all parents of a student from Roster Relationships
+
+4 - Email all parents of a student from Roster Relationships
      View Relationships from a student's card in a roster now includes a mailto link that includes all
      emails for this student's parents.
-- Enroll in All
+
+5 - Enroll in All
      Button added when editing group enrollments, primarily for LS, who add all classes for a specific
      homeroom.
-- Roster Student Count
+
+6 - Roster Student Count
      Rosters (class, activity, community, and athletic groups) show total members, including teachers/
      coaches.  This also displays the total number of students in the group, which is a more useful number.
-- Manual Attendance Sheet Improvements
+
+7 - Manual Attendance Sheet Improvements
      Manual Attendance Sheet report added to roster reports menu and loads the class that you ran the
      report from.
-- Convert Grad Year to Grade Level
+
+8 - Convert Grad Year to Grade Level
      Roster cards can now display current grade level instead of graduation year or both, (global setting saved
      as a browser cookie and selectable from a new menu added to roster pages).  Student profile pages
      (Core, Academics, Faculty) display the current grade level in addition to the grad year.
-- Advanced List User Links
+
+9 - Advanced List User Links
      Advanced lists that include a User ID column will now link the User ID to their profile page.  The module
      and page it opens to is customizable and saved per list.
-- Roster Student Select
+
+10 - Roster Student Select
      Specific students can be selected on class rosters, and the Send Communication menu then used to email those
      students, parents of those students, or both.
-- Team Roster Link to Grades
+
+11 - Team Roster Link to Grades
      Team rosters now have a View Grades link for each student, for quick access to Faculty->Progress page
      for the student.
-- Email Multiple Classes
+
+12 - Email Multiple Classes
      Classes can be selected on Schedule & Performance page and email sent to students, parents, or everyone in
      selected classes.
-- Classes Menu Sort Order
+
+13 - Classes Menu Sort Order
      Classes menu can be sorted by period instead of the default alphabetical order.  See the new Settings page on
      the resource board or click the link at the bottom of any page on the site.
-- Classes Menu Default Page
+
+14 - Classes Menu Default Page
      The default page that classes open to from the Classes menu can be changed to Topics, Assignments, Schedule, or
      Roster instead of the default Bulletin Board.
-- Reverse Attendance Default
+
+15 - Reverse Attendance Default
      Adds option on the Record Attendance screen to set all students to Unexcused Absence, then allowing the teacher to
      one-click mark students as Present.
-- Page Number Navigation
+
+16 - Page Number Navigation
      Various Podium pages that contain lists, such as Advanced Lists, have Back/Next and page number links for navigation,
      but only at the top of the page.  This copies the navigation area to the bottom of the page as well.
-- Advanced List Favorites
+
+17 - Advanced List Favorites
      Advanced lists can be individually added to a list of favorite lists that you can Copy or Run from the Core Dashboard.
+
+18 - WYSIWYG Editor Improvements
+     Default font size in WYSIWYG editors throughout the system is very small and hard to read (10px).  Change this default on the
+     script's settings page.  Note that this does not change the final font size of the edited item, which is different
+     depending on where this item is displayed.  Ex: Announcement default is 15px, while pushpage appears to be 13px if no font
+     size is selected in the editor.
+
+     The (vertical) size of the editor is also very small.  Expand button has been added, which can be clicked on to
+     increase the size of the box.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -205,6 +230,9 @@ function gmMain(){
     waitForKeyElements(".thCBarlink:first", CopyPageNumberNavigation)
     waitForKeyElements(".thCBarlinkD:first", CopyPageNumberNavigation)
 
+    // WYSIWYG Editor Improvements
+    waitForKeyElements("#tinymce", EditorImprovements, false, "iframe")
+
 }
 
 
@@ -269,10 +297,9 @@ function GetModule(strURL)
 
 function AddPageFooter()
 {
-    console.log(GM_info.script.version)
     if (window.location.href != "https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184")
     {
-        $("body").append('<div align="center" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018 Hanalani Schools | Click <a href="https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184" target="_blank">here</a> to change settings.</div>')
+        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018 Hanalani Schools | Click <a href="https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184" target="_blank">here</a> to change settings.</div>')
     }
 }
 
@@ -1727,6 +1754,12 @@ function GenerateSettingsPage(jNode)
     str += '<input type="radio" id="ClassPageDefaultSchedule" name="class-default-page" value="schedule"><label for="ClassPageDefaultSchedule">Schedule</label><br>'
     str += '<input type="radio" id="ClassPageDefaultRoster" name="class-default-page" value="roster"><label for="ClassPageDefaultRoster">Roster</label><br>'
     str += '</td></tr>'
+
+    // WYSIWYG Editor Default Font Size 8,10,12,14,16,24,36
+    str += '<tr><td valign="top">WYSIWYG Editor Default Font Size</td>'
+    str += '<td><select id="EditorDefaultSize"><option value="default">Default</option><option value="8">8</option><option value="10">10</option><option value="12">12</option><option value="14">14</option><option value="16">16 (Recommended)</option><option value="24">24</option><option value="36">36</option></select>'
+    str += '</td></tr>'
+
     $("#settings-table").append(str)
 
     // ----------------------------------------------------------------------------------------
@@ -1769,6 +1802,12 @@ function GenerateSettingsPage(jNode)
             $("#ClassPageDefaultBulletinBoard ~ label:first").text("Bulletin Board (default)")
     }
 
+    // WYSIWYG Editor Default Font Size
+    if (localStorage.getItem("EditorDefaultSize") != null)
+    {
+        $("#EditorDefaultSize").val(localStorage.getItem("EditorDefaultSize"))
+    }
+
     // Save changes
     $("#ClassSortByName").unbind("click").bind("click", function(){
         localStorage.setItem("ClassesMenuSortOrder", "name")
@@ -1791,6 +1830,10 @@ function GenerateSettingsPage(jNode)
     $("#ClassPageDefaultRoster").unbind("click").bind("click", function(){
         localStorage.setItem("ClassesDefaultPage", "roster")
     });
+    $("#EditorDefaultSize").unbind("click").bind("click", function(){
+        localStorage.setItem("EditorDefaultSize", $("#EditorDefaultSize").val())
+    });
+
 }
 
 // ----------------------------------------------------------------------------------------
@@ -1996,6 +2039,29 @@ function AddAdvancedListFavorite(listID, listName)
     }
 
 
+}
+
+// ----------------------------------------------------------------------------------------
+// ------------------------------WYSIWYG Editor Improvements-------------------------------
+// ----------------------------------------------------------------------------------------
+
+function EditorImprovements(jNode)
+{
+    // Default Size
+    if (localStorage.getItem("EditorDefaultSize") > 0)
+    {
+        $(jNode).siblings("head").append('<style>body {font-size:' + localStorage.getItem("EditorDefaultSize") + 'px;}</style>')
+    }
+
+    // Expand Editor Size
+    if (!$("#expand-" + $("iframe").attr("id")).length)
+    {
+        $("iframe").closest(".row").append('<div id="expand-' + $("iframe").attr("id") + '" align="right"><a href="javascript:void(0)" class="expand-editor"><font size="-1">&#9660Expand&#9660</font></a></div>')
+    }
+
+    $(".expand-editor").unbind("click").bind("click", function(){
+        $(this).closest(".row").find("iframe").css("height", +$(this).closest(".row").find("iframe").css("height").substr(0, $(this).closest(".row").find("iframe").css("height").length-2)+100 + "px")
+    });
 }
 
 // ----------------------------------------------------------------------------------------
