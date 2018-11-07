@@ -15,3 +15,61 @@ All notable changes to this project will be documented in this file.
 - Current script version added to page footer
 ### Fixed
 - Reverse attendance default no longer allows switching a locked code to Attended.
+
+## [1.2.2] - 2018-11-01
+### Fixed
+- Favorite lists appearing in unintended areas
+
+## [1.2.1] - 2018-10-31
+### Changed
+- Settings are now saved using browser local storage instead of cookies
+
+## [1.2.0] - 2018-10-25
+### Added
+- Advanced List Favorites
+
+## [1.1.2] - 2018-10-25
+### Added
+- Page number navigation for podium pages are now copied to bottom of page
+### Fixed
+- Student Roster Count was creating duplicate Student Count items when roster was edited on that page
+
+## [1.1.1] - 2018-10-02
+### Fixed
+- Classes Menu Sort Order was broken for Elementary classes because they have no block
+
+## [1.1.0] - 2018-09-28
+### Added
+- Reverse Attendance Default
+
+## [1.0.1] - 2018-09-27
+### Changed
+- User Module Selector now also adds links to the "core#profile" page
+
+## [1.0.0] - 2018-09-21
+### Added
+- Classes Menu Sort Order
+- Classes Menu Default Page
+- Settings page
+
+## [0.10.1] - 2018-09-18
+### Fixed
+- Email Multiple Classes - handle cases when list of emails for class is blank
+
+## [0.10.0] - 2018-09-14
+### Added
+- Email Multiple Classes from Schedule & Performance page
+
+## [0.9.6] - 2018-09-13
+### Added
+- Team Roster Link to Grades
+
+## [0.9.5] - 2018-09-12
+### Changed
+- Updated User Module Selector to also work on Extracurricular profile pages
+
+## [0.9.4] - 2018-09-07
+### Fixed
+- Advanced list default user page menu missing for users who aren't list admins.
+### Changed
+- Roster Grade Level - "None" option added
