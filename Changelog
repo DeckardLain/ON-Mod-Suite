@@ -1,0 +1,17 @@
+# Changelog
+All notable changes to this project will be documented in this file.
+
+## [1.4.0] - 2018-11-06
+### Added
+- Highlight Invalid Attendance
+
+## [1.3.0] - 2018-11-05
+### Added
+- WYSIWYG Editor Improvements - Default font size can be changed on Settings page
+- WYSIWYG Editor Improvements - Expand button to enable increasing size of editor box
+
+## [1.2.3] - 2018-11-01
+### Added
+- Current script version added to page footer
+### Fixed
+- Reverse attendance default no longer allows switching a locked code to Attended.
