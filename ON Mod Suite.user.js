@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.3.0
+// @version      1.4.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -59,7 +59,7 @@ Completed Mods:
 
 8 - Convert Grad Year to Grade Level
      Roster cards can now display current grade level instead of graduation year or both, (global setting saved
-     as a browser cookie and selectable from a new menu added to roster pages).  Student profile pages
+     in browser local storage and selectable from a new menu added to roster pages).  Student profile pages
      (Core, Academics, Faculty) display the current grade level in addition to the grad year.
 
 9 - Advanced List User Links
@@ -105,6 +105,10 @@ Completed Mods:
 
      The (vertical) size of the editor is also very small.  Expand button has been added, which can be clicked on to
      increase the size of the box.
+
+19 - Highlight Invalid Attendance
+     Invalid attendance (class codes in Homeroom or non-class codes in classes) will be highlighted on the Student Attendance
+     page to easily see which attendance entries need to be fixed.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -215,6 +219,9 @@ function gmMain(){
         case "Core Dashboard":
             waitForKeyElements(".col-md-9:first", AdvancedListFavorites)
             break;
+        case "Student Attendance":
+            waitForKeyElements(".inline-edit:first", HighlightInvalidAttendance)
+            break;
     }
 
     // People Finder Quick Select
@@ -242,6 +249,9 @@ function GetModule(strURL)
     if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL == "https://hanalani.myschoolapp.com/app/academics#studentattendance")
+    {
+        return "Student Attendance";
     } else if (strURL == "https://hanalani.myschoolapp.com/app/core#dashboard/system")
     {
         return "Core Dashboard";
@@ -2062,6 +2072,48 @@ function EditorImprovements(jNode)
     $(".expand-editor").unbind("click").bind("click", function(){
         $(this).closest(".row").find("iframe").css("height", +$(this).closest(".row").find("iframe").css("height").substr(0, $(this).closest(".row").find("iframe").css("height").length-2)+100 + "px")
     });
+}
+
+// ----------------------------------------------------------------------------------------
+// --------------------------------Highlight Invalid Attendance----------------------------
+// ----------------------------------------------------------------------------------------
+
+function HighlightInvalidAttendance(jNode)
+{
+    $("tbody").children("tr").each(function(index){
+        HighlightInvalidAttendanceRow(this)
+    });
+
+    $(".inline-edit[data-action='reason']").bind("click", function(){
+        HighlightInvalidAttendanceRow($(this).closest("tr"));
+    });
+}
+
+function HighlightInvalidAttendanceRow(jNode)
+{
+    if ($(jNode).children("td").eq(4).text() == "HR")
+    {
+        // Block: Homeroom
+        if ($(jNode).children("td").eq(6).text().includes("[Class]"))
+        {
+            // Class code
+            $(jNode).css("background-color", "red");
+        } else
+        {
+            $(jNode).css("background-color", "");
+        }
+    } else
+    {
+        // Block: Not Homeroom
+        if (!$(jNode).children("td").eq(6).text().includes("[Class]"))
+        {
+            // Not Class code
+            $(jNode).css("background-color", "red");
+        } else
+        {
+            $(jNode).css("background-color", "");
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------------------
