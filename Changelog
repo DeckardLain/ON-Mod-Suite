@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2018-11-07
+### Added
+- Automatically Expand All
+- [Dev] Table of contents with searchable index to easily jump to different code sections.
+- [Dev] Each function run logged to console for easier debugging.
+### Fixed
+- Settings page not saving settings if keyboard is used to change settings.
+- WYSIWYG Editor improvements not working for certain editor boxes.
+### Changed
+- Added info tooltips to Settings page
+
 ## [1.4.0] - 2018-11-06
 ### Added
 - Highlight Invalid Attendance
