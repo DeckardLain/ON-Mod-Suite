@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.4.0
+// @version      1.5.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -26,8 +26,35 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 
-
 /*
+
+---Table of Contents---
+[INDEX001] Main Section
+[INDEX002] User Module Selector
+[INDEX003] People Finder Quick Select
+[INDEX004] Switch Roster to Faculty
+[INDEX005] Email All Parents of Student
+[INDEX006] Enroll in All
+[INDEX007] Remove Connect5 Info
+[INDEX008] Roster Student Count
+[INDEX009] Manual Attendance Sheet
+[INDEX010] Convert Grad Year to Grade Level
+[INDEX011] Advanced List ID Links
+[INDEX012] Roster Student Select
+[INDEX013] Team Roster Link to Grades
+[INDEX014] Email Multiple Classes
+[INDEX015] Classes Menu Sort Order
+[INDEX016] Default Class Page
+[INDEX017] Settings Page
+[INDEX018] Reverse Attendance Default
+[INDEX019] Page Number Navigation
+[INDEX020] Advanced List Favorites
+[INDEX021] WYSIWYG Editor Improvements
+[INDEX022] Highlight Invalid Attendance
+[INDEX023] Automatically Expand All
+[INDEX900] Misc. Helper Functions
+
+
 Completed Mods:
 1 - User Module Selector
      Adds links to user pages for quickly switching between module views
@@ -110,12 +137,16 @@ Completed Mods:
      Invalid attendance (class codes in Homeroom or non-class codes in classes) will be highlighted on the Student Attendance
      page to easily see which attendance entries need to be fixed.
 
+20 - Automatically Expand All
+     Turn on in Settings.  When enabled, all collapsed areas (identified by the down chevron), such as financial aid will be
+     expanded automatically when the page loads. Also causes the Checklist page to load grouped by milestone.
+
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
 
 */
 
-// ----------------------------------------------------------------------------------------
+// ----------------------------------------[INDEX001]--------------------------------------
 // ---------------------------------------Main Section-------------------------------------
 // ----------------------------------------------------------------------------------------
 
@@ -144,6 +175,7 @@ var pageURLCheckTimer       = setInterval (
 // Load all mods
 function gmMain(){
 
+    console.log("Function: " + arguments.callee.name)
     var strURL = window.location.href
 
     // User Module Selector
@@ -240,12 +272,15 @@ function gmMain(){
     // WYSIWYG Editor Improvements
     waitForKeyElements("#tinymce", EditorImprovements, false, "iframe")
 
+    // Chevron Down
+    waitForKeyElements(".fa-chevron-down", AutomaticallyExpandAll)
+
 }
 
 
 function GetModule(strURL)
 {
-
+    console.log("Function: " + arguments.callee.name)
     if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
@@ -307,18 +342,20 @@ function GetModule(strURL)
 
 function AddPageFooter()
 {
+    console.log("Function: " + arguments.callee.name)
     if (window.location.href != "https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184")
     {
         $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018 Hanalani Schools | Click <a href="https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184" target="_blank">here</a> to change settings.</div>')
     }
 }
 
-// ----------------------------------------------------------------------------------------
+// ---------------------------------------[INDEX002]---------------------------------------
 // -----------------------------------User Module Selector---------------------------------
 // ----------------------------------------------------------------------------------------
 
 function PostLinkCore(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     var strURL = window.location.href
     var strLinks = "Open in: "
     var strID = GetID(strURL);
@@ -343,6 +380,7 @@ function PostLinkCore(jNode)
 
 function PostLinkAcademics(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     var strURL = window.location.href
     var strLinks = "Open in: "
     var strID = GetID(strURL);
@@ -362,6 +400,7 @@ function PostLinkAcademics(jNode)
 
 function PostLinkEnrollmentManagement(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     var strURL = window.location.href
     var strLinks = "Open in: "
     var strID = GetID(strURL);
@@ -387,6 +426,7 @@ function PostLinkEnrollmentManagement(jNode)
 
 function PostLinkFaculty(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     var strURL = window.location.href
     var strLinks = "Open in: "
     var strID = GetID(strURL);
@@ -406,6 +446,7 @@ function PostLinkFaculty(jNode)
 
 function GetLink(strModule, strID)
 {
+    console.log("Function: " + arguments.callee.name)
     var strHTMLPrefix = '<a href="';
     var strHTMLSuffix = '">[';
     var strHTMLSuffix2 = ']</a>  ';
@@ -451,6 +492,7 @@ function GetLink(strModule, strID)
 
 function GetID(strURL)
 {
+    console.log("Function: " + arguments.callee.name)
 
     var strParts = strURL.split("/");
     var arrayLength = strParts.length;
@@ -466,12 +508,13 @@ function GetID(strURL)
 }
 
 
-// ----------------------------------------------------------------------------------------
+// --------------------------------------[INDEX003]----------------------------------------
 // ------------------------------People Finder Quick Select--------------------------------
 // ----------------------------------------------------------------------------------------
 
 function PeopleFinderQuickSelect(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     $("#people-finder-search-box").keypress(function (e){
         switch (e.keyCode)
         {
@@ -507,12 +550,13 @@ function PeopleFinderQuickSelect(jNode)
     })
 }
 
-// ----------------------------------------------------------------------------------------
+// -------------------------------------[INDEX004]-----------------------------------------
 // ------------------------------Switch Roster to Faculty----------------------------------
 // ----------------------------------------------------------------------------------------
 
 function PostLinkRosterFaculty(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     var strURL = window.location.href
     var strLinks = "Switch to: "
     var strID = GetID(strURL);
@@ -535,6 +579,7 @@ function PostLinkRosterFaculty(jNode)
 
 function PostLinkRosterAcademics(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     var strURL = window.location.href
     var strLinks = "Switch to: "
     var strID = GetID(strURL);
@@ -547,18 +592,20 @@ function PostLinkRosterAcademics(jNode)
     return;
 }
 
-// ----------------------------------------------------------------------------------------
+// -------------------------------------[INDEX005]-----------------------------------------
 // ----------------------------Email All Parents of Student--------------------------------
 // ----------------------------------------------------------------------------------------
 
 function EmailAllParentsOfStudent()
 {
+    console.log("Function: " + arguments.callee.name)
     setInterval(function(){
     waitForKeyElements(".roster-relationships", CreateEmailLink);}, 1000);
 }
 
 function CreateEmailLink(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     if (!$("#email-parents").length)
     {
         var strPrefix = '<div align="right"><a href="mailto:';
@@ -577,13 +624,13 @@ function CreateEmailLink(jNode)
     }
 }
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------[INDEX006]-------------------------------------
 // ----------------------------------------Enroll in All-----------------------------------
 // ----------------------------------------------------------------------------------------
 
 function EnrollInAll(jNode)
 {
-    console.log($("#LevelNum").val())
+    console.log("Function: " + arguments.callee.name)
     if (!$(".custom-add-all").length){
 
         $(".corner .white-bgc:first").append('<a class="btn btn-default custom-add-all">Enroll in All</a>');
@@ -595,10 +642,8 @@ function EnrollInAll(jNode)
             {
 
                 if (confirm("Are you sure you want to enroll this student in all displayed classes?")){
-                    console.log("confirmed");
                     $(".fa-plus-circle").each(function(index) {
                         this.click();
-                        console.log(index);
                     });
                 }
             }
@@ -606,12 +651,13 @@ function EnrollInAll(jNode)
     }
 }
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------[INDEX007]-------------------------------------
 // ------------------------------------Remove Connect5 Info--------------------------------
 // ----------------------------------------------------------------------------------------
 
 function RemoveConnect5Info(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     var str;
 
     setTimeout(function(){
@@ -626,12 +672,13 @@ function RemoveConnect5Info(jNode)
     }, 100);
 }
 
-// ----------------------------------------------------------------------------------------
+// ----------------------------------------[INDEX008]--------------------------------------
 // -----------------------------------Roster Student Count---------------------------------
 // ----------------------------------------------------------------------------------------
 
 function AddRosterStudentCount(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     var memberCount = $("#roster-count").text();
     var teacherCount = 0;
     var nonStudentConditions = ["Teacher", "Co-Teacher", "Assistant Teacher", "Activity Leader", "Owner", "Coach"]
@@ -676,25 +723,28 @@ function AddRosterStudentCount(jNode)
 
 }
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------[INDEX009]-------------------------------------
 // ----------------------------------Manual Attendance Sheet-------------------------------
 // ----------------------------------------------------------------------------------------
 
 
 function LaunchManualAttendanceSheet()
 {
+    console.log("Function: " + arguments.callee.name)
     SaveClassAndTeacher();
     window.open("/podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359", "_blank");
 }
 
 function AddManualAttendanceSheetToMenu()
 {
+    console.log("Function: " + arguments.callee.name)
     var html = '<li><a href="javascript:void(0)" id="ManualAttendanceSheet">Manual Attendance Sheet</a></li>'
     $("#roster-reports .dropdown-menu").append(html);
 }
 
 function SaveClassAndTeacher()
 {
+    console.log("Function: " + arguments.callee.name)
     var userID;
 
     // Save class ID to cookie
@@ -747,6 +797,7 @@ function SaveClassAndTeacher()
 
 function ManualAttendanceSheet()
 {
+    console.log("Function: " + arguments.callee.name)
     switch(localStorage.getItem("ManualAttendanceSheetNewInfo"))
     {
         case "1":
@@ -780,12 +831,13 @@ function ManualAttendanceSheet()
     }
 }
 
-// ----------------------------------------------------------------------------------------
+// ---------------------------------------[INDEX010]---------------------------------------
 // ----------------------------Convert Grad Year to Grade Level----------------------------
 // ----------------------------------------------------------------------------------------
 
 function ConvertGradYearToGradeLevel()
 {
+    console.log("Function: " + arguments.callee.name)
     if (!$("#show-menu").length)
     {
         // Add menu
@@ -870,6 +922,7 @@ function ConvertGradYearToGradeLevel()
 
 function GetGradeLevel(str)
 {
+    console.log("Function: " + arguments.callee.name)
     str = str.trim()
     if (str.substring(str.length-3, str.length-2)=="'" && isInt(str.substring(str.length-2, str.length)))
     {
@@ -932,12 +985,13 @@ function GetGradeLevel(str)
     }
 }
 
-// ----------------------------------------------------------------------------------------
+// ----------------------------------------[INDEX011]--------------------------------------
 // -----------------------------------Advanced list ID Links-------------------------------
 // ----------------------------------------------------------------------------------------
 
 function CreateAdvancedListDefaultButton(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     var page = GetAdvancedListIDLinkSetting("Default");
     if (page == "") // default not set
     {
@@ -949,6 +1003,7 @@ function CreateAdvancedListDefaultButton(jNode)
 
 function AddAdvancedListIDLinks()
 {
+    console.log("Function: " + arguments.callee.name)
     var listName = GetListName();
     var page = GetAdvancedListIDLinkSetting(listName);
     if (page == "")
@@ -968,6 +1023,7 @@ function AddAdvancedListIDLinks()
 
 function CreateUserLinks(page)
 {
+    console.log("Function: " + arguments.callee.name)
     if ($("td").length)
     {
         $("td").each(function(index){
@@ -981,6 +1037,7 @@ function CreateUserLinks(page)
 
 function GetListName()
 {
+    console.log("Function: " + arguments.callee.name)
     var listName = $(".thHistoryLink1 ~ b").text()
     listName = listName.replace("Edit Advanced List: ", "");
     listName = listName.replace("Advanced List: ", "");
@@ -992,6 +1049,7 @@ function GetListName()
 }
 
 function AdvancedListSetting(listName, page) {
+    console.log("Function: " + arguments.callee.name)
     var that= this;
 
     this.listName = listName;
@@ -1000,6 +1058,7 @@ function AdvancedListSetting(listName, page) {
 
 function GetAdvancedListIDLinkSetting(listName)
 {
+    console.log("Function: " + arguments.callee.name)
     var rawSettings = localStorage.getItem("AdvancedListUserLinkSettings");
     if (rawSettings == null)
     {
@@ -1027,6 +1086,7 @@ function GetAdvancedListIDLinkSetting(listName)
 
 function SetAdvancedListIDLinkSetting(listName, page)
 {
+    console.log("Function: " + arguments.callee.name)
     var rawSettings = localStorage.getItem("AdvancedListUserLinkSettings");
     var settings = [];
 
@@ -1051,6 +1111,7 @@ function SetAdvancedListIDLinkSetting(listName, page)
 
 function GetUserLink(userID, page, newWindow)
 {
+    console.log("Function: " + arguments.callee.name)
     var moduleURL;
     var pageURL;
     var strHTMLPrefix = '<a '
@@ -1170,6 +1231,7 @@ function GetUserLink(userID, page, newWindow)
 
 function GeneratePageMenu(label, location)
 {
+    console.log("Function: " + arguments.callee.name)
     if (!$("#openin-menu").length)
     {
         var strHTMLPrefix = '<div id="openin-menu" class="btn-group" style="margin-left:10px;"><button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" style="display: inline-block;" data-original-title="" title="" aria-expanded="false">' + label + ' <span class="caret"></span></button><ul class="dropdown-menu">'
@@ -1227,12 +1289,13 @@ function GeneratePageMenu(label, location)
     }
 }
 
-// ----------------------------------------------------------------------------------------
+// ----------------------------------------[INDEX012]--------------------------------------
 // -----------------------------------Roster Student Select--------------------------------
 // ----------------------------------------------------------------------------------------
 
 function CreateRosterCheckboxes(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     var input;
     var cardHeader;
     var nonStudentConditions = ["Teacher", "Co-Teacher", "Assistant Teacher", "Activity Leader", "Owner", "Coach"]
@@ -1303,6 +1366,7 @@ function CreateRosterCheckboxes(jNode)
 
 function EmailSelectedParents(studentsToo)
 {
+    console.log("Function: " + arguments.callee.name)
     var mailtoLink = "mailto:?bcc=";
     var lastEmail;
     var currEmail = 0;
@@ -1372,6 +1436,7 @@ function EmailSelectedParents(studentsToo)
 
 function EmailSelectedStudents()
 {
+    console.log("Function: " + arguments.callee.name)
     var mailtoLink = "mailto:?bcc=";
 
     if ($('input[type="checkbox"]:checked').not('.Select_all').length)
@@ -1386,12 +1451,13 @@ function EmailSelectedStudents()
     }
 }
 
-// ----------------------------------------------------------------------------------------
+// ----------------------------------------[INDEX013]--------------------------------------
 // --------------------------------Team Roster Link to Grades------------------------------
 // ----------------------------------------------------------------------------------------
 
 function AddLinkToFacultyProgress()
 {
+    console.log("Function: " + arguments.callee.name)
      $(".btn-contact-card").each(function(index){
          if ($(this).closest("div").attr("class") != "bb-card-actions")
          {
@@ -1400,12 +1466,13 @@ function AddLinkToFacultyProgress()
      });
 }
 
-// ----------------------------------------------------------------------------------------
+// ----------------------------------------[INDEX014]--------------------------------------
 // ----------------------------------Email Multiple Classes--------------------------------
 // ----------------------------------------------------------------------------------------
 
 function CreateClassCheckboxes()
 {
+    console.log("Function: " + arguments.callee.name)
     var input;
     var link;
     var RosterWindow;
@@ -1463,6 +1530,7 @@ function CreateClassCheckboxes()
 
 function EmailSelectedClasses()
 {
+    console.log("Function: " + arguments.callee.name)
     var numSelectedClasses = $('input[type="checkbox"]:checked').not('.Select_all').length
     var currClass = 0
     var rosterWindow
@@ -1556,6 +1624,7 @@ function EmailSelectedClasses()
 
 function SaveRosterEmails()
 {
+    console.log("Function: " + arguments.callee.name)
     if (localStorage.getItem("SaveRosterEmailsActive") == 1)
     {
         switch (localStorage.getItem("SaveRosterEmailsType"))
@@ -1578,6 +1647,7 @@ function SaveRosterEmails()
 
 function GrabEmails()
 {
+    console.log("Function: " + arguments.callee.name)
     if (localStorage.getItem("SaveRosterEmailsActive") == 1)
     {
         var str;
@@ -1604,12 +1674,13 @@ function GrabEmails()
     }
 }
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------[INDEX015]-------------------------------------
 // ----------------------------------Classes Menu Sort Order-------------------------------
 // ----------------------------------------------------------------------------------------
 
 function ClassesMenuSortOrder(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     // Get saved value
     if (localStorage.getItem("ClassesMenuSortOrder") == "period")
     {
@@ -1634,6 +1705,7 @@ function ClassesMenuSortOrder(jNode)
 
 function GetPeriodSortOrder(period)
 {
+    console.log("Function: " + arguments.callee.name)
     if (period)
     {
         switch (period.substring(0, 2))
@@ -1689,6 +1761,7 @@ function GetPeriodSortOrder(period)
 
 function GetPeriod(className)
 {
+    console.log("Function: " + arguments.callee.name)
     if (className.indexOf("(") == -1)
     {
         return null
@@ -1698,12 +1771,13 @@ function GetPeriod(className)
     }
 }
 
-// ----------------------------------------------------------------------------------------
+// ----------------------------------------[INDEX016]--------------------------------------
 // ------------------------------------Default Class Page----------------------------------
 // ----------------------------------------------------------------------------------------
 
 function UpdateClassMenuLinks()
 {
+    console.log("Function: " + arguments.callee.name)
     var page = localStorage.getItem("ClassesDefaultPage")
 
     $("#group-header-Classes").siblings(".subnav").find("a").attr("href", function(index, value){
@@ -1719,6 +1793,7 @@ function UpdateClassMenuLinks()
 
 function GetClassPage(classID, page)
 {
+    console.log("Function: " + arguments.callee.name)
     var urlPrefix = "https://hanalani.myschoolapp.com/app/faculty#academicclass/"
     var urlMiddle = "/0/"
 
@@ -1744,12 +1819,13 @@ function GetClassPage(classID, page)
     }
 }
 
-// ----------------------------------------------------------------------------------------
+// ----------------------------------------[INDEX017]--------------------------------------
 // ---------------------------------------Settings Page------------------------------------
 // ----------------------------------------------------------------------------------------
 
 function GenerateSettingsPage(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     var str
     // Build Page
     document.title = "ON Mod Suite Settings"
@@ -1766,8 +1842,15 @@ function GenerateSettingsPage(jNode)
     str += '</td></tr>'
 
     // WYSIWYG Editor Default Font Size 8,10,12,14,16,24,36
-    str += '<tr><td valign="top">WYSIWYG Editor Default Font Size</td>'
+    str += '<tr><td valign="top">WYSIWYG Editor Default Font Size&nbsp'
+    str += '<a class="notificationIcon" title="This only changes the default text size that you see in the editor box, and does not affect the size of text actually displayed on the page after saving.  Most editor boxes default to size 10, while the saved content default can vary from 13-16."><i class="p3icon-notification-2"></i></a></td>'
     str += '<td><select id="EditorDefaultSize"><option value="default">Default</option><option value="8">8</option><option value="10">10</option><option value="12">12</option><option value="14">14</option><option value="16">16 (Recommended)</option><option value="24">24</option><option value="36">36</option></select>'
+    str += '</td></tr>'
+
+    // Automatically Expand All
+    str += '<tr><td valign="top"><label for="AutomaticallyExpandAll">Automatically Expand All&nbsp</label>'
+    str += '<a class="notificationIcon" title="When enabled, all collapsed areas (identified by the down chevron), such as financial aid will be expanded automatically when the page loads. Also causes the Checklist page to load grouped by milestone."><i class="p3icon-notification-2"></i></a></td>'
+    str += '<td><input type="checkbox" id="AutomaticallyExpandAll"><br>'
     str += '</td></tr>'
 
     $("#settings-table").append(str)
@@ -1818,40 +1901,59 @@ function GenerateSettingsPage(jNode)
         $("#EditorDefaultSize").val(localStorage.getItem("EditorDefaultSize"))
     }
 
+    // Automatically Expand All
+    if (localStorage.getItem("AutomaticallyExpandAll") != null)
+    {
+        if (localStorage.getItem("AutomaticallyExpandAll") == "True")
+        {
+            $("#AutomaticallyExpandAll").prop("checked", true)
+        }
+    }
+
     // Save changes
-    $("#ClassSortByName").unbind("click").bind("click", function(){
+    $("#ClassSortByName").unbind("click change").bind("click change", function(){
         localStorage.setItem("ClassesMenuSortOrder", "name")
     });
-    $("#ClassSortByPeriod").unbind("click").bind("click", function(){
+    $("#ClassSortByPeriod").unbind("click change").bind("click change", function(){
         localStorage.setItem("ClassesMenuSortOrder", "period")
     });
-    $("#ClassPageDefaultBulletinBoard").unbind("click").bind("click", function(){
+    $("#ClassPageDefaultBulletinBoard").unbind("click change").bind("click change", function(){
         localStorage.setItem("ClassesDefaultPage", "bulletinboard")
     });
-    $("#ClassPageDefaultTopics").unbind("click").bind("click", function(){
+    $("#ClassPageDefaultTopics").unbind("click change").bind("click change", function(){
         localStorage.setItem("ClassesDefaultPage", "topics")
     });
-    $("#ClassPageDefaultAssignments").unbind("click").bind("click", function(){
+    $("#ClassPageDefaultAssignments").unbind("click change").bind("click change", function(){
         localStorage.setItem("ClassesDefaultPage", "assignments")
     });
-    $("#ClassPageDefaultSchedule").unbind("click").bind("click", function(){
+    $("#ClassPageDefaultSchedule").unbind("click change").bind("click change", function(){
         localStorage.setItem("ClassesDefaultPage", "schedule")
     });
-    $("#ClassPageDefaultRoster").unbind("click").bind("click", function(){
+    $("#ClassPageDefaultRoster").unbind("click change").bind("click change", function(){
         localStorage.setItem("ClassesDefaultPage", "roster")
     });
-    $("#EditorDefaultSize").unbind("click").bind("click", function(){
+    $("#EditorDefaultSize").unbind("click change").bind("click change", function(){
         localStorage.setItem("EditorDefaultSize", $("#EditorDefaultSize").val())
+    });
+    $("#AutomaticallyExpandAll").unbind("click change").bind("click change", function(){
+        if ($("#AutomaticallyExpandAll").prop("checked") == true)
+        {
+            localStorage.setItem("AutomaticallyExpandAll", "True")
+        } else
+        {
+            localStorage.setItem("AutomaticallyExpandAll", "False")
+        }
     });
 
 }
 
-// ----------------------------------------------------------------------------------------
+// ----------------------------------------[INDEX018]--------------------------------------
 // ---------------------------------Reverse Attendance Default-----------------------------
 // ----------------------------------------------------------------------------------------
 
 function ReverseAttendanceDefault(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     if (jNode.text() == "Record Attendance")
     {
         $(".modal-body").prepend('<a href="javascript:void(0)" id="reverse-attendance">Click to set all students to Unexcused Absence</a>')
@@ -1886,12 +1988,13 @@ function ReverseAttendanceDefault(jNode)
     }
 }
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------[INDEX019]-------------------------------------
 // -----------------------------------Page Number Navigation-------------------------------
 // ----------------------------------------------------------------------------------------
 
 function CopyPageNumberNavigation(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     if (!$("#bottom-page-navigation").length)
     {
         $("#lPg").append(jNode.closest("table").clone().attr("id", "bottom-page-navigation"));
@@ -1902,12 +2005,13 @@ function CopyPageNumberNavigation(jNode)
     window.scrollTo(0, 0);
 }
 
-// ----------------------------------------------------------------------------------------
+// ----------------------------------------[INDEX020]--------------------------------------
 // ----------------------------------Advanced List Favorites-------------------------------
 // ----------------------------------------------------------------------------------------
 
 function AdvancedListFavorites()
 {
+    console.log("Function: " + arguments.callee.name)
     if (location.href == "https://hanalani.myschoolapp.com/app/core#dashboard/system")
     {
         $(".col-md-9").append('<h1>Favorite Lists</h><br>')
@@ -1971,6 +2075,7 @@ function AdvancedListFavorites()
 
 function CheckIfRunningFavorite()
 {
+    console.log("Function: " + arguments.callee.name)
     // Loads when Advanced List Main Page loads
     var FavoriteListID
     var FavoriteListName
@@ -1997,6 +2102,7 @@ function CheckIfRunningFavorite()
 
 function CreateAddToFavoritesLink()
 {
+    console.log("Function: " + arguments.callee.name)
     var ListName
     var ListID
     var pos
@@ -2018,6 +2124,7 @@ function CreateAddToFavoritesLink()
 
 function AdvancedListFavorite(listID, listName)
 {
+    console.log("Function: " + arguments.callee.name)
     var that=this;
     this.listID = listID;
     this.listName = listName;
@@ -2025,6 +2132,7 @@ function AdvancedListFavorite(listID, listName)
 
 function AddAdvancedListFavorite(listID, listName)
 {
+    console.log("Function: " + arguments.callee.name)
     var rawFavorites = localStorage.getItem("AdvancedListFavorites");
     var favorites = [];
 
@@ -2051,12 +2159,13 @@ function AddAdvancedListFavorite(listID, listName)
 
 }
 
-// ----------------------------------------------------------------------------------------
+// --------------------------------------[INDEX021]----------------------------------------
 // ------------------------------WYSIWYG Editor Improvements-------------------------------
 // ----------------------------------------------------------------------------------------
 
 function EditorImprovements(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     // Default Size
     if (localStorage.getItem("EditorDefaultSize") > 0)
     {
@@ -2066,20 +2175,39 @@ function EditorImprovements(jNode)
     // Expand Editor Size
     if (!$("#expand-" + $("iframe").attr("id")).length)
     {
-        $("iframe").closest(".row").append('<div id="expand-' + $("iframe").attr("id") + '" align="right"><a href="javascript:void(0)" class="expand-editor"><font size="-1">&#9660Expand&#9660</font></a></div>')
+        if ($("iframe").closest(".row").length)
+        {
+            $("iframe").closest(".row").append('<div id="expand-' + $("iframe").attr("id") + '" align="right"><a href="javascript:void(0)" class="expand-editor"><font size="-1">&#9660Expand&#9660</font></a></div>')
+        } else if ($("iframe").closest(".form-group").length)
+        {
+            $("iframe").closest(".form-group").append('<div id="expand-' + $("iframe").attr("id") + '" align="right"><a href="javascript:void(0)" class="expand-editor"><font size="-1">&#9660Expand&#9660</font></a></div>')
+        } else
+        {
+            $("iframe").closest("tr").after('<div id="expand-' + $("iframe").attr("id") + '" align="right"><a href="javascript:void(0)" class="expand-editor"><font size="-1">&#9660Expand&#9660</font></a></div>')
+        }
     }
 
     $(".expand-editor").unbind("click").bind("click", function(){
-        $(this).closest(".row").find("iframe").css("height", +$(this).closest(".row").find("iframe").css("height").substr(0, $(this).closest(".row").find("iframe").css("height").length-2)+100 + "px")
+        if ($(this).closest(".row").length)
+        {
+            $(this).closest(".row").find("iframe").css("height", +$(this).closest(".row").find("iframe").css("height").substr(0, $(this).closest(".row").find("iframe").css("height").length-2)+100 + "px")
+        } else if ($("iframe").closest(".form-group").length)
+        {
+            $(this).closest(".form-group").find("iframe").css("height", +$(this).closest(".form-group").find("iframe").css("height").substr(0, $(this).closest(".form-group").find("iframe").css("height").length-2)+100 + "px")
+        } else
+        {
+            $(this).closest("tr").find("iframe").css("height", +$(this).closest("tr").find("iframe").css("height").substr(0, $(this).closest("tr").find("iframe").css("height").length-2)+100 + "px")
+        }
     });
 }
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------[INDEX022]-------------------------------------
 // --------------------------------Highlight Invalid Attendance----------------------------
 // ----------------------------------------------------------------------------------------
 
 function HighlightInvalidAttendance(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     $("tbody").children("tr").each(function(index){
         HighlightInvalidAttendanceRow(this)
     });
@@ -2091,6 +2219,7 @@ function HighlightInvalidAttendance(jNode)
 
 function HighlightInvalidAttendanceRow(jNode)
 {
+    console.log("Function: " + arguments.callee.name)
     if ($(jNode).children("td").eq(4).text() == "HR")
     {
         // Block: Homeroom
@@ -2116,7 +2245,20 @@ function HighlightInvalidAttendanceRow(jNode)
     }
 }
 
+// ---------------------------------------[INDEX023]---------------------------------------
+// --------------------------------Automatically Expand All--------------------------------
 // ----------------------------------------------------------------------------------------
+
+function AutomaticallyExpandAll()
+{
+    console.log("Function: " + arguments.callee.name)
+    if (localStorage.getItem("AutomaticallyExpandAll") == "True")
+    {
+        $(".fa-chevron-down:visible").click()
+    }
+}
+
+// -----------------------------------------[INDEX900]-------------------------------------
 // -----------------------------------Misc. Helper Functions-------------------------------
 // ----------------------------------------------------------------------------------------
 
