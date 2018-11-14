@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.6.0
+// @version      1.6.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -133,7 +133,7 @@ Completed Mods:
      size is selected in the editor.
 
      The (vertical) size of the editor is also very small.  Expand button has been added, which can be clicked on to
-     increase the size of the box.
+     increase the size of the box.  Added in v1.6.1: The starting height of all editor boxes can be customized on the Settings page
 
 19 - Highlight Invalid Attendance
      Invalid attendance (class codes in Homeroom or non-class codes in classes) will be highlighted on the Student Attendance
@@ -1866,6 +1866,12 @@ function GenerateSettingsPage(jNode)
     str += '<td><select id="EditorDefaultSize"><option value="default">Default</option><option value="8">8</option><option value="10">10</option><option value="12">12</option><option value="14">14</option><option value="16">16 (Recommended)</option><option value="24">24</option><option value="36">36</option></select>'
     str += '</td></tr>'
 
+    //WYSIWYG Editor box starting height
+    str += '<tr><td valign="top">WYSIWYG Editor Box Starting Height'
+    str += '<a class="notificationIcon" title="Most editor boxes start at height 100.  If you are frequently expanding editor boxes, select a larger starting height with this option.  Each manual expand of the editor box increases the height by 100."><i class="p3icon-notification-2"></i></a></td>'
+    str += '<td><select id="EditorBoxHeight"><option value="default">Default</option><option value="100">100</option><option value="200">200</option><option value="300">300</option><option value="400">400</option><option value="500">500</option><option value="600">600</option><option value="700">700</option></select>'
+    str += '</td></tr>'
+
     // Automatically Expand All
     str += '<tr><td valign="top"><label for="AutomaticallyExpandAll">Automatically Expand All&nbsp</label>'
     str += '<a class="notificationIcon" title="When enabled, all collapsed areas (identified by the down chevron), such as financial aid will be expanded automatically when the page loads. Also causes the Checklist page to load grouped by milestone."><i class="p3icon-notification-2"></i></a></td>'
@@ -1920,6 +1926,12 @@ function GenerateSettingsPage(jNode)
         $("#EditorDefaultSize").val(localStorage.getItem("EditorDefaultSize"))
     }
 
+    // WYSIWYG Editor Box Starting Height
+    if (localStorage.getItem("EditorBoxHeight") != null)
+    {
+        $("#EditorBoxHeight").val(localStorage.getItem("EditorBoxHeight"))
+    }
+
     // Automatically Expand All
     if (localStorage.getItem("AutomaticallyExpandAll") != null)
     {
@@ -1953,6 +1965,9 @@ function GenerateSettingsPage(jNode)
     });
     $("#EditorDefaultSize").unbind("click change").bind("click change", function(){
         localStorage.setItem("EditorDefaultSize", $("#EditorDefaultSize").val())
+    });
+    $("#EditorBoxHeight").unbind("click change").bind("click change", function(){
+        localStorage.setItem("EditorBoxHeight", $("#EditorBoxHeight").val())
     });
     $("#AutomaticallyExpandAll").unbind("click change").bind("click change", function(){
         if ($("#AutomaticallyExpandAll").prop("checked") == true)
@@ -2189,6 +2204,12 @@ function EditorImprovements(jNode)
     if (localStorage.getItem("EditorDefaultSize") > 0)
     {
         $(jNode).siblings("head").append('<style>body {font-size:' + localStorage.getItem("EditorDefaultSize") + 'px;}</style>')
+    }
+
+    // Default Height
+    if (localStorage.getItem("EditorBoxHeight") > 0)
+    {
+        $("iframe").css("height", localStorage.getItem("EditorBoxHeight") + 'px')
     }
 
     // Expand Editor Size
