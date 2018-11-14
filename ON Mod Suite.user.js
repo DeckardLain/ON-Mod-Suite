@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.6.1
+// @version      1.6.2
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -133,7 +133,7 @@ Completed Mods:
      size is selected in the editor.
 
      The (vertical) size of the editor is also very small.  Expand button has been added, which can be clicked on to
-     increase the size of the box.  Added in v1.6.1: The starting height of all editor boxes can be customized on the Settings page
+     increase the size of the box.  Added in v1.6.1: The starting height of all editor boxes can be customized on the Settings page.
 
 19 - Highlight Invalid Attendance
      Invalid attendance (class codes in Homeroom or non-class codes in classes) will be highlighted on the Student Attendance
@@ -2473,7 +2473,7 @@ function EmailFromAdvancedListGatherAndSend()
     var pageInfo = "";
 
     var timerID = setInterval(function(){
-        if ($("[title='Next Page'], [title='Previous Page']").closest("td").text() != pageInfo)
+        if ($("[title='Next Page'], [title='Previous Page']").closest("td").text() != pageInfo || !$("[title='Next Page'], [title='Previous Page']").closest("td").length)
         {
             $(".tblcell").each(function(){
                 var email = $(this).children("td").eq($('th:contains("E-Mail")').index()).text()
