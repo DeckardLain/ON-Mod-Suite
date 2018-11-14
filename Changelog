@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.1] - 2018-11-13
+### Changed
+- WYSIWYG Editor Improvements - starting height for all editor boxes can now be customized on the Settings page.
+
+## [1.6.0] - 2018-11-13
+### Added
+- Official Notes Improvements - Move unread messages to top
+- Official Notes Improvements - Remove notes of type Admissions Only
+- Official Notes Improvements - Candidate names are now linked to their checklist page
+- Email from Advanced List
+
 ## [1.5.0] - 2018-11-07
 ### Added
 - Automatically Expand All
