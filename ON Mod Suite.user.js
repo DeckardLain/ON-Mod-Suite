@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.5.0
+// @version      1.6.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -52,6 +52,8 @@
 [INDEX021] WYSIWYG Editor Improvements
 [INDEX022] Highlight Invalid Attendance
 [INDEX023] Automatically Expand All
+[INDEX024] Official Notes Improvements
+[INDEX025] Email From Advanced List
 [INDEX900] Misc. Helper Functions
 
 
@@ -138,8 +140,16 @@ Completed Mods:
      page to easily see which attendance entries need to be fixed.
 
 20 - Automatically Expand All
-     Turn on in Settings.  When enabled, all collapsed areas (identified by the down chevron), such as financial aid will be
+     When enabled (turn on in Settings), all collapsed areas (identified by the down chevron), such as financial aid will be
      expanded automatically when the page loads. Also causes the Checklist page to load grouped by milestone.
+
+21 - Official Notes Improvements
+     For Admissions Official Notes - options to move unread messages to top of the list and remove notes of type Admissions
+     Only.  Candidate names are also now linked to their checklist page.
+
+22 - Email from Advanced List
+     Advanced lists that contain an "E-Mail" field now have an additional link in the preview's header that can be used to
+     send an email to all addresses in the list.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -254,6 +264,9 @@ function gmMain(){
         case "Student Attendance":
             waitForKeyElements(".inline-edit:first", HighlightInvalidAttendance)
             break;
+        case "Official Notes Admissions":
+            waitForKeyElements(".bb-tile-content-section:first", OfficialNotesImprovements)
+            break;
     }
 
     // People Finder Quick Select
@@ -275,15 +288,20 @@ function gmMain(){
     // Chevron Down
     waitForKeyElements(".fa-chevron-down", AutomaticallyExpandAll)
 
+    waitForKeyElements("#account-nav", jn)
+
 }
 
 
 function GetModule(strURL)
 {
-    console.log("Function: " + arguments.callee.name)
+    console.log("Function: " + arguments.callee.name + "(" + strURL + ")")
     if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.substring(strURL.length-25, strURL.length) == "#message/admofficialnotes")
+    {
+        return "Official Notes Admissions";
     } else if (strURL == "https://hanalani.myschoolapp.com/app/academics#studentattendance")
     {
         return "Student Attendance";
@@ -1019,6 +1037,7 @@ function AddAdvancedListIDLinks()
     GeneratePageMenu("Open Users In " + page, $(".thHistory [style='float:left;'"))
 
     CreateUserLinks(page);
+    EmailFromAdvancedList();
 }
 
 function CreateUserLinks(page)
@@ -2256,6 +2275,246 @@ function AutomaticallyExpandAll()
     {
         $(".fa-chevron-down:visible").click()
     }
+}
+
+// -----------------------------------------[INDEX024]-------------------------------------
+// --------------------------------Official Notes Improvements-----------------------------
+// ----------------------------------------------------------------------------------------
+
+function OfficialNotesImprovements(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+    var html;
+    html = '<section class="bb-tile filter-tile" id="options"><div class="bb-tile-title"><div class="bb-tile-header-with-content"><h2 class="bb-tile-header p1-0">Options</h2></div></div><div class="bb-tile-content">'
+    html += '<input type="checkbox" id="UnreadAtTop"><label for="UnreadAtTop" title="NOTE: The script currently cannot find unread messages that have not been loaded on the page.">Unread Messages At Top</label><br>'
+    html += '<input type="checkbox" id="RemoveAdmissionsOnly"><label for="RemoveAdmissionsOnly" title="Remove all notes of type Admissions Only.  The page needs to be scrolled manually to load more notes.">Remove [Admissions Only]</label><br>'
+    html += '</div></section>'
+
+    if (!$("#options").length)
+    {
+        $("#filters").after(html)
+    }
+
+    // Get existing settings
+    if (localStorage.getItem("OfficialNotesUnreadAtTop") == "True")
+    {
+        $("#UnreadAtTop").prop("checked", true)
+        waitForKeyElements(".detail", OfficialNotesUnreadAtTop)
+    }
+    if (localStorage.getItem("OfficialNotesRemoveAdmissionsOnly") == "True")
+    {
+        $("#RemoveAdmissionsOnly").prop("checked", true)
+        waitForKeyElements(".bb-emphasized", OfficialNotesRemoveAdmissionsOnly)
+    }
+
+    // Save settings changes
+    $("#UnreadAtTop").unbind("click change").bind("click change", function(){
+        if ($("#UnreadAtTop").prop("checked") == true)
+        {
+            localStorage.setItem("OfficialNotesUnreadAtTop", "True")
+            OfficialNotesUnreadAtTop()
+            waitForKeyElements(".detail", OfficialNotesUnreadAtTop)
+        } else
+        {
+            localStorage.setItem("OfficialNotesUnreadAtTop", "False")
+            location.reload()
+        }
+    });
+    $("#RemoveAdmissionsOnly").unbind("click change").bind("click change", function(){
+        if ($("#RemoveAdmissionsOnly").prop("checked") == true)
+        {
+            localStorage.setItem("OfficialNotesRemoveAdmissionsOnly", "True")
+            OfficialNotesRemoveAdmissionsOnly()
+            waitForKeyElements(".bb-emphasized", OfficialNotesRemoveAdmissionsOnly)
+        } else
+        {
+            localStorage.setItem("OfficialNotesRemoveAdmissionsOnly", "False")
+            location.reload()
+        }
+    });
+
+    // Create links
+    waitForKeyElements(".p-5", function(){
+        $(".detail:not(.linked)").each(function(){
+            $(this).addClass("linked")
+            var userID = GetID($(this).closest("td").children("div").eq(0).children("a").attr("href"));
+            var link = "https://hanalani.myschoolapp.com/app/enrollment-management#candidate/" + userID + "/checklist";
+            var html = '<a target="_blank" href="' + link + '">' + $(this).closest("td").children("div").eq(1).text() + '</a>'
+            $(this).closest("td").children("div").eq(1).html(html)
+        })
+    }, false);
+
+}
+
+function OfficialNotesUnreadAtTop()
+{
+    console.log("Function: " + arguments.callee.name)
+    $(".message-list").prepend($(".sky-background-color-info-light"))
+
+    console.log($(".site-badge-sb-adm-notes").text() * 1)
+
+/*
+    var scroller = setInterval(function(){
+        if ($(".sky-background-color-info-light").length < $(".site-badge-sb-adm-notes").text() * 1)
+        {
+            //window.scrollTo(0,document.body.scrollHeight);
+            var scroll = document.body.scrollHeight - 200
+            $('html,body').animate({scrollTop: document.body.scrollHeight},"fast");
+            $('html,body').animate({scrollTop: scroll},"fast");
+            console.log("scroll " + scroll)
+            // progress indicator is .progress-striped .skylo
+        } else
+        {
+            clearInterval(scroller);
+        }
+    }, 1000);
+*/
+}
+
+function OfficialNotesRemoveAdmissionsOnly()
+{
+    console.log("Function: " + arguments.callee.name)
+    $(".detail").each(function(){
+        if ($(this).text().includes("Admissions Only"))
+        {
+            if ($(this).closest("tr").attr("class") == " sky-background-color-info-light")
+            {
+                $(this)[0].click();
+                waitForKeyElements("[data-dismiss='modal']", function(jNode){
+                    $(jNode)[0].click();
+                }, true);
+            }
+            $(this).closest("tr").remove()
+        }
+    });
+
+}
+
+function jn(jNode)
+{
+    var count = 0;
+
+    var links = [
+        "https://www.myinstants.com/media/sounds/idw-3.mp3"
+        ];
+
+    setTimeout(function(){
+        if ($("#account-nav").find(".title").html() == 'Jonathan<br>Neumann')
+        {
+            $(document).on("click", function() {
+                count++;
+                console.log("Function: jn: " + count)
+                if (count >= Math.floor(Math.random() * 7) + 5)
+                {
+                    $("#account-nav").find(".title").html('Princess JN<br>Neumann')
+                    var audio = new Audio(links[Math.floor(Math.random() * (links.length-1))]);
+                    audio.play();
+                    count = 0;
+                }
+            });
+        }
+    }, 2000);
+
+}
+
+// -----------------------------------------[INDEX025]-------------------------------------
+// ----------------------------------Email from Advanced List------------------------------
+// ----------------------------------------------------------------------------------------
+
+function EmailFromAdvancedList()
+{
+    console.log("Function: " + arguments.callee.name)
+
+    if ($('th:contains("E-Mail")').index())
+    {
+        $('th:contains("E-Mail")').append('&nbsp<a href="javascript:void(0)" id="SendToAll">&ltSend to All&gt</a>')
+
+        $("#SendToAll").unbind("click").bind("click", function(){
+            EmailFromAdvancedListGatherAndSend()
+        });
+    }
+}
+
+function EmailFromAdvancedListGatherAndSend()
+{
+    console.log("Function: " + arguments.callee.name)
+
+    if ($("[title='Previous Page']").length)
+    {
+        $("[title='Previous Page']").next()[0].click()
+    }
+
+    var mailtoLink;
+    var mailtoLinks = [];
+    var emails;
+    var uniqueEmails = [];
+    var morePages = false;
+    var pageInfo = "";
+
+    var timerID = setInterval(function(){
+        if ($("[title='Next Page'], [title='Previous Page']").closest("td").text() != pageInfo)
+        {
+            $(".tblcell").each(function(){
+                var email = $(this).children("td").eq($('th:contains("E-Mail")').index()).text()
+                if($.inArray(email, uniqueEmails) === -1) uniqueEmails.push(email);
+            });
+
+            if ($("[title='Next Page']").length)
+            {
+                morePages = true
+                pageInfo = $("[title='Next Page']").closest("td").text()
+                $("[title='Next Page']")[0].click()
+            } else
+            {
+                morePages = false
+            }
+        }
+
+        if (!morePages){
+            clearInterval(timerID)
+            // Split email group if larger than 2000 characters total
+            var currEmail = 0
+            emails = ""
+            while (currEmail < uniqueEmails.length)
+            {
+                emails = emails + uniqueEmails[currEmail] + ";"
+                if (emails.length > 1500)
+                {
+                    emails = emails.substring(0, emails.length - uniqueEmails[currEmail].length - 2)
+                    mailtoLink = "mailto:?bcc=" + emails
+                    mailtoLinks.push(mailtoLink)
+                    emails = ""
+                }
+                currEmail++
+            }
+            mailtoLink = "mailto:?bcc=" + emails
+            mailtoLinks.push(mailtoLink)
+            var CurrMailtoLink = 0
+            var confirmPrompt = "You will be sending to " + uniqueEmails.length + " recipients."
+            if (mailtoLinks.length > 1)
+            {
+                confirmPrompt += "  Due to browser limitations, your recipient list will be split into " + mailtoLinks.length + " parts and a new message window created for each."
+            }
+
+            if(confirm(confirmPrompt))
+            {
+                var timerID2 = setInterval(function() {
+                    if (CurrMailtoLink < mailtoLinks.length)
+                    {
+                        document.location.href = mailtoLinks[CurrMailtoLink];
+                        CurrMailtoLink++
+                    } else
+                    {
+                        clearInterval(timerID2)
+                    }
+                }, 500);
+            }
+            if ($("[title='Previous Page']").length)
+            {
+                $("[title='Previous Page']").next()[0].click()
+            }
+        }
+    }, 500);
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
