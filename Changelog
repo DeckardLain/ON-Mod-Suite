@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.2] - 2018-11-13
+### Fixed
+- Email from Advanced List was failing when there was only one page of results.
+
 ## [1.6.1] - 2018-11-13
 ### Changed
 - WYSIWYG Editor Improvements - starting height for all editor boxes can now be customized on the Settings page.
