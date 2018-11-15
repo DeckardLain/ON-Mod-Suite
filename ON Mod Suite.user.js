@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.6.2
+// @version      1.6.3
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -270,7 +270,7 @@ function gmMain(){
     }
 
     // People Finder Quick Select
-    waitForKeyElements("#people-finder-search-box", PeopleFinderQuickSelect)
+    waitForKeyElements(".people-finder-search-box", PeopleFinderQuickSelect)
 
     // Remove Connect5 Info
     waitForKeyElements(".emergencyemaildetail p", RemoveConnect5Info)
@@ -533,36 +533,36 @@ function GetID(strURL)
 function PeopleFinderQuickSelect(jNode)
 {
     console.log("Function: " + arguments.callee.name)
-    $("#people-finder-search-box").keypress(function (e){
+    $(".people-finder-search-box").keypress(function (e){
         switch (e.keyCode)
         {
             case 13:
             case 49:
-                $(".pf-user").eq(0).click();
+                $("#PeopleFinderContainer").find(".pf-user").eq(0).click();
                 break;
             case 50:
-                $(".pf-user").eq(1).click();
+                $("#PeopleFinderContainer").find(".pf-user").eq(1).click();
                 break;
             case 51:
-                $(".pf-user").eq(2).click();
+                $("#PeopleFinderContainer").find(".pf-user").eq(2).click();
                 break;
             case 52:
-                $(".pf-user").eq(3).click();
+                $("#PeopleFinderContainer").find(".pf-user").eq(3).click();
                 break;
             case 53:
-                $(".pf-user").eq(4).click();
+                $("#PeopleFinderContainer").find(".pf-user").eq(4).click();
                 break;
             case 54:
-                $(".pf-user").eq(5).click();
+                $("#PeopleFinderContainer").find(".pf-user").eq(5).click();
                 break;
             case 55:
-                $(".pf-user").eq(6).click();
+                $("#PeopleFinderContainer").find(".pf-user").eq(6).click();
                 break;
             case 56:
-                $(".pf-user").eq(7).click();
+                $("#PeopleFinderContainer").find(".pf-user").eq(7).click();
                 break;
             case 57:
-                $(".pf-user").eq(8).click();
+                $("#PeopleFinderContainer").find(".pf-user").eq(8).click();
         }
 
     })
