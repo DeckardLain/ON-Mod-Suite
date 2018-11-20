@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.6.3
+// @version      1.6.4
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -2398,6 +2398,7 @@ function OfficialNotesRemoveAdmissionsOnly()
     $(".detail").each(function(){
         if ($(this).text().includes("Admissions Only"))
         {
+            /*
             if ($(this).closest("tr").attr("class") == " sky-background-color-info-light")
             {
                 $(this)[0].click();
@@ -2405,6 +2406,7 @@ function OfficialNotesRemoveAdmissionsOnly()
                     $(jNode)[0].click();
                 }, true);
             }
+            */
             $(this).closest("tr").remove()
         }
     });
