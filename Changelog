@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.5] - 2018-11-26
+### Added
+- Pushpage Improvements - Increase Distribution Group List Box Size
+
+## [1.6.4] - 2018-11-20
+### Fixed
+- Official notes - no longer clicks admissions only notes to mark them as read, as it breaks the page's content loader.
+
+## [1.6.3] - 2018-11-15
+### Fixed
+- People Finder Quick Select updated to work with Blackbaud's latest update, which enables People Finder on mobile devices.
+
 ## [1.6.2] - 2018-11-13
 ### Fixed
 - Email from Advanced List was failing when there was only one page of results.
