@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.6.4
+// @version      1.6.5
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -54,6 +54,7 @@
 [INDEX023] Automatically Expand All
 [INDEX024] Official Notes Improvements
 [INDEX025] Email From Advanced List
+[INDEX026] Pushpage Improvements
 [INDEX900] Misc. Helper Functions
 
 
@@ -150,6 +151,10 @@ Completed Mods:
 22 - Email from Advanced List
      Advanced lists that contain an "E-Mail" field now have an additional link in the preview's header that can be used to
      send an email to all addresses in the list.
+
+23 - Pushpage Improvements
+     Increase Distribution Group List Box Size - When creating or editing a distribution group, increases the size of the
+     list selection box so that it is actually usable.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -267,6 +272,9 @@ function gmMain(){
         case "Official Notes Admissions":
             waitForKeyElements(".bb-tile-content-section:first", OfficialNotesImprovements)
             break;
+        case "Create Distribution Group":
+            waitForKeyElements("[style='height:75px;width:200px;visibility:visible !important;']", IncreaseDistributionGroupListBoxSize, true)
+            break;
     }
 
     // People Finder Quick Select
@@ -299,6 +307,9 @@ function GetModule(strURL)
     if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=52800" || strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=52801" || strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=52802")
+    {
+        return "Create Distribution Group";
     } else if (strURL.substring(strURL.length-25, strURL.length) == "#message/admofficialnotes")
     {
         return "Official Notes Admissions";
@@ -2538,6 +2549,16 @@ function EmailFromAdvancedListGatherAndSend()
             }
         }
     }, 500);
+}
+
+// -----------------------------------------[INDEX026]-------------------------------------
+// -----------------------------------Pushpage Improvements--------------------------------
+// ----------------------------------------------------------------------------------------
+
+function IncreaseDistributionGroupListBoxSize(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+    jNode.css({"height": "200px", "width": "400px"});
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
