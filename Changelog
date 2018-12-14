@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.6] - 2018-12-13
+### Added
+- People Finder - Click the menu button to put the cursor in the search box
+- People Finder - Prevent the menu from hiding as long as the cursor is in the search box
+- People Finder - If the menu is locked open, hit Escape or click on the page to hide the menu again
+
 ## [1.6.5] - 2018-11-26
 ### Added
 - Pushpage Improvements - Increase Distribution Group List Box Size
