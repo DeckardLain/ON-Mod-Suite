@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.6.5
+// @version      1.6.6
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -65,6 +65,9 @@ Completed Mods:
 2 - People Finder Quick Select
      Hit enter when searching with People Finder to open the first result.
      Use number keys 1-9 to select the nth search result
+     Added in v1.6.6 - Click on the People Finder menu button to put the cursor in the search box.  The
+     script now prevents the menu from hiding as long as the cursor is in the search box. Click on the page
+     or hit Escape to cancel and hide the menu.
 
 3 - Switch Roster to Faculty
      Class rosters opened in Academics are missing the Send Communication menu.
@@ -574,9 +577,39 @@ function PeopleFinderQuickSelect(jNode)
                 break;
             case 57:
                 $("#PeopleFinderContainer").find(".pf-user").eq(8).click();
+                break;
         }
 
     })
+
+    $(".people-finder-search-box").keyup(function (e){
+        if (e.key ==="Escape")
+        {
+            $("#PeopleFinderContainer").hide();
+        }
+    });
+
+    $("#PeopleFinderContainer").parent().find(".subnavtrigger").unbind("click").bind("click", function(){
+        $("#PeopleFinderContainer").find(".people-finder-search-box")[0].focus();
+        $("#PeopleFinderContainer").find(".people-finder-search-box")[0].select();
+    });
+
+    $(document).bind("mousemove", function(){
+        if ($(".people-finder-search-box:focus").length)
+        {
+            $("#PeopleFinderContainer").show();
+        }
+    });
+
+    $(".site-main-wrap").bind("click", function(){
+        $("#PeopleFinderContainer").hide();
+    });
+
+    $("#lPg").bind("click", function(){
+        $("#PeopleFinderContainer").hide();
+    });
+
+
 }
 
 // -------------------------------------[INDEX004]-----------------------------------------
@@ -2271,27 +2304,30 @@ function HighlightInvalidAttendance(jNode)
 function HighlightInvalidAttendanceRow(jNode)
 {
     console.log("Function: " + arguments.callee.name)
-    if ($(jNode).children("td").eq(4).text() == "HR")
+    if (window.location.href == "https://hanalani.myschoolapp.com/app/academics#studentattendance")
     {
-        // Block: Homeroom
-        if ($(jNode).children("td").eq(6).text().includes("[Class]"))
+        if ($(jNode).children("td").eq(4).text() == "HR")
         {
-            // Class code
-            $(jNode).css("background-color", "red");
+            // Block: Homeroom
+            if ($(jNode).children("td").eq(6).text().includes("[Class]"))
+            {
+                // Class code
+                $(jNode).css("background-color", "red");
+            } else
+            {
+                $(jNode).css("background-color", "");
+            }
         } else
         {
-            $(jNode).css("background-color", "");
-        }
-    } else
-    {
-        // Block: Not Homeroom
-        if (!$(jNode).children("td").eq(6).text().includes("[Class]"))
-        {
-            // Not Class code
-            $(jNode).css("background-color", "red");
-        } else
-        {
-            $(jNode).css("background-color", "");
+            // Block: Not Homeroom
+            if (!$(jNode).children("td").eq(6).text().includes("[Class]"))
+            {
+                // Not Class code
+                $(jNode).css("background-color", "red");
+            } else
+            {
+                $(jNode).css("background-color", "");
+            }
         }
     }
 }
