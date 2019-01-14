@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.7] - 2019-01-14
+### Added
+- ENR-12 Shortcuts
+
 ## [1.6.6] - 2018-12-13
 ### Added
 - People Finder - Click the menu button to put the cursor in the search box
