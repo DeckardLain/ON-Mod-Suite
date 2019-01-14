@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.6.6
+// @version      1.6.7
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -55,6 +55,7 @@
 [INDEX024] Official Notes Improvements
 [INDEX025] Email From Advanced List
 [INDEX026] Pushpage Improvements
+[INDEX027] ENR-12 Shortcuts
 [INDEX900] Misc. Helper Functions
 
 
@@ -158,6 +159,11 @@ Completed Mods:
 23 - Pushpage Improvements
      Increase Distribution Group List Box Size - When creating or editing a distribution group, increases the size of the
      list selection box so that it is actually usable.
+
+24 - ENR-12 Shortcuts
+     To improve ENR-12 processing speed, when viewing registries for the ENR-12 form, shortcuts to view contract status or send
+     email to the parent have been added.  Also, when opening the contract list from the registration, the student link will
+     open to their Academics->Groups page for adding additional programs.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -278,6 +284,11 @@ function gmMain(){
         case "Create Distribution Group":
             waitForKeyElements("[style='height:75px;width:200px;visibility:visible !important;']", IncreaseDistributionGroupListBoxSize, true)
             break;
+        case "Edit Registry":
+            waitForKeyElements("#L_c1i0_cb88911_ct88911_ctl00_f_7", ENR12Shortcuts, true)
+            break;
+        case "Contracts List":
+            waitForKeyElements(".bb-search-input-container", ContractListAutoSearch, true)
     }
 
     // People Finder Quick Select
@@ -310,6 +321,12 @@ function GetModule(strURL)
     if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL == "https://hanalani.myschoolapp.com/app/enrollment-management#lists/contracts")
+    {
+        return "Contracts List"
+    } else if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=36655")
+    {
+        return "Edit Registry";
     } else if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=52800" || strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=52801" || strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=52802")
     {
         return "Create Distribution Group";
@@ -2595,6 +2612,65 @@ function IncreaseDistributionGroupListBoxSize(jNode)
 {
     console.log("Function: " + arguments.callee.name)
     jNode.css({"height": "200px", "width": "400px"});
+}
+
+// -----------------------------------------[INDEX027]-------------------------------------
+// --------------------------------------ENR-12 Shortcuts----------------------------------
+// ----------------------------------------------------------------------------------------
+
+function ENR12Shortcuts(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+
+    if ($(".thHistoryLink").find("span").text().includes("ENR-12"))
+    {
+        // Add Email hyperlink
+        var mailToHTML = '<a href="mailto:' + $(jNode).find("input").val() + '">Send Email</a>'
+        $(jNode).after(mailToHTML)
+
+        // Add button to view contract status
+        $("#L_c1i0_cb88911_ct88911_ctl00_f_1_txtf_1").after('<a href="javascript:void(0)" id="ViewContractStatus">View Contract Status</a>')
+
+        $("#ViewContractStatus").unbind("click").bind("click", function(){
+            var StudentName = $("#L_c1i0_cb88911_ct88911_ctl00_f_1_txtf_1").val() + " " + $("#L_c1i0_cb88911_ct88911_ctl00_f_3_txtf_3").val()
+            localStorage.setItem("ContractListSearchName", StudentName)
+            window.open("https://hanalani.myschoolapp.com/app/enrollment-management#lists/contracts", "Contract List", "top=0,left=0")
+        });
+    }
+}
+
+function ContractListAutoSearch(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+
+    if (localStorage.getItem("ContractListSearchName"))
+    {
+        console.log(localStorage.getItem("ContractListSearchName"))
+        $(jNode).find("input").focus()
+        $(jNode).find("input").val(localStorage.getItem("ContractListSearchName"))
+        $("#search-button").eq(0).click()
+        localStorage.removeItem("ContractListSearchName")
+
+        waitForKeyElements("td[aria-describedby*='ContractStatus']", function(jNode){
+            switch ($(jNode).text())
+            {
+                case "Submitted":
+                case "Processed":
+                    $(jNode).css('background-color', 'green')
+                    break;
+                case "None":
+                case "Saved":
+                    $(jNode).css('background-color', 'red')
+                    break;
+            }
+        });
+
+        waitForKeyElements('[aria-describedby*="FullName"]', function(jNode){
+            var link = "https://hanalani.myschoolapp.com/app/academics#academicprofile/" + GetID($(jNode).find("a").attr("href")) + "/enrollment"
+            $(jNode).find("a").attr("href", link)
+        });
+
+    }
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
