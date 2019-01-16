@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.6.7
+// @version      1.6.8
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -154,7 +154,7 @@ Completed Mods:
 
 22 - Email from Advanced List
      Advanced lists that contain an "E-Mail" field now have an additional link in the preview's header that can be used to
-     send an email to all addresses in the list.
+     send an email to all addresses in the list.  v1.6.8 also added individual mailto links for each address in the table.
 
 23 - Pushpage Improvements
      Increase Distribution Group List Box Size - When creating or editing a distribution group, increases the size of the
@@ -2520,6 +2520,12 @@ function EmailFromAdvancedList()
             EmailFromAdvancedListGatherAndSend()
         });
     }
+
+    $('.tblcell td:contains("@")').each(function(){
+        var EmailLink = '<a href="mailto:' + $(this).text() + '">' + $(this).text() + '</a>'
+        $(this).html(EmailLink)
+    })
+
 }
 
 function EmailFromAdvancedListGatherAndSend()
@@ -2634,7 +2640,7 @@ function ENR12Shortcuts(jNode)
         $("#ViewContractStatus").unbind("click").bind("click", function(){
             var StudentName = $("#L_c1i0_cb88911_ct88911_ctl00_f_1_txtf_1").val() + " " + $("#L_c1i0_cb88911_ct88911_ctl00_f_3_txtf_3").val()
             localStorage.setItem("ContractListSearchName", StudentName)
-            window.open("https://hanalani.myschoolapp.com/app/enrollment-management#lists/contracts", "Contract List", "top=0,left=0")
+            window.open("https://hanalani.myschoolapp.com/app/enrollment-management#lists/contracts", "Contract List", "top=0,left=0,menubar=yes,toolbar=yes")
         });
     }
 }
