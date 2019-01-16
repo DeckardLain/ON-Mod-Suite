@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.8] - 2019-01-15
+### Added
+- Advanced lists containing email fields now create mailto links for each email address in the results table.
+
 ## [1.6.7] - 2019-01-14
 ### Added
 - ENR-12 Shortcuts
