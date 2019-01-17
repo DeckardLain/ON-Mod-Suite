@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.9] - 2019-01-17
+### Fixed
+- Hotfix for email links in advanced lists
+
 ## [1.6.8] - 2019-01-15
 ### Added
 - Advanced lists containing email fields now create mailto links for each email address in the results table.
