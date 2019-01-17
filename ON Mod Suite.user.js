@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.6.8
+// @version      1.6.9
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -2521,7 +2521,7 @@ function EmailFromAdvancedList()
         });
     }
 
-    $('.tblcell td:contains("@")').each(function(){
+    $('.tblcell > td:contains("@")').each(function(){
         var EmailLink = '<a href="mailto:' + $(this).text() + '">' + $(this).text() + '</a>'
         $(this).html(EmailLink)
     })
