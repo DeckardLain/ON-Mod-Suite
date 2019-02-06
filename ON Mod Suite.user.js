@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.6.9
+// @version      1.6.10
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -273,7 +273,7 @@ function gmMain(){
             waitForKeyElements(".bb-dialog-header", ReverseAttendanceDefault)
             break;
         case "Core Dashboard":
-            waitForKeyElements(".col-md-9:first", AdvancedListFavorites)
+            waitForKeyElements(".core-dashboard", AdvancedListFavorites)
             break;
         case "Student Attendance":
             waitForKeyElements(".inline-edit:first", HighlightInvalidAttendance)
@@ -293,12 +293,14 @@ function gmMain(){
 
     // People Finder Quick Select
     waitForKeyElements(".people-finder-search-box", PeopleFinderQuickSelect)
+    waitForKeyElements("sis-people-finder", PeopleFinderQuickSelect)
 
     // Remove Connect5 Info
     waitForKeyElements(".emergencyemaildetail p", RemoveConnect5Info)
 
     // Page footer
     waitForKeyElements("#site-footer-fixed", AddPageFooter)
+    waitForKeyElements("sky-pages-app", AddPageFooter)
 
     // Page Number Navigation
     waitForKeyElements(".thCBarlink:first", CopyPageNumberNavigation)
@@ -310,7 +312,7 @@ function gmMain(){
     // Chevron Down
     waitForKeyElements(".fa-chevron-down", AutomaticallyExpandAll)
 
-    waitForKeyElements("#account-nav", jn)
+//    waitForKeyElements("#account-nav", jn)
 
 }
 
@@ -336,7 +338,7 @@ function GetModule(strURL)
     } else if (strURL == "https://hanalani.myschoolapp.com/app/academics#studentattendance")
     {
         return "Student Attendance";
-    } else if (strURL == "https://hanalani.myschoolapp.com/app/core#dashboard/system")
+    } else if (strURL == "https://hanalani.myschoolapp.com/edu-core/dashboard")
     {
         return "Core Dashboard";
     } else if (strURL == "https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184")
@@ -564,51 +566,65 @@ function GetID(strURL)
 function PeopleFinderQuickSelect(jNode)
 {
     console.log("Function: " + arguments.callee.name)
-    $(".people-finder-search-box").keypress(function (e){
+    $(".people-finder-search-box, input[placeholder='Type a name, ID or email']").keypress(function (e){
         switch (e.keyCode)
         {
             case 13:
             case 49:
                 $("#PeopleFinderContainer").find(".pf-user").eq(0).click();
+                $(".result").eq(0).click();
                 break;
             case 50:
                 $("#PeopleFinderContainer").find(".pf-user").eq(1).click();
+                $(".result").eq(1).click();
                 break;
             case 51:
                 $("#PeopleFinderContainer").find(".pf-user").eq(2).click();
+                $(".result").eq(2).click();
                 break;
             case 52:
                 $("#PeopleFinderContainer").find(".pf-user").eq(3).click();
+                $(".result").eq(3).click();
                 break;
             case 53:
                 $("#PeopleFinderContainer").find(".pf-user").eq(4).click();
+                $(".result").eq(4).click();
                 break;
             case 54:
                 $("#PeopleFinderContainer").find(".pf-user").eq(5).click();
+                $(".result").eq(5).click();
                 break;
             case 55:
                 $("#PeopleFinderContainer").find(".pf-user").eq(6).click();
+                $(".result").eq(6).click();
                 break;
             case 56:
                 $("#PeopleFinderContainer").find(".pf-user").eq(7).click();
+                $(".result").eq(7).click();
                 break;
             case 57:
                 $("#PeopleFinderContainer").find(".pf-user").eq(8).click();
+                $(".result").eq(8).click();
                 break;
         }
 
     })
 
-    $(".people-finder-search-box").keyup(function (e){
+    $(".people-finder-search-box, input[placeholder='Type a name, ID or email']").keyup(function (e){
         if (e.key ==="Escape")
         {
-            $("#PeopleFinderContainer").hide();
+            $("#PeopleFinderContainer, .results").hide();
         }
     });
 
     $("#PeopleFinderContainer").parent().find(".subnavtrigger").unbind("click").bind("click", function(){
         $("#PeopleFinderContainer").find(".people-finder-search-box")[0].focus();
         $("#PeopleFinderContainer").find(".people-finder-search-box")[0].select();
+    });
+
+    $(".root-nav-item").eq(4).unbind("click").bind("click", function(){
+        $("input[placeholder='Type a name, ID or email']").focus();
+        $("input[placeholder='Type a name, ID or email']").select();
     });
 
     $(document).bind("mousemove", function(){
@@ -619,11 +635,11 @@ function PeopleFinderQuickSelect(jNode)
     });
 
     $(".site-main-wrap").bind("click", function(){
-        $("#PeopleFinderContainer").hide();
+        $("#PeopleFinderContainer, .results").hide();
     });
 
     $("#lPg").bind("click", function(){
-        $("#PeopleFinderContainer").hide();
+        $("#PeopleFinderContainer, .results").hide();
     });
 
 
@@ -2107,15 +2123,15 @@ function CopyPageNumberNavigation(jNode)
 function AdvancedListFavorites()
 {
     console.log("Function: " + arguments.callee.name)
-    if (location.href == "https://hanalani.myschoolapp.com/app/core#dashboard/system")
+    if (location.href == "https://hanalani.myschoolapp.com/edu-core/dashboard")
     {
-        $(".col-md-9").append('<h1>Favorite Lists</h><br>')
+        $(".core-dashboard").append('<h1>Favorite Lists</h><br>')
 
         var rawFavorites = localStorage.getItem("AdvancedListFavorites");
 
         if (rawFavorites == null)
         {
-            $(".col-md-9").append("No favorites yet. Go to Advanced Lists to add some.")
+            $(".core-dashboard").append("No favorites yet. Go to Advanced Lists to add some.")
             return;
         }
 
@@ -2124,14 +2140,15 @@ function AdvancedListFavorites()
 
         if (!favorites.length)
         {
-            $(".col-md-9").append("No favorites yet. Go to Advanced Lists to add some.")
+            $(".core-dashboard").append("No favorites yet. Go to Advanced Lists to add some.")
         } else
         {
 
             favorites.forEach(function(value){
                 favoriteHTML = value.listName + ' | <a href="javascript:void(0)" class="fav-list-copy" data-id="' + value.listID + '" data-name="' + value.listName + '">Copy</a>' + ' | <a href="javascript:void(0)" class="fav-list-run" data-id="' + value.listID + '" data-name="' + value.listName + '">Run</a>' + ' | <a href="javascript:void(0)" class="fav-list-remove" data-id="' + value.listID + '" data-name="' + value.listName + '">Remove from Favorites</a><br>'
-                $(".col-md-9").append(favoriteHTML)
+                $(".core-dashboard").append(favoriteHTML)
             });
+            $(".core-dashboard").append("<p>")
 
             $(document).on('click', ".fav-list-copy", function(){
                 localStorage.setItem("FavoriteListRunID", $(this).attr("data-id"))
@@ -2358,7 +2375,7 @@ function AutomaticallyExpandAll()
     console.log("Function: " + arguments.callee.name)
     if (localStorage.getItem("AutomaticallyExpandAll") == "True")
     {
-        $(".fa-chevron-down:visible").click()
+        $(".fa-chevron-down:visible").not(".fa-lg").click()
     }
 }
 
