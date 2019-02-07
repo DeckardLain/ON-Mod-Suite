@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.10] - 2019-02-06
+### Fixed
+- (Some of) People Finder fixed to work with Blackbaud's latest update.  Core->Dashboard uses completely different code in
+People Finder, so not all modifications are working on that page.
+
 ## [1.6.9] - 2019-01-17
 ### Fixed
 - Hotfix for email links in advanced lists
