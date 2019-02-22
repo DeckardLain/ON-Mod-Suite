@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.6.11] - 2019-02-21
+### Changed
+- ENR-12 Shortcuts added to SUM-02 and SUM-03 forms.
+
 ## [1.6.10] - 2019-02-06
 ### Fixed
 - (Some of) People Finder fixed to work with Blackbaud's latest update.  Core->Dashboard uses completely different code in
