@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.6.10
+// @version      1.6.11
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -11,7 +11,7 @@
 // @require      https://gist.github.com/raw/2625891/waitForKeyElements.js
 // ==/UserScript==
 
-/* Copyright (C) 2018  Hanalani Schools
+/* Copyright (C) 2018-2019  Hanalani Schools
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -396,7 +396,7 @@ function AddPageFooter()
     console.log("Function: " + arguments.callee.name)
     if (window.location.href != "https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184")
     {
-        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018 Hanalani Schools | Click <a href="https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184" target="_blank">here</a> to change settings.</div>')
+        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2019 Hanalani Schools | Click <a href="https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184" target="_blank">here</a> to change settings.</div>')
     }
 }
 
@@ -566,6 +566,7 @@ function GetID(strURL)
 function PeopleFinderQuickSelect(jNode)
 {
     console.log("Function: " + arguments.callee.name)
+    $(".people-finder-userlist-link").remove()
     $(".people-finder-search-box, input[placeholder='Type a name, ID or email']").keypress(function (e){
         switch (e.keyCode)
         {
@@ -2645,11 +2646,11 @@ function ENR12Shortcuts(jNode)
 {
     console.log("Function: " + arguments.callee.name)
 
-    if ($(".thHistoryLink").find("span").text().includes("ENR-12"))
+    if ($(".thHistoryLink").find("span").text().includes("ENR-12") || $(".thHistoryLink").find("span").text().includes("SUM-02") || $(".thHistoryLink").find("span").text().includes("SUM-03"))
     {
         // Add Email hyperlink
-        var mailToHTML = '<a href="mailto:' + $(jNode).find("input").val() + '">Send Email</a>'
-        $(jNode).after(mailToHTML)
+        var mailToHTML = '<a href="mailto:' + $(".maintext:contains('Parent E-Mail Address')").next(".maintext").find("input").val() + '">Send Email</a>'
+        $(".maintext:contains('Parent E-Mail Address')").next(".maintext").find("input").after(mailToHTML)
 
         // Add button to view contract status
         $("#L_c1i0_cb88911_ct88911_ctl00_f_1_txtf_1").after('<a href="javascript:void(0)" id="ViewContractStatus">View Contract Status</a>')
