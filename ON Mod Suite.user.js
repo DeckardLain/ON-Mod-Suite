@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.6.11
+// @version      1.7.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -56,6 +56,7 @@
 [INDEX025] Email From Advanced List
 [INDEX026] Pushpage Improvements
 [INDEX027] ENR-12 Shortcuts
+[INDEX028] Salutation Formulas
 [INDEX900] Misc. Helper Functions
 
 
@@ -214,6 +215,7 @@ function gmMain(){
         case "Core":
             waitForKeyElements("#userName", PostLinkCore)
             waitForKeyElements(".bb-page-heading", PostLinkCore)
+            waitForKeyElements("#LabelSalutation", SalutationFormulas)
             break;
         case "Academics":
             waitForKeyElements("h1.bb-tile-header", PostLinkAcademics)
@@ -2695,6 +2697,161 @@ function ContractListAutoSearch(jNode)
         });
 
     }
+}
+
+// -----------------------------------------[INDEX028]-------------------------------------
+// ------------------------------------Salutation Formulas---------------------------------
+// ----------------------------------------------------------------------------------------
+
+function SalutationFormulas(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+
+    var p1name = "";
+    var p2name = "";
+    var p1namefirst;
+    var p1namelast;
+    var p2namefirst;
+    var p2namelast;
+    var p1names;
+    var p2names;
+    var salutationsInformal = [];
+    var salutationsHousehold = [];
+    var salutationsFormal = [];
+    var UsalutationsInformal = [];
+    var UsalutationsHousehold = [];
+    var UsalutationsFormal = [];
+
+    // Get parent names from relationships (only 2)
+    $("#relationship-table").find("tr:contains('Parental Access')").each(function(index){
+        if (p1name == "")
+        {
+            p1name = $(this).closest("tr").find("h4").text()
+        } else if (p2name == "")
+        {
+            p2name = $(this).closest("tr").find("h4").text()
+        }
+    });
+
+    // Parse names and generate preset salutations
+    p1names = p1name.split(" ")
+    p2names = p2name.split(" ")
+
+    if (p1names.length == 2 && p2names.length == 2)
+    {
+        // simple case: first and last name each one word
+        salutationsInformal.push(p1names[0] + " & " + p2names[0])
+        salutationsInformal.push(p2names[0] + " & " + p1names[0])
+        salutationsHousehold.push("Mr. & Mrs. " + p1name)
+        salutationsHousehold.push("Mr. & Mrs. " + p2name)
+        salutationsFormal.push("Mr. & Mrs. " + p1names[1])
+        salutationsFormal.push("Mr. & Mrs. " + p2names[1])
+    } else
+    {
+        // First alternate: first word and last word only
+        salutationsInformal.push(p1names[0] + " & " + p2names[0])
+        salutationsInformal.push(p2names[0] + " & " + p1names[0])
+        salutationsHousehold.push("Mr. & Mrs. " + p1names[0] + " " + p1names[p1names.length-1])
+        salutationsHousehold.push("Mr. & Mrs. " + p2names[0] + " " + p2names[p2names.length-1])
+        salutationsFormal.push("Mr. & Mrs. " + p1names[p1names.length-1])
+        salutationsFormal.push("Mr. & Mrs. " + p2names[p2names.length-1])
+
+        // Second alternate: first word as first name, rest as last name
+        salutationsInformal.push(p1names[0] + " & " + p2names[0])
+        salutationsInformal.push(p2names[0] + " & " + p1names[0])
+        salutationsHousehold.push("Mr. & Mrs. " + p1name)
+        salutationsHousehold.push("Mr. & Mrs. " + p2name)
+        salutationsFormal.push("Mr. & Mrs. " + p1name.substr(p1names[0].length+1))
+        salutationsFormal.push("Mr. & Mrs. " + p2name.substr(p2names[0].length+1))
+
+        // Third alternate: last word as last name, rest as first name
+        salutationsInformal.push(p1name.substr(0,p1name.length-p1names[p1names.length-1].length-1) + " & " + p2name.substr(0,p2name.length-p2names[p2names.length-1].length-1))
+        salutationsInformal.push(p2name.substr(0,p2name.length-p2names[p2names.length-1].length-1) + " & " + p1name.substr(0,p1name.length-p1names[p1names.length-1].length-1))
+    }
+
+    // Remove duplicates
+    $.each(salutationsInformal, function(i, el){
+        if($.inArray(el, UsalutationsInformal) === -1) UsalutationsInformal.push(el);
+    });
+    $.each(salutationsHousehold, function(i, el){
+        if($.inArray(el, UsalutationsHousehold) === -1) UsalutationsHousehold.push(el);
+    });
+    $.each(salutationsFormal, function(i, el){
+        if($.inArray(el, UsalutationsFormal) === -1) UsalutationsFormal.push(el);
+    });
+
+    // Create dropdown boxes
+    var s;
+    var i;
+
+    s = $('<select />', {id: "InformalFormula"})
+    $('<option />', {value: "NA", text: "-- Select from Formula --"}).appendTo(s)
+    for (i = 0; i < UsalutationsInformal.length; i++)
+    {
+        $('<option />', {value: UsalutationsInformal[i], text: UsalutationsInformal[i]}).appendTo(s)
+    }
+    $("#LabelSalutation").after(s)
+
+    s = $('<select />', {id: "HouseholdFormula"})
+    $('<option />', {value: "NA", text: "-- Select from Formula --"}).appendTo(s)
+    for (i = 0; i < UsalutationsHousehold.length; i++)
+    {
+        $('<option />', {value: UsalutationsHousehold[i], text: UsalutationsHousehold[i]}).appendTo(s)
+    }
+    $("#HouseholdSalutation").after(s)
+
+    s = $('<select />', {id: "FormalFormula"})
+    $('<option />', {value: "NA", text: "-- Select from Formula --"}).appendTo(s)
+    for (i = 0; i < UsalutationsFormal.length; i++)
+    {
+        $('<option />', {value: UsalutationsFormal[i], text: UsalutationsFormal[i]}).appendTo(s)
+    }
+    $("#FormalSalutation").after(s)
+
+    // Dropdown box click handlers
+    /*
+    $("#InformalFormula").unbind("click change").bind("click change", function(){
+        if ($("#InformalFormula").val() != "NA")
+        {
+            $("#LabelSalutation").val($("#InformalFormula").val())
+        }
+    });
+    */
+    $("#HouseholdFormula").bind("click change", function(){
+        if ($("#HouseholdFormula").val() != "NA")
+        {
+            //$("#HouseholdSalutation").click()
+            $("#HouseholdSalutation").val($("#HouseholdFormula").val()).change()
+            //$("input[id='HouseholdSalutation']").val($("#HouseholdFormula").val()).change()
+            //$("#HouseholdSalutation").focus()
+            //$("#HouseholdSalutation").attr("value", $("#HouseholdFormula").val())
+            //$("#HouseholdSalutation").change()
+            //$("#HouseholdSalutation").blur()
+            //var e = jQuery.Event("keypress");
+            //e.which = 50; // # Some key code value
+            //$("#HouseholdSalutation").trigger(e);
+            //$("#HouseholdSalutation").trigger("change form input")
+            //$("#HouseholdSalutation").closest("#site-modal").children("div:first").trigger("change")
+
+
+        }
+    });
+    /*
+    $("#FormalFormula").unbind("click change").bind("click change", function(){
+        if ($("#FormalFormula").val() != "NA")
+        {
+            $("#FormalSalutation").val($("#FormalFormula").val())
+        }
+    });
+*/
+    // TODO: Button to open parent contact cards to grab prefixes
+
+    console.log(p1names)
+    console.log(p2names)
+    console.log(UsalutationsInformal)
+    console.log(UsalutationsHousehold)
+    console.log(UsalutationsFormal)
+
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
