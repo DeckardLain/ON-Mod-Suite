@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.6.11
+// @version      1.7.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -56,6 +56,7 @@
 [INDEX025] Email From Advanced List
 [INDEX026] Pushpage Improvements
 [INDEX027] ENR-12 Shortcuts
+[INDEX028] Salutation Formulas
 [INDEX900] Misc. Helper Functions
 
 
@@ -165,6 +166,12 @@ Completed Mods:
      email to the parent have been added.  Also, when opening the contract list from the registration, the student link will
      open to their Academics->Groups page for adding additional programs.
 
+25 - Salutation Formulas
+     When entering address salutations, choose from a drop-down list of options generated from parent names.  Must edit address
+     from student's contact card to properly detect parents (Parental Access must be granted, and will only use the first two
+     relationships with that flag).  Optionally, name prefixes can be grabbed for the parents (requires some extra processing
+     because their contact cards need to be opened).
+
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
 
@@ -214,6 +221,8 @@ function gmMain(){
         case "Core":
             waitForKeyElements("#userName", PostLinkCore)
             waitForKeyElements(".bb-page-heading", PostLinkCore)
+            waitForKeyElements("#LabelSalutation", SalutationFormulas)
+            waitForKeyElements(".bb-tile-header:contains('General information')", SavePrefixes, true)
             break;
         case "Academics":
             waitForKeyElements("h1.bb-tile-header", PostLinkAcademics)
@@ -2495,33 +2504,6 @@ function OfficialNotesRemoveAdmissionsOnly()
 
 }
 
-function jn(jNode)
-{
-    var count = 0;
-
-    var links = [
-        "https://www.myinstants.com/media/sounds/idw-3.mp3"
-        ];
-
-    setTimeout(function(){
-        if ($("#account-nav").find(".title").html() == 'Jonathan<br>Neumann')
-        {
-            $(document).on("click", function() {
-                count++;
-                console.log("Function: jn: " + count)
-                if (count >= Math.floor(Math.random() * 7) + 5)
-                {
-                    $("#account-nav").find(".title").html('Princess JN<br>Neumann')
-                    var audio = new Audio(links[Math.floor(Math.random() * (links.length-1))]);
-                    audio.play();
-                    count = 0;
-                }
-            });
-        }
-    }, 2000);
-
-}
-
 // -----------------------------------------[INDEX025]-------------------------------------
 // ----------------------------------Email from Advanced List------------------------------
 // ----------------------------------------------------------------------------------------
@@ -2694,6 +2676,249 @@ function ContractListAutoSearch(jNode)
             $(jNode).find("a").attr("href", link)
         });
 
+    }
+}
+
+// -----------------------------------------[INDEX028]-------------------------------------
+// ------------------------------------Salutation Formulas---------------------------------
+// ----------------------------------------------------------------------------------------
+
+function SalutationFormulas()
+{
+    console.log("Function: " + arguments.callee.name)
+
+    var p1name = "";
+    var p2name = "";
+    var p1namefirst;
+    var p1namelast;
+    var p2namefirst;
+    var p2namelast;
+    var p1names;
+    var p2names;
+    var p1prefix;
+    var p2prefix;
+    var salutationsInformal = [];
+    var salutationsHousehold = [];
+    var salutationsFormal = [];
+    var UsalutationsInformal = [];
+    var UsalutationsHousehold = [];
+    var UsalutationsFormal = [];
+
+    // Get parent names from relationships (only 2)
+    $("#relationship-table").find("tr:contains('Parental Access')").each(function(index){
+        if (p1name == "")
+        {
+            p1name = $(this).closest("tr").find("h4").text()
+            localStorage.setItem("GetPrefixesP1ID", GetID($(this).closest("tr").find("a").attr("href")))
+        } else if (p2name == "")
+        {
+            p2name = $(this).closest("tr").find("h4").text()
+            localStorage.setItem("GetPrefixesP2ID", GetID($(this).closest("tr").find("a").attr("href")))
+        }
+    });
+
+    // If prefixes were grabbed, use those
+    if (localStorage.getItem("GetPrefixesFresh") == "1")
+    {
+        p1prefix = localStorage.getItem("GetPrefixesP1Prefix")
+        p2prefix = localStorage.getItem("GetPrefixesP2Prefix")
+        $("#GetPrefixes").text("<Prefixes for formulas grabbed from contact cards: " + p1prefix + "/" + p2prefix + ">")
+        $("#GetPrefixes").unbind("click")
+        $("#GetPrefixes").removeAttr("href")
+        if (p1prefix == "") { p1prefix = "Mr." }
+        if (p2prefix == "") { p2prefix = "Mrs." }
+        localStorage.setItem("GetPrefixesFresh", "0")
+        $("#InformalFormula").remove()
+        $("#HouseholdFormula").remove()
+        $("#FormalFormula").remove()
+    } else
+    {
+        p1prefix = "Mr."
+        p2prefix = "Mrs."
+
+        // Button to open parent contact cards to grab prefixes
+        $(".control-label:contains('Salutation')").after('&nbsp&nbsp<a href="javascript:void(0)" id="GetPrefixes">&ltGet Prefixes for Formulas&gt</a>')
+        $("#GetPrefixes").unbind("click").bind("click", function(){
+            GetPrefixes()
+        });
+    }
+
+    // Parse names and generate preset salutations
+    p1names = p1name.split(" ")
+    p2names = p2name.split(" ")
+
+    if (p1names.length == 2 && p2names.length == 2)
+    {
+        // simple case: first and last name each one word
+        salutationsInformal.push(p1names[0] + " & " + p2names[0])
+        salutationsInformal.push(p2names[0] + " & " + p1names[0])
+        salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p1name)
+        salutationsHousehold.push(p2prefix + " & " + p1prefix + " " + p2name)
+        salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p1names[1])
+        salutationsFormal.push(p2prefix + " & " + p1prefix + " " + p2names[1])
+    } else
+    {
+        // First alternate: first word and last word only
+        salutationsInformal.push(p1names[0] + " & " + p2names[0])
+        salutationsInformal.push(p2names[0] + " & " + p1names[0])
+        salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p1names[0] + " " + p1names[p1names.length-1])
+        salutationsHousehold.push(p2prefix + " & " + p1prefix + " " + p2names[0] + " " + p2names[p2names.length-1])
+        salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p1names[p1names.length-1])
+        salutationsFormal.push(p2prefix + " & " + p1prefix + " " + p2names[p2names.length-1])
+
+        // Second alternate: first word as first name, rest as last name
+        salutationsInformal.push(p1names[0] + " & " + p2names[0])
+        salutationsInformal.push(p2names[0] + " & " + p1names[0])
+        salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p1name)
+        salutationsHousehold.push(p2prefix + " & " + p1prefix + " " + p2name)
+        salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p1name.substr(p1names[0].length+1))
+        salutationsFormal.push(p2prefix + " & " + p1prefix + " " + p2name.substr(p2names[0].length+1))
+
+        // Third alternate: last word as last name, rest as first name
+        salutationsInformal.push(p1name.substr(0,p1name.length-p1names[p1names.length-1].length-1) + " & " + p2name.substr(0,p2name.length-p2names[p2names.length-1].length-1))
+        salutationsInformal.push(p2name.substr(0,p2name.length-p2names[p2names.length-1].length-1) + " & " + p1name.substr(0,p1name.length-p1names[p1names.length-1].length-1))
+    }
+
+    // Remove duplicates
+    $.each(salutationsInformal, function(i, el){
+        if($.inArray(el, UsalutationsInformal) === -1) UsalutationsInformal.push(el);
+    });
+    $.each(salutationsHousehold, function(i, el){
+        if($.inArray(el, UsalutationsHousehold) === -1) UsalutationsHousehold.push(el);
+    });
+    $.each(salutationsFormal, function(i, el){
+        if($.inArray(el, UsalutationsFormal) === -1) UsalutationsFormal.push(el);
+    });
+
+    // Create dropdown boxes
+    var s;
+    var i;
+
+    s = $('<select />', {id: "InformalFormula"})
+    $('<option />', {value: "NA", text: "-- Select from Formula --"}).appendTo(s)
+    for (i = 0; i < UsalutationsInformal.length; i++)
+    {
+        $('<option />', {value: UsalutationsInformal[i], text: UsalutationsInformal[i]}).appendTo(s)
+    }
+    $("#LabelSalutation").after(s)
+
+    s = $('<select />', {id: "HouseholdFormula"})
+    $('<option />', {value: "NA", text: "-- Select from Formula --"}).appendTo(s)
+    for (i = 0; i < UsalutationsHousehold.length; i++)
+    {
+        $('<option />', {value: UsalutationsHousehold[i], text: UsalutationsHousehold[i]}).appendTo(s)
+    }
+    $("#HouseholdSalutation").after(s)
+
+    s = $('<select />', {id: "FormalFormula"})
+    $('<option />', {value: "NA", text: "-- Select from Formula --"}).appendTo(s)
+    for (i = 0; i < UsalutationsFormal.length; i++)
+    {
+        $('<option />', {value: UsalutationsFormal[i], text: UsalutationsFormal[i]}).appendTo(s)
+    }
+    $("#FormalSalutation").after(s)
+
+    // Dropdown box click handlers
+    $("#InformalFormula").unbind("click change").bind("click change", function(){
+        if ($("#InformalFormula").val() != "NA")
+        {
+            $("#LabelSalutation").val($("#InformalFormula").val())
+            var event = document.createEvent("Event")
+            event.initEvent("change", true, false)
+            $("#LabelSalutation")[0].dispatchEvent(event)
+        }
+    });
+    $("#HouseholdFormula").unbind("click change").bind("click change", function(){
+        if ($("#HouseholdFormula").val() != "NA")
+        {
+            $("#HouseholdSalutation").val($("#HouseholdFormula").val())
+            var event = document.createEvent("Event")
+            event.initEvent("change", true, false)
+            $("#HouseholdSalutation")[0].dispatchEvent(event)
+        }
+    });
+    $("#FormalFormula").unbind("click change").bind("click change", function(){
+        if ($("#FormalFormula").val() != "NA")
+        {
+            $("#FormalSalutation").val($("#FormalFormula").val())
+            var event = document.createEvent("Event")
+            event.initEvent("change", true, false)
+            $("#FormalSalutation")[0].dispatchEvent(event)
+        }
+    });
+
+}
+
+function GetPrefixes()
+{
+    console.log("Function: " + arguments.callee.name)
+
+    localStorage.setItem("GetPrefixesActive", "1")
+    localStorage.setItem("GetPrefixesParentDone", "0")
+    localStorage.setItem("GetPrefixesWaiting", "0")
+    var p1link = "https://hanalani.myschoolapp.com/app/core#userprofile/" + localStorage.getItem("GetPrefixesP1ID") + "/contactcard"
+    var p2link = "https://hanalani.myschoolapp.com/app/core#userprofile/" + localStorage.getItem("GetPrefixesP2ID") + "/contactcard"
+    var contactCardWindow
+
+    var timerID = setInterval(function(){
+        if (localStorage.getItem("GetPrefixesWaiting") == "1")
+        {
+            // wait for new window to finish saving prefixes
+        } else
+        {
+            switch (localStorage.getItem("GetPrefixesParentDone"))
+            {
+                case "0":
+                    // First parent
+                    localStorage.setItem("GetPrefixesWaiting", "1")
+                    contactCardWindow = window.open(p1link)
+                    break;
+                case "1":
+                    // Second parent
+                    localStorage.setItem("GetPrefixesWaiting", "1")
+                    contactCardWindow = window.open(p2link)
+                    break;
+                case "2":
+                    // Done
+                    clearInterval(timerID)
+                    localStorage.setItem("GetPrefixesActive", "0")
+                    localStorage.setItem("GetPrefixesFresh", "1")
+                    SalutationFormulas()
+                    break;
+            }
+        }
+
+    }, 100);
+}
+
+function SavePrefixes(jNode)
+{
+    if (localStorage.getItem("GetPrefixesActive") == "1")
+    {
+        console.log("Function: " + arguments.callee.name)
+        switch (localStorage.getItem("GetPrefixesParentDone"))
+        {
+            case "0":
+                // First parent
+                if (GetID(window.location.href) == localStorage.getItem("GetPrefixesP1ID"))
+                {
+                    localStorage.setItem("GetPrefixesP1Prefix", $(".bb-page-content-tile-column > #contact-generalinformation").find("td:contains('Prefix')").siblings("td").text())
+                    localStorage.setItem("GetPrefixesParentDone", "1")
+                    localStorage.setItem("GetPrefixesWaiting", "0")
+                    window.close()
+                }
+                break;
+            case "1":
+                // Second parent
+                if (GetID(window.location.href) == localStorage.getItem("GetPrefixesP2ID"))
+                {
+                    localStorage.setItem("GetPrefixesP2Prefix", $(".bb-page-content-tile-column > #contact-generalinformation").find("td:contains('Prefix')").siblings("td").text())
+                    localStorage.setItem("GetPrefixesParentDone", "2")
+                    localStorage.setItem("GetPrefixesWaiting", "0")
+                    window.close()
+                }
+                break;
+        }
     }
 }
 
