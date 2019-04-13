@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.7.0] - 2019-04-12
+### Added
+- Salutation formulas
+
 ## [1.6.11] - 2019-02-21
 ### Changed
 - ENR-12 Shortcuts added to SUM-02 and SUM-03 forms.
