@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.7.0
+// @version      1.7.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -167,10 +167,9 @@ Completed Mods:
      open to their Academics->Groups page for adding additional programs.
 
 25 - Salutation Formulas
-     When entering address salutations, choose from a drop-down list of options generated from parent names.  Must edit address
-     from student's contact card to properly detect parents (Parental Access must be granted, and will only use the first two
-     relationships with that flag).  Optionally, name prefixes can be grabbed for the parents (requires some extra processing
-     because their contact cards need to be opened).
+     When entering address salutations, choose from a drop-down list of options generated from parent names.  Only works for two
+     parents.  Optionally, name prefixes can be grabbed for the parents (requires some extra processing because their contact
+     cards need to be opened).
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -2695,46 +2694,90 @@ function SalutationFormulas()
     var p2namelast;
     var p1names;
     var p2names;
-    var p1prefix;
-    var p2prefix;
+    var p1prefix = "";
+    var p2prefix = "";
     var salutationsInformal = [];
     var salutationsHousehold = [];
     var salutationsFormal = [];
     var UsalutationsInformal = [];
     var UsalutationsHousehold = [];
     var UsalutationsFormal = [];
+    var defaultPrefix = false;
 
     // Get parent names from relationships (only 2)
-    $("#relationship-table").find("tr:contains('Parental Access')").each(function(index){
-        if (p1name == "")
+    localStorage.setItem("GetPrefixesP1ID", "")
+    localStorage.setItem("GetPrefixesP2ID", "")
+    p1prefix = ""
+    p2prefix = ""
+
+    if ($("#relationship-table").find("tr:contains('Child')").length > 0)
+    {
+        // Parent's contact card
+        p1name = $("#contact-generalinformation").find("td:contains('First name')").siblings("td").text() + " " + $("#contact-generalinformation").find("td:contains('Last Name')").siblings("td").text()
+        p1prefix = $("#contact-generalinformation").find("td:contains('Prefix')").siblings("td").text()
+        if ($("#relationship-table").find("tr:contains('Spouse')").length == 0)
         {
-            p1name = $(this).closest("tr").find("h4").text()
-            localStorage.setItem("GetPrefixesP1ID", GetID($(this).closest("tr").find("a").attr("href")))
-        } else if (p2name == "")
+            // No spouse, single parent
+        } else
         {
-            p2name = $(this).closest("tr").find("h4").text()
-            localStorage.setItem("GetPrefixesP2ID", GetID($(this).closest("tr").find("a").attr("href")))
+            // Has spouse
+            p2name = $("#relationship-table").find("tr:contains('Spouse')").closest("tr").find("h4").text()
+            localStorage.setItem("GetPrefixesP2ID", GetID($("#relationship-table").find("tr:contains('Spouse')").closest("tr").find("a").attr("href")))
+            if (p1prefix == "Mrs." || p1prefix == "Ms.")
+            {
+                p2prefix = "Mr."
+            }
         }
-    });
+    } else
+    {
+        // Student's contact card
+        $("#relationship-table").find("tr:contains('Parental Access')").each(function(index){
+            if (p1name == "")
+            {
+                p1name = $(this).closest("tr").find("h4").text()
+                localStorage.setItem("GetPrefixesP1ID", GetID($(this).closest("tr").find("a").attr("href")))
+            } else if (p2name == "")
+            {
+                p2name = $(this).closest("tr").find("h4").text()
+                localStorage.setItem("GetPrefixesP2ID", GetID($(this).closest("tr").find("a").attr("href")))
+            }
+        });
+    }
 
     // If prefixes were grabbed, use those
     if (localStorage.getItem("GetPrefixesFresh") == "1")
     {
-        p1prefix = localStorage.getItem("GetPrefixesP1Prefix")
+        if (p1prefix == "") { p1prefix = localStorage.getItem("GetPrefixesP1Prefix") }
         p2prefix = localStorage.getItem("GetPrefixesP2Prefix")
         $("#GetPrefixes").text("<Prefixes for formulas grabbed from contact cards: " + p1prefix + "/" + p2prefix + ">")
         $("#GetPrefixes").unbind("click")
         $("#GetPrefixes").removeAttr("href")
-        if (p1prefix == "") { p1prefix = "Mr." }
-        if (p2prefix == "") { p2prefix = "Mrs." }
+        if (p1prefix == "")
+        {
+            p1prefix = "Mr."
+            defaultPrefix = true
+        }
+        if (p2prefix == "")
+        {
+            p2prefix = "Mrs."
+            defaultPrefix = true
+        }
         localStorage.setItem("GetPrefixesFresh", "0")
         $("#InformalFormula").remove()
         $("#HouseholdFormula").remove()
         $("#FormalFormula").remove()
     } else
     {
-        p1prefix = "Mr."
-        p2prefix = "Mrs."
+        if (p1prefix == "")
+        {
+            p1prefix = "Mr."
+            defaultPrefix = true
+        }
+        if (p2prefix == "")
+        {
+            p2prefix = "Mrs."
+            defaultPrefix = true
+        }
 
         // Button to open parent contact cards to grab prefixes
         $(".control-label:contains('Salutation')").after('&nbsp&nbsp<a href="javascript:void(0)" id="GetPrefixes">&ltGet Prefixes for Formulas&gt</a>')
@@ -2744,39 +2787,95 @@ function SalutationFormulas()
     }
 
     // Parse names and generate preset salutations
-    p1names = p1name.split(" ")
-    p2names = p2name.split(" ")
-
-    if (p1names.length == 2 && p2names.length == 2)
+    if (p1name == "")
     {
-        // simple case: first and last name each one word
-        salutationsInformal.push(p1names[0] + " & " + p2names[0])
-        salutationsInformal.push(p2names[0] + " & " + p1names[0])
-        salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p1name)
-        salutationsHousehold.push(p2prefix + " & " + p1prefix + " " + p2name)
-        salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p1names[1])
-        salutationsFormal.push(p2prefix + " & " + p1prefix + " " + p2names[1])
+        // No parents found
+    } else if (p2name == "")
+    {
+        // Single parent
+        p1names = p1name.split(" ")
+        salutationsInformal.push(p1names[0])
+        salutationsHousehold.push(p1prefix + " " + p1name)
+        if (p1names.length == 2)
+        {
+            // simple case: first and last name each one word
+            salutationsFormal.push(p1prefix + " " + p1names[1])
+        } else
+        {
+            // First alternate: first word and last word only
+            salutationsHousehold.push(p1prefix + " " + p1names[0] + " " + p1names[p1names.length-1])
+            salutationsFormal.push(p1prefix + " " + p1names[p1names.length-1])
+
+            // Second alternate: first word as first name, rest as last name
+            salutationsFormal.push(p1prefix + " " + p1name.substr(p1names[0].length+1))
+
+            // Third alternate: last word as last name, rest as first name
+            salutationsInformal.push(p1name.substr(0,p1name.length-p1names[p1names.length-1].length-1))
+        }
     } else
     {
-        // First alternate: first word and last word only
-        salutationsInformal.push(p1names[0] + " & " + p2names[0])
-        salutationsInformal.push(p2names[0] + " & " + p1names[0])
-        salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p1names[0] + " " + p1names[p1names.length-1])
-        salutationsHousehold.push(p2prefix + " & " + p1prefix + " " + p2names[0] + " " + p2names[p2names.length-1])
-        salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p1names[p1names.length-1])
-        salutationsFormal.push(p2prefix + " & " + p1prefix + " " + p2names[p2names.length-1])
+        // 2 Parents
+        p1names = p1name.split(" ")
+        p2names = p2name.split(" ")
 
-        // Second alternate: first word as first name, rest as last name
-        salutationsInformal.push(p1names[0] + " & " + p2names[0])
-        salutationsInformal.push(p2names[0] + " & " + p1names[0])
-        salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p1name)
-        salutationsHousehold.push(p2prefix + " & " + p1prefix + " " + p2name)
-        salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p1name.substr(p1names[0].length+1))
-        salutationsFormal.push(p2prefix + " & " + p1prefix + " " + p2name.substr(p2names[0].length+1))
+        if (p1names.length == 2 && p2names.length == 2)
+        {
+            // simple case: first and last name each one word
+            salutationsInformal.push(p1names[0] + " & " + p2names[0])
+            salutationsInformal.push(p2names[0] + " & " + p1names[0])
+            salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p1name)
+            salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p1names[1])
+            if (defaultPrefix)
+            {
+                // Reverse prefixes in case default had it backwards
+                salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p2name)
+                salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p2names[1])
+            } else
+            {
+                // Parent 2 prefix will only come first if not using defaults
+                salutationsHousehold.push(p2prefix + " & " + p1prefix + " " + p2name)
+                salutationsFormal.push(p2prefix + " & " + p1prefix + " " + p2names[1])
+            }
+        } else
+        {
+            // First alternate: first word and last word only
+            salutationsInformal.push(p1names[0] + " & " + p2names[0])
+            salutationsInformal.push(p2names[0] + " & " + p1names[0])
+            salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p1names[0] + " " + p1names[p1names.length-1])
+            salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p1names[p1names.length-1])
+            if (defaultPrefix)
+            {
+                // Reverse prefixes in case default had it backwards
+                salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p2names[0] + " " + p2names[p2names.length-1])
+                salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p2names[p2names.length-1])
+            } else
+            {
+                // Parent 2 prefix will only come first if not using defaults
+                salutationsHousehold.push(p2prefix + " & " + p1prefix + " " + p2names[0] + " " + p2names[p2names.length-1])
+                salutationsFormal.push(p2prefix + " & " + p1prefix + " " + p2names[p2names.length-1])
+            }
 
-        // Third alternate: last word as last name, rest as first name
-        salutationsInformal.push(p1name.substr(0,p1name.length-p1names[p1names.length-1].length-1) + " & " + p2name.substr(0,p2name.length-p2names[p2names.length-1].length-1))
-        salutationsInformal.push(p2name.substr(0,p2name.length-p2names[p2names.length-1].length-1) + " & " + p1name.substr(0,p1name.length-p1names[p1names.length-1].length-1))
+            // Second alternate: first word as first name, rest as last name
+            salutationsInformal.push(p1names[0] + " & " + p2names[0])
+            salutationsInformal.push(p2names[0] + " & " + p1names[0])
+            salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p1name)
+            salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p1name.substr(p1names[0].length+1))
+            if (defaultPrefix)
+            {
+                // Reverse prefixes in case default had it backwards
+                salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p2name)
+                salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p2name.substr(p2names[0].length+1))
+            } else
+            {
+                // Parent 2 prefix will only come first if not using defaults
+                salutationsHousehold.push(p2prefix + " & " + p1prefix + " " + p2name)
+                salutationsFormal.push(p2prefix + " & " + p1prefix + " " + p2name.substr(p2names[0].length+1))
+            }
+
+            // Third alternate: last word as last name, rest as first name
+            salutationsInformal.push(p1name.substr(0,p1name.length-p1names[p1names.length-1].length-1) + " & " + p2name.substr(0,p2name.length-p2names[p2names.length-1].length-1))
+            salutationsInformal.push(p2name.substr(0,p2name.length-p2names[p2names.length-1].length-1) + " & " + p1name.substr(0,p1name.length-p1names[p1names.length-1].length-1))
+        }
     }
 
     // Remove duplicates
@@ -2854,8 +2953,11 @@ function GetPrefixes()
     console.log("Function: " + arguments.callee.name)
 
     localStorage.setItem("GetPrefixesActive", "1")
+    localStorage.setItem("GetPrefixesParentDone", "1")
     localStorage.setItem("GetPrefixesParentDone", "0")
     localStorage.setItem("GetPrefixesWaiting", "0")
+    localStorage.setItem("GetPrefixesP1Prefix", "")
+    localStorage.setItem("GetPrefixesP2Prefix", "")
     var p1link = "https://hanalani.myschoolapp.com/app/core#userprofile/" + localStorage.getItem("GetPrefixesP1ID") + "/contactcard"
     var p2link = "https://hanalani.myschoolapp.com/app/core#userprofile/" + localStorage.getItem("GetPrefixesP2ID") + "/contactcard"
     var contactCardWindow
@@ -2870,13 +2972,27 @@ function GetPrefixes()
             {
                 case "0":
                     // First parent
-                    localStorage.setItem("GetPrefixesWaiting", "1")
-                    contactCardWindow = window.open(p1link)
+                    //alert("first")
+                    if (localStorage.getItem("GetPrefixesP1ID") != "")
+                    {
+                        localStorage.setItem("GetPrefixesWaiting", "1")
+                        contactCardWindow = window.open(p1link)
+                    } else
+                    {
+                        localStorage.setItem("GetPrefixesParentDone", "1")
+                    }
                     break;
                 case "1":
                     // Second parent
-                    localStorage.setItem("GetPrefixesWaiting", "1")
-                    contactCardWindow = window.open(p2link)
+                    //alert("second")
+                    if (localStorage.getItem("GetPrefixesP2ID") != "")
+                    {
+                        localStorage.setItem("GetPrefixesWaiting", "1")
+                        contactCardWindow = window.open(p2link)
+                    } else
+                    {
+                        localStorage.setItem("GetPrefixesParentDone", "2")
+                    }
                     break;
                 case "2":
                     // Done
@@ -2906,6 +3022,10 @@ function SavePrefixes(jNode)
                     localStorage.setItem("GetPrefixesParentDone", "1")
                     localStorage.setItem("GetPrefixesWaiting", "0")
                     window.close()
+                } else
+                {
+                    // Something went wrong, reset flag
+                    localStorage.setItem("GetPrefixesActive", "0")
                 }
                 break;
             case "1":
@@ -2916,6 +3036,10 @@ function SavePrefixes(jNode)
                     localStorage.setItem("GetPrefixesParentDone", "2")
                     localStorage.setItem("GetPrefixesWaiting", "0")
                     window.close()
+                } else
+                {
+                    // Something went wrong, reset flag
+                    localStorage.setItem("GetPrefixesActive", "0")
                 }
                 break;
         }
