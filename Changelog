@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.7.2] - 2019-05-08
+### Added
+- Admin-view-only field automatically adds when selected from the drop-down.
+
 ## [1.7.1] - 2019-04-15
 ### Fixed
 - Salutation Formulas updated to work from parents' contact cards: auto-detects spouse in relationships.  Now correctly
