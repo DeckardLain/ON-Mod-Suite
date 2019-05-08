@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.7.1
+// @version      1.7.2
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -57,6 +57,7 @@
 [INDEX026] Pushpage Improvements
 [INDEX027] ENR-12 Shortcuts
 [INDEX028] Salutation Formulas
+[INDEX029] Admin Field Auto-Add
 [INDEX900] Misc. Helper Functions
 
 
@@ -170,6 +171,9 @@ Completed Mods:
      When entering address salutations, choose from a drop-down list of options generated from parent names.  Only works for two
      parents.  Optionally, name prefixes can be grabbed for the parents (requires some extra processing because their contact
      cards need to be opened).
+
+26 - Admin Field Auto-Add
+     When selecting an admin-viewable-only field, automatically add the field when selected from the drop-down.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -319,6 +323,9 @@ function gmMain(){
 
     // Chevron Down
     waitForKeyElements(".fa-chevron-down", AutomaticallyExpandAll)
+
+    // Admin Field Auto-Add
+    waitForKeyElements(".available-field-dropdown", AdminFieldAutoAdd)
 
 //    waitForKeyElements("#account-nav", jn)
 
@@ -3044,6 +3051,22 @@ function SavePrefixes(jNode)
                 break;
         }
     }
+}
+
+// -----------------------------------------[INDEX029]-------------------------------------
+// -----------------------------------Admin Field Auto-Add---------------------------------
+// ----------------------------------------------------------------------------------------
+
+function AdminFieldAutoAdd()
+{
+    console.log("Function: " + arguments.callee.name)
+
+    $(".available-field-dropdown").bind("change", function(){
+        var event = document.createEvent("Event")
+        event.initEvent("click", true, false)
+        $(".add-field-link")[0].dispatchEvent(event)
+    });
+
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
