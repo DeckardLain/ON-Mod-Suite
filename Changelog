@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.7.3] - 2019-06-04
+### Changed
+- Convert grad level to grade year now promotes to next grade level from June 1 instead of from August 1, to more
+accurately reflect grade level promotions for summer program.
+
 ## [1.7.2] - 2019-05-08
 ### Added
 - Admin-view-only field automatically adds when selected from the drop-down.
