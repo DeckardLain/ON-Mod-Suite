@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.7.2
+// @version      1.7.3
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -1041,7 +1041,8 @@ function GetGradeLevel(str)
         var yearnum = d.getFullYear();
         var year = yearnum.toString();
         year = year.substring(2, 4);
-        var offset = str.substring(str.length-2, str.length) - year - ((d.getMonth() < 7) ? 0:1);
+        console.log(d.getMonth())
+        var offset = str.substring(str.length-2, str.length) - year - ((d.getMonth() < 5) ? 0:1);
 
         switch (offset)
         {
