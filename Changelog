@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2019-07-29
+### Changed
+- Misc changes to cleanup code and make it easier to port to other schools.
+
 ## [1.7.3] - 2019-06-04
 ### Changed
 - Convert grad level to grade year now promotes to next grade level from June 1 instead of from August 1, to more
