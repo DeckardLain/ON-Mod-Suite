@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      1.7.3
+// @version      2.0.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -185,6 +185,8 @@ Notes:
 // ----------------------------------------------------------------------------------------
 
 this.$ = this.jQuery = jQuery.noConflict(true);
+const schoolURL = "https://hanalani.myschoolapp.com/"
+const settingsResourceBoardID = "16184"
 
 // Check for page hashchanges
 // Borrowed from: https://stackoverflow.com/questions/18989345/how-do-i-reload-a-greasemonkey-script-when-ajax-changes-the-url-without-reloadin
@@ -211,10 +213,6 @@ function gmMain(){
 
     console.log("Function: " + arguments.callee.name)
     var strURL = window.location.href
-
-    // User Module Selector
-
-    var strLinks = "Open in: "
 
     switch(GetModule(strURL))
     {
@@ -319,7 +317,10 @@ function gmMain(){
     waitForKeyElements(".thCBarlinkD:first", CopyPageNumberNavigation)
 
     // WYSIWYG Editor Improvements
-    waitForKeyElements("#tinymce", EditorImprovements, false, "iframe")
+    if (strURL != schoolURL+"podium/default.aspx?t=52781")
+    {
+        waitForKeyElements("#tinymce", EditorImprovements, false, "iframe")
+    }
 
     // Chevron Down
     waitForKeyElements(".fa-chevron-down", AutomaticallyExpandAll)
@@ -327,78 +328,76 @@ function gmMain(){
     // Admin Field Auto-Add
     waitForKeyElements(".available-field-dropdown", AdminFieldAutoAdd)
 
-//    waitForKeyElements("#account-nav", jn)
-
 }
 
 
 function GetModule(strURL)
 {
     console.log("Function: " + arguments.callee.name + "(" + strURL + ")")
-    if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
+    if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
-    } else if (strURL == "https://hanalani.myschoolapp.com/app/enrollment-management#lists/contracts")
+    } else if (strURL == schoolURL+"app/enrollment-management#lists/contracts")
     {
         return "Contracts List"
-    } else if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=36655")
+    } else if (strURL == schoolURL+"podium/default.aspx?t=36655")
     {
         return "Edit Registry";
-    } else if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=52800" || strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=52801" || strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=52802")
+    } else if (strURL == schoolURL+"podium/default.aspx?t=52800" || strURL == schoolURL+"podium/default.aspx?t=52801" || strURL == schoolURL+"podium/default.aspx?t=52802")
     {
         return "Create Distribution Group";
     } else if (strURL.substring(strURL.length-25, strURL.length) == "#message/admofficialnotes")
     {
         return "Official Notes Admissions";
-    } else if (strURL == "https://hanalani.myschoolapp.com/app/academics#studentattendance")
+    } else if (strURL == schoolURL+"app/academics#studentattendance")
     {
         return "Student Attendance";
-    } else if (strURL == "https://hanalani.myschoolapp.com/edu-core/dashboard")
+    } else if (strURL == schoolURL+"edu-core/dashboard")
     {
         return "Core Dashboard";
-    } else if (strURL == "https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184")
+    } else if (strURL == schoolURL+"app/faculty#resourceboarddetail/"+settingsResourceBoardID)
     {
         return "Settings";
-    } else if (strURL == "https://hanalani.myschoolapp.com/app/faculty#myday/schedule-performance")
+    } else if (strURL == schoolURL+"app/faculty#myday/schedule-performance")
     {
         return "Schedule and Performance";
-    } else if (strURL.substring(0, 41).toLowerCase() == "https://hanalani.myschoolapp.com/app/core")
+    } else if (strURL.substring(0, schoolURL.length+8).toLowerCase() == schoolURL+"app/core")
     {
         return "Core";
-    } else if (strURL.substring(0, 70) == "https://hanalani.myschoolapp.com/app/academics#managestudentenrollment")
+    } else if (strURL.substring(0, schoolURL.length+37) == schoolURL+"app/academics#managestudentenrollment")
     {
         return "Manage Student Enrollment";
-    } else if (strURL.substring(0, 60) == "https://hanalani.myschoolapp.com/app/academics#academicclass" && strURL.substring(73, 79) == "roster")
+    } else if (strURL.substring(0, schoolURL.length+27) == schoolURL+"app/academics#academicclass" && strURL.substring(schoolURL.length+40, schoolURL.length+46) == "roster")
     {
         return "Academics-Roster";
-    } else if (strURL.substring(0, 58) == "https://hanalani.myschoolapp.com/app/faculty#academicclass" && strURL.substring(71, 77) == "roster")
+    } else if (strURL.substring(0, schoolURL.length+25) == schoolURL+"app/faculty#academicclass" && strURL.substring(schoolURL.length+38, schoolURL.length+44) == "roster")
     {
         return "Faculty-Roster";
-    } else if (strURL.substring(53, 65) == "athleticteam" && strURL.substring(strURL.length-6, strURL.length) == "roster")
+    } else if (strURL.substring(schoolURL.length+20, schoolURL.length+32) == "athleticteam" && strURL.substring(strURL.length-6, strURL.length) == "roster")
     {
         return "Team Roster";
     } else if (strURL.substring(strURL.length-6, strURL.length) == "roster")
     {
         return "Other Roster";
-    } else if (strURL.substring(0, 46) == "https://hanalani.myschoolapp.com/app/academics")
+    } else if (strURL.substring(0, schoolURL.length+13) == schoolURL+"app/academics")
     {
         return "Academics";
-    } else if (strURL.substring(0, 58) == "https://hanalani.myschoolapp.com/app/enrollment-management")
+    } else if (strURL.substring(0, schoolURL.length+25) == schoolURL+"app/enrollment-management")
     {
         return "Enrollment Management";
-    } else if (strURL.substring(0, 44) == "https://hanalani.myschoolapp.com/app/faculty")
+    } else if (strURL.substring(0, schoolURL.length+11) == schoolURL+"app/faculty")
     {
         return "Faculty";
-    } else if (strURL.substring(0, 52) == "https://hanalani.myschoolapp.com/app/extracurricular")
+    } else if (strURL.substring(0, schoolURL.length+19) == schoolURL+"app/extracurricular")
     {
         return "Extracurricular";
-    } else if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=52586")
+    } else if (strURL == schoolURL+"podium/default.aspx?t=52586")
     {
         return "Advanced List - Run";
-    } else if (strURL == "https://hanalani.myschoolapp.com/podium/default.aspx?t=52568")
+    } else if (strURL == schoolURL+"podium/default.aspx?t=52568")
     {
         return "Advanced List - CopyEdit";
-    } else if (strURL.substring(0, 60) == "https://hanalani.myschoolapp.com/podium/default.aspx?t=23189")
+    } else if (strURL.substring(0, schoolURL.length+27) == schoolURL+"podium/default.aspx?t=23189")
     {
         return "Advanced List Main";
     }
@@ -409,9 +408,9 @@ function GetModule(strURL)
 function AddPageFooter()
 {
     console.log("Function: " + arguments.callee.name)
-    if (window.location.href != "https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184")
+    if (window.location.href != schoolURL+"app/faculty#resourceboarddetail/"+settingsResourceBoardID)
     {
-        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2019 Hanalani Schools | Click <a href="https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/16184" target="_blank">here</a> to change settings.</div>')
+        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2019 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
     }
 }
 
@@ -429,7 +428,7 @@ function PostLinkCore(jNode)
         return;
     }
 
-    if (strURL.substring(0, 49) == "https://hanalani.myschoolapp.com/app/core#profile")
+    if (strURL.substring(0, schoolURL.length+16) == schoolURL+"app/core#profile")
     {
         strLinks = strLinks.concat(GetLink("Core", strID));
     }
@@ -478,7 +477,7 @@ function PostLinkEnrollmentManagement(jNode)
     strLinks = strLinks.concat(GetLink("Academics", GetID(strURL)));
     strLinks = strLinks.concat(GetLink("Faculty", strID));
 
-    if (strURL.substring(0, 66) == "https://hanalani.myschoolapp.com/app/enrollment-management#profile")
+    if (strURL.substring(0, schoolURL.length+33) == schoolURL+"app/enrollment-management#profile")
     {
         strLinks = strLinks.concat(GetLink("Enrollment Management", strID));
         jNode.after(strLinks);
@@ -522,32 +521,32 @@ function GetLink(strModule, strID)
     switch(strModule)
     {
         case "Core":
-            strLinkPrefix = "https://hanalani.myschoolapp.com/app/Core#userprofile/";
+            strLinkPrefix = schoolURL+"app/Core#userprofile/";
             strLinkSuffix = "/access";
             break;
         case "Academics":
-            strLinkPrefix = "https://hanalani.myschoolapp.com/app/academics#academicprofile/";
+            strLinkPrefix = schoolURL+"app/academics#academicprofile/";
             strLinkSuffix = "/attendance";
             break;
         case "Enrollment Management":
-            strLinkPrefix = "https://hanalani.myschoolapp.com/app/enrollment-management#candidate/";
+            strLinkPrefix = schoolURL+"app/enrollment-management#candidate/";
             strLinkSuffix = "/contracts";
             break;
         case "Faculty":
-            strLinkPrefix = "https://hanalani.myschoolapp.com/app/faculty#profile/";
+            strLinkPrefix = schoolURL+"app/faculty#profile/";
             strLinkSuffix = "/progress";
             break;
         case "View Grades":
-            strLinkPrefix = "https://hanalani.myschoolapp.com/app/faculty#profile/";
+            strLinkPrefix = schoolURL+"app/faculty#profile/";
             strLinkSuffix = "/progress";
             break;
         case "Faculty-Roster":
-            strLinkPrefix = "https://hanalani.myschoolapp.com/app/faculty#academicclass/";
+            strLinkPrefix = schoolURL+"app/faculty#academicclass/";
             strLinkSuffix = "/0/roster";
             strModule = "Faculty";
             break;
         case "Academics-Roster":
-            strLinkPrefix = "https://hanalani.myschoolapp.com/app/academics#academicclass/";
+            strLinkPrefix = schoolURL+"app/academics#academicclass/";
             strLinkSuffix = "/0/roster";
             strModule = "Academics";
     }
@@ -858,10 +857,10 @@ function SaveClassAndTeacher()
     console.log("Function: " + arguments.callee.name)
     var userID;
 
-    // Save class ID to cookie
+    // Save class ID
     localStorage.setItem("ClassID", GetID(window.location.href));
 
-    // Save teacher's user ID to cookie
+    // Save teacher's user ID
     $(".bb-card-title").each(function(index){
        var str = $(this).text();
        if (str == "Teacher")
@@ -872,7 +871,7 @@ function SaveClassAndTeacher()
     });
     localStorage.setItem("TeacherID", userID);
 
-    // Save class school level to cookie
+    // Save class school level
     var details = $(".lead").text();
     if (details.includes("Upper School"))
     {
@@ -885,7 +884,7 @@ function SaveClassAndTeacher()
         localStorage.setItem("SchoolLevel", "1566");
     }
 
-    // Save term to cookie
+    // Save term
     if (details.includes("Fall Semester"))
     {
         localStorage.setItem("Term", "98719");
@@ -1041,7 +1040,6 @@ function GetGradeLevel(str)
         var yearnum = d.getFullYear();
         var year = yearnum.toString();
         year = year.substring(2, 4);
-        console.log(d.getMonth())
         var offset = str.substring(str.length-2, str.length) - year - ((d.getMonth() < 5) ? 0:1);
 
         switch (offset)
@@ -1231,7 +1229,7 @@ function GetUserLink(userID, page, newWindow)
     if (newWindow){
         strHTMLPrefix = strHTMLPrefix + 'target="_blank" '
     }
-    strHTMLPrefix = strHTMLPrefix + 'href="https://hanalani.myschoolapp.com/app/'
+    strHTMLPrefix = strHTMLPrefix + 'href="'+schoolURL+'app/'
     var strHTMLSuffix = '</a>';
 
     switch (page)
@@ -1326,7 +1324,7 @@ function GetUserLink(userID, page, newWindow)
             break;
         case "Faculty->Official Notes":
             moduleURL = "faculty#profile";
-            pageURL = "officalnotes";
+            pageURL = "officialnotes";
             break;
         case "Faculty->Contact Card":
             moduleURL = "faculty#profile";
@@ -1672,7 +1670,7 @@ function EmailSelectedClasses()
                 if (currClass < numSelectedClasses)
                 {
                     // Open class roster to grab email addresses
-                    url = "https://hanalani.myschoolapp.com/app/faculty#academicclass/" + GetID($('input[type="checkbox"]:checked').not('.Select_all').eq(currClass).next("[href]").attr("href")) + "/0/roster"
+                    url = schoolURL+"app/faculty#academicclass/" + GetID($('input[type="checkbox"]:checked').not('.Select_all').eq(currClass).next("[href]").attr("href")) + "/0/roster"
                     localStorage.setItem("SaveRosterEmailsClassDone", "0");
                     rosterWindow = window.open(url)
                 } else  // Done
@@ -1907,7 +1905,7 @@ function UpdateClassMenuLinks()
 function GetClassPage(classID, page)
 {
     console.log("Function: " + arguments.callee.name)
-    var urlPrefix = "https://hanalani.myschoolapp.com/app/faculty#academicclass/"
+    var urlPrefix = schoolURL+"app/faculty#academicclass/"
     var urlMiddle = "/0/"
 
     switch (page)
@@ -2140,7 +2138,7 @@ function CopyPageNumberNavigation(jNode)
 function AdvancedListFavorites()
 {
     console.log("Function: " + arguments.callee.name)
-    if (location.href == "https://hanalani.myschoolapp.com/edu-core/dashboard")
+    if (location.href == schoolURL+"edu-core/dashboard")
     {
         $(".core-dashboard").append('<h1>Favorite Lists</h><br>')
 
@@ -2171,14 +2169,14 @@ function AdvancedListFavorites()
                 localStorage.setItem("FavoriteListRunID", $(this).attr("data-id"))
                 localStorage.setItem("FavoriteListRunName", $(this).attr("data-name"))
                 localStorage.setItem("FavoriteListRunType", "Copy")
-                window.open("https://hanalani.myschoolapp.com/podium/default.aspx?t=23189&wapp=1")
+                window.open(schoolURL+"podium/default.aspx?t=23189&wapp=1")
             });
 
             $(document).on('click', ".fav-list-run", function(){
                 localStorage.setItem("FavoriteListRunID", $(this).attr("data-id"))
                 localStorage.setItem("FavoriteListRunName", $(this).attr("data-name"))
                 localStorage.setItem("FavoriteListRunType", "Run")
-                window.open("https://hanalani.myschoolapp.com/podium/default.aspx?t=23189&wapp=1")
+                window.open(schoolURL+"podium/default.aspx?t=23189&wapp=1")
             });
 
             $(document).on('click', ".fav-list-remove", function(){
@@ -2355,7 +2353,7 @@ function HighlightInvalidAttendance(jNode)
 function HighlightInvalidAttendanceRow(jNode)
 {
     console.log("Function: " + arguments.callee.name)
-    if (window.location.href == "https://hanalani.myschoolapp.com/app/academics#studentattendance")
+    if (window.location.href == schoolURL+"app/academics#studentattendance")
     {
         if ($(jNode).children("td").eq(4).text() == "HR")
         {
@@ -2457,7 +2455,7 @@ function OfficialNotesImprovements(jNode)
         $(".detail:not(.linked)").each(function(){
             $(this).addClass("linked")
             var userID = GetID($(this).closest("td").children("div").eq(0).children("a").attr("href"));
-            var link = "https://hanalani.myschoolapp.com/app/enrollment-management#candidate/" + userID + "/checklist";
+            var link = schoolURL+"app/enrollment-management#candidate/" + userID + "/checklist";
             var html = '<a target="_blank" href="' + link + '">' + $(this).closest("td").children("div").eq(1).text() + '</a>'
             $(this).closest("td").children("div").eq(1).html(html)
         })
@@ -2647,7 +2645,7 @@ function ENR12Shortcuts(jNode)
         $("#ViewContractStatus").unbind("click").bind("click", function(){
             var StudentName = $("#L_c1i0_cb88911_ct88911_ctl00_f_1_txtf_1").val() + " " + $("#L_c1i0_cb88911_ct88911_ctl00_f_3_txtf_3").val()
             localStorage.setItem("ContractListSearchName", StudentName)
-            window.open("https://hanalani.myschoolapp.com/app/enrollment-management#lists/contracts", "Contract List", "top=0,left=0,menubar=yes,toolbar=yes")
+            window.open(schoolURL+"app/enrollment-management#lists/contracts", "Contract List", "top=0,left=0,menubar=yes,toolbar=yes")
         });
     }
 }
@@ -2679,7 +2677,7 @@ function ContractListAutoSearch(jNode)
         });
 
         waitForKeyElements('[aria-describedby*="FullName"]', function(jNode){
-            var link = "https://hanalani.myschoolapp.com/app/academics#academicprofile/" + GetID($(jNode).find("a").attr("href")) + "/enrollment"
+            var link = schoolURL+"app/academics#academicprofile/" + GetID($(jNode).find("a").attr("href")) + "/enrollment"
             $(jNode).find("a").attr("href", link)
         });
 
@@ -2966,8 +2964,8 @@ function GetPrefixes()
     localStorage.setItem("GetPrefixesWaiting", "0")
     localStorage.setItem("GetPrefixesP1Prefix", "")
     localStorage.setItem("GetPrefixesP2Prefix", "")
-    var p1link = "https://hanalani.myschoolapp.com/app/core#userprofile/" + localStorage.getItem("GetPrefixesP1ID") + "/contactcard"
-    var p2link = "https://hanalani.myschoolapp.com/app/core#userprofile/" + localStorage.getItem("GetPrefixesP2ID") + "/contactcard"
+    var p1link = schoolURL+"app/core#userprofile/" + localStorage.getItem("GetPrefixesP1ID") + "/contactcard"
+    var p2link = schoolURL+"app/core#userprofile/" + localStorage.getItem("GetPrefixesP2ID") + "/contactcard"
     var contactCardWindow
 
     var timerID = setInterval(function(){
