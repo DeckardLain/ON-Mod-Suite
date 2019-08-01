@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.0.0
+// @version      2.0.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -2121,6 +2121,10 @@ function ReverseAttendanceDefault(jNode)
 function CopyPageNumberNavigation(jNode)
 {
     console.log("Function: " + arguments.callee.name)
+    if (window.location.href == schoolURL+"podium/default.aspx?t=12200")
+    {
+        return;
+    }
     if (!$("#bottom-page-navigation").length)
     {
         $("#lPg").append(jNode.closest("table").clone().attr("id", "bottom-page-navigation"));
