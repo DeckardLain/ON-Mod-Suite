@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.2] - 2019-08-02
+### Changed
+- Salutation formulas updated to reflect upcoming policy changes (and instead of &; informal salutation to use
+[first] and [first] [last])
+
 ## [2.0.1] - 2019-08-01
 ### Fixed
 - Daily Schedule Calendar was broken by Page Number Navigation enhancement.
