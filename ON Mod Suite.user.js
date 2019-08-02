@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.0.1
+// @version      2.0.2
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -2831,60 +2831,60 @@ function SalutationFormulas()
         if (p1names.length == 2 && p2names.length == 2)
         {
             // simple case: first and last name each one word
-            salutationsInformal.push(p1names[0] + " & " + p2names[0])
-            salutationsInformal.push(p2names[0] + " & " + p1names[0])
-            salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p1name)
-            salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p1names[1])
+            salutationsInformal.push(p1names[0] + " and " + p2name)
+            salutationsInformal.push(p2names[0] + " and " + p1name)
+            salutationsHousehold.push(p1prefix + " and " + p2prefix + " " + p1name)
+            salutationsFormal.push(p1prefix + " and " + p2prefix + " " + p1names[1])
             if (defaultPrefix)
             {
                 // Reverse prefixes in case default had it backwards
-                salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p2name)
-                salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p2names[1])
+                salutationsHousehold.push(p1prefix + " and " + p2prefix + " " + p2name)
+                salutationsFormal.push(p1prefix + " and " + p2prefix + " " + p2names[1])
             } else
             {
                 // Parent 2 prefix will only come first if not using defaults
-                salutationsHousehold.push(p2prefix + " & " + p1prefix + " " + p2name)
-                salutationsFormal.push(p2prefix + " & " + p1prefix + " " + p2names[1])
+                salutationsHousehold.push(p2prefix + " and " + p1prefix + " " + p2name)
+                salutationsFormal.push(p2prefix + " and " + p1prefix + " " + p2names[1])
             }
         } else
         {
             // First alternate: first word and last word only
-            salutationsInformal.push(p1names[0] + " & " + p2names[0])
-            salutationsInformal.push(p2names[0] + " & " + p1names[0])
-            salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p1names[0] + " " + p1names[p1names.length-1])
-            salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p1names[p1names.length-1])
+            salutationsInformal.push(p1names[0] + " and " + p2names[0] + " " + p2names[p2names.length-1])
+            salutationsInformal.push(p2names[0] + " and " + p1names[0] + " " + p1names[p1names.length-1])
+            salutationsHousehold.push(p1prefix + " and " + p2prefix + " " + p1names[0] + " " + p1names[p1names.length-1])
+            salutationsFormal.push(p1prefix + " and " + p2prefix + " " + p1names[p1names.length-1])
             if (defaultPrefix)
             {
                 // Reverse prefixes in case default had it backwards
-                salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p2names[0] + " " + p2names[p2names.length-1])
-                salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p2names[p2names.length-1])
+                salutationsHousehold.push(p1prefix + " and " + p2prefix + " " + p2names[0] + " " + p2names[p2names.length-1])
+                salutationsFormal.push(p1prefix + " and " + p2prefix + " " + p2names[p2names.length-1])
             } else
             {
                 // Parent 2 prefix will only come first if not using defaults
-                salutationsHousehold.push(p2prefix + " & " + p1prefix + " " + p2names[0] + " " + p2names[p2names.length-1])
-                salutationsFormal.push(p2prefix + " & " + p1prefix + " " + p2names[p2names.length-1])
+                salutationsHousehold.push(p2prefix + " and " + p1prefix + " " + p2names[0] + " " + p2names[p2names.length-1])
+                salutationsFormal.push(p2prefix + " and " + p1prefix + " " + p2names[p2names.length-1])
             }
 
             // Second alternate: first word as first name, rest as last name
-            salutationsInformal.push(p1names[0] + " & " + p2names[0])
-            salutationsInformal.push(p2names[0] + " & " + p1names[0])
-            salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p1name)
-            salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p1name.substr(p1names[0].length+1))
+            salutationsInformal.push(p1names[0] + " and " + p2name)
+            salutationsInformal.push(p2names[0] + " and " + p1name)
+            salutationsHousehold.push(p1prefix + " and " + p2prefix + " " + p1name)
+            salutationsFormal.push(p1prefix + " and " + p2prefix + " " + p1name.substr(p1names[0].length+1))
             if (defaultPrefix)
             {
                 // Reverse prefixes in case default had it backwards
-                salutationsHousehold.push(p1prefix + " & " + p2prefix + " " + p2name)
-                salutationsFormal.push(p1prefix + " & " + p2prefix + " " + p2name.substr(p2names[0].length+1))
+                salutationsHousehold.push(p1prefix + " and " + p2prefix + " " + p2name)
+                salutationsFormal.push(p1prefix + " and " + p2prefix + " " + p2name.substr(p2names[0].length+1))
             } else
             {
                 // Parent 2 prefix will only come first if not using defaults
-                salutationsHousehold.push(p2prefix + " & " + p1prefix + " " + p2name)
-                salutationsFormal.push(p2prefix + " & " + p1prefix + " " + p2name.substr(p2names[0].length+1))
+                salutationsHousehold.push(p2prefix + " and " + p1prefix + " " + p2name)
+                salutationsFormal.push(p2prefix + " and " + p1prefix + " " + p2name.substr(p2names[0].length+1))
             }
 
             // Third alternate: last word as last name, rest as first name
-            salutationsInformal.push(p1name.substr(0,p1name.length-p1names[p1names.length-1].length-1) + " & " + p2name.substr(0,p2name.length-p2names[p2names.length-1].length-1))
-            salutationsInformal.push(p2name.substr(0,p2name.length-p2names[p2names.length-1].length-1) + " & " + p1name.substr(0,p1name.length-p1names[p1names.length-1].length-1))
+            salutationsInformal.push(p1name.substr(0,p1name.length-p1names[p1names.length-1].length-1) + " and " + p2name)
+            salutationsInformal.push(p2name.substr(0,p2name.length-p2names[p2names.length-1].length-1) + " and " + p1name)
         }
     }
 
