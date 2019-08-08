@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.0.2
+// @version      2.1.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -58,6 +58,9 @@
 [INDEX027] ENR-12 Shortcuts
 [INDEX028] Salutation Formulas
 [INDEX029] Admin Field Auto-Add
+[INDEX030] Highlight Row on Hover
+[INDEX031] Manage Student Enrollments Shortcuts
+[INDEX032] List Role Access Shortcuts
 [INDEX900] Misc. Helper Functions
 
 
@@ -174,6 +177,17 @@ Completed Mods:
 
 26 - Admin Field Auto-Add
      When selecting an admin-viewable-only field, automatically add the field when selected from the drop-down.
+
+27 - Highlight Row on Hover
+     Hard-to-read lists on podium pages now highlight on mouseover.
+
+28 - Manage Student Enrollments Shortcuts
+     When in Manage Student Enrollments, hover over a student and press a keyboard shortcut to select Promote, Repeat, Withdraw,
+     or No Change without needing to click the radio button.
+
+29 - List Role Access Shortcuts
+     When editing advanced list role access, hover over a role and press a keyboard shortcut to select Run, Copy, or No Access
+     without needing to click the radio button.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -299,6 +313,12 @@ function gmMain(){
             break;
         case "Contracts List":
             waitForKeyElements(".bb-search-input-container", ContractListAutoSearch, true)
+            break;
+        case "Manage Student Enrollments Promote":
+            waitForKeyElements(".tbl", ManageStudentEnrollmentsShortcuts, true)
+            break;
+        case "List Role Access":
+            waitForKeyElements(".tbl", ListRoleAccessShortcuts, true)
     }
 
     // People Finder Quick Select
@@ -328,6 +348,9 @@ function gmMain(){
     // Admin Field Auto-Add
     waitForKeyElements(".available-field-dropdown", AdminFieldAutoAdd)
 
+    // Highlight row on hover
+    HighlightRowOnHover()
+
 }
 
 
@@ -340,6 +363,12 @@ function GetModule(strURL)
     } else if (strURL == schoolURL+"app/enrollment-management#lists/contracts")
     {
         return "Contracts List"
+    } else if (strURL == schoolURL+"podium/default.aspx?t=23193")
+    {
+        return "List Role Access"
+    } else if (strURL == schoolURL+"podium/default.aspx?t=2948")
+    {
+        return "Manage Student Enrollments Promote"
     } else if (strURL == schoolURL+"podium/default.aspx?t=36655")
     {
         return "Edit Registry";
@@ -3070,6 +3099,99 @@ function AdminFieldAutoAdd()
         $(".add-field-link")[0].dispatchEvent(event)
     });
 
+}
+
+// -----------------------------------------[INDEX030]-------------------------------------
+// ----------------------------------Highlight Row on Hover--------------------------------
+// ----------------------------------------------------------------------------------------
+
+function HighlightRowOnHover()
+{
+    if (window.location.href.substr(schoolURL.length, 6) == "podium")  // Only for podium pages--doesn't seem like the pages in the newer UI have this problem.
+    {
+        console.log("Function: " + arguments.callee.name)
+
+        $("table:not(.thCBar) > tbody").each(function(index){  // Exclude class thCBar, used in some areas just for formatting
+            if ($(this).children("tr").length > 3)  // Only for tables with more than 3 rows
+            {
+                $(this).children("tr").not(':first').hover(
+                    function () {
+                        $(this).css("background","AliceBlue");
+                    },
+                    function () {
+                        $(this).css("background","");
+                    }
+                );
+            }
+        });
+    }
+}
+
+// -----------------------------------------[INDEX031]-------------------------------------
+// ---------------------------Manage Student Enrollments Shortcuts-------------------------
+// ----------------------------------------------------------------------------------------
+
+function ManageStudentEnrollmentsShortcuts()
+{
+    console.log("Function: " + arguments.callee.name)
+
+    $(document).on('keypress', function(e) {
+        switch (e.keyCode)
+        {
+            case 114:  // R
+                $('tr[style*="background: aliceblue"]').find('span[f="graduated"]').find("input").prop("checked", true).trigger("click")
+                break;
+            case 101:  // E
+                $('tr[style*="background: aliceblue"]').find('span[f="repeated"]').find("input").prop("checked", true).trigger("click")
+                break;
+            case 119:  // W
+                $('tr[style*="background: aliceblue"]').find('span[f="withdraw"]').find("input").prop("checked", true).trigger("click")
+                break;
+            case 110:  // N
+                $('tr[style*="background: aliceblue"]').find('span[f="nochange"]').find("input").prop("checked", true).trigger("click")
+                break;
+            default:
+                return;
+        }
+        // Flash student name to indicate to user that shortcut key was pressed
+        $('tr[style*="background: aliceblue"]').children("td:eq(0)").fadeOut(100).fadeIn(100)
+    });
+
+    // Add note to top
+    $(".tbl:first:not(.onMod)").find("br:eq(3)").before(" Hover over a row and use one of the following keyboard shortcuts to select the corresponding option: R=Promote / E=Repeat / W=Withdraw  / N=No Change")
+    $(".tbl:first").addClass("onMod")
+}
+
+// -----------------------------------------[INDEX032]-------------------------------------
+// --------------------------------List Role Access Shortcuts------------------------------
+// ----------------------------------------------------------------------------------------
+
+function ListRoleAccessShortcuts()
+{
+    console.log("Function: " + arguments.callee.name)
+
+    $(document).on('keypress', function(e) {
+        switch (e.keyCode)
+        {
+            case 114:  // R
+                $('tr[style*="background: aliceblue"]').find("input:eq(0)").prop("checked", true).trigger("click")
+                break;
+            case 99:   // C
+                $('tr[style*="background: aliceblue"]').find("input:eq(1)").prop("checked", true).trigger("click")
+                break;
+            case 110:  // N
+                $('tr[style*="background: aliceblue"]').find("input:eq(2)").prop("checked", true).trigger("click")
+                break;
+            default:
+                return;
+        }
+        // Flash role name to indicate to user that shortcut key was pressed
+        $('tr[style*="background: aliceblue"]').children("td:eq(1)").fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100)
+    });
+
+    // Add note to top
+    $(".mobile-word-break:not(.onMod)").find("br:eq(2)").after("Hover over a row and use one of the following keyboard shortcuts to select the corresponding option: R=Run / C=Copy / N=No Access")
+    $(".mobile-word-break").addClass("onMod")
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
