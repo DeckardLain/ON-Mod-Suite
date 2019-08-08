@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2019-08-08
+### Added
+- Highlight Row on Hover
+- Manage Student Enrollment Keyboard Shortcuts
+- Advanced List Role Access Keyboard Shortcuts
+
 ## [2.0.2] - 2019-08-02
 ### Changed
 - Salutation formulas updated to reflect upcoming policy changes (and instead of &; informal salutation to use
