@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.1.1] - 2019-08-12
+### Fixed
+- Advanced list favorites broken for list IDs with 6 or more digits.
+### Added
+- Advanced list IDs displayed on list of lists.
+
 ## [2.1.0] - 2019-08-08
 ### Added
 - Highlight Row on Hover
