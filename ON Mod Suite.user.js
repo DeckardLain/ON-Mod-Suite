@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.1.0
+// @version      2.1.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -2271,9 +2271,11 @@ function CreateAddToFavoritesLink()
     $(".cal2listdayitem, .cal2listdayitemalt").each(function(){
         ListName = $(this).find(".cal2listdayitemtext:first").text().trim()
         pos = $(this).find(".cal2listdayitemtext").eq(1).children("a:last").attr("href").indexOf("slid")
-        ListID = $(this).find(".cal2listdayitemtext").eq(1).children("a:last").attr("href").substring(pos+5, pos+10)
+        var pos2 = $(this).find(".cal2listdayitemtext").eq(1).children("a:last").attr("href").indexOf("~ml")
+        ListID = $(this).find(".cal2listdayitemtext").eq(1).children("a:last").attr("href").substring(pos+5, pos2)
         link = ' | <a href="javascript:void(0)" class="add-list-to-favorites" data-id="' + ListID + '" data-name="' + ListName + '">Add to Favorites</a>'
         $(this).find(".cal2listdayitemtext").eq(1).append(link)
+        $(this).find("tr").eq(1).children("td").eq(0).append(" | List ID: "+ListID)
     });
 
     //$(document).on('click', ".add-list-to-favorites", function(){
