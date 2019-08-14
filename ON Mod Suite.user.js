@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.1.1
+// @version      2.2.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -135,6 +135,7 @@ Completed Mods:
 
 17 - Advanced List Favorites
      Advanced lists can be individually added to a list of favorite lists that you can Copy or Run from the Core Dashboard.
+     Sharable link can be copied and sent to other users, so they can run a list without needing to find it first.
 
 18 - WYSIWYG Editor Improvements
      Default font size in WYSIWYG editors throughout the system is very small and hard to read (10px).  Change this default on the
@@ -2245,6 +2246,15 @@ function CheckIfRunningFavorite()
     FavoriteListName = localStorage.getItem("FavoriteListRunName")
     FavoriteListType = localStorage.getItem("FavoriteListRunType")
 
+    if (FavoriteListID == null || FavoriteListID == "" || FavoriteListID == undefined)
+    {
+        // Check if page was opened from link
+        var urlParams = new URLSearchParams(window.location.search)
+        FavoriteListID = urlParams.get('id')
+        FavoriteListName = urlParams.get('name')
+        FavoriteListType = urlParams.get('type')
+    }
+
     if (FavoriteListID != null)
     {
         localStorage.setItem("FavoriteListRunID", "")
@@ -2272,10 +2282,17 @@ function CreateAddToFavoritesLink()
         ListName = $(this).find(".cal2listdayitemtext:first").text().trim()
         pos = $(this).find(".cal2listdayitemtext").eq(1).children("a:last").attr("href").indexOf("slid")
         var pos2 = $(this).find(".cal2listdayitemtext").eq(1).children("a:last").attr("href").indexOf("~ml")
-        ListID = $(this).find(".cal2listdayitemtext").eq(1).children("a:last").attr("href").substring(pos+5, pos2)
-        link = ' | <a href="javascript:void(0)" class="add-list-to-favorites" data-id="' + ListID + '" data-name="' + ListName + '">Add to Favorites</a>'
-        $(this).find(".cal2listdayitemtext").eq(1).append(link)
-        $(this).find("tr").eq(1).children("td").eq(0).append(" | List ID: "+ListID)
+        if (pos2 > 0)
+        {
+            ListID = $(this).find(".cal2listdayitemtext").eq(1).children("a:last").attr("href").substring(pos+5, pos2)
+            link = ' | <a href="javascript:void(0)" class="add-list-to-favorites" data-id="' + ListID + '" data-name="' + ListName + '">Add to Favorites</a>'
+            $(this).find(".cal2listdayitemtext").eq(1).append(link)
+            // Also add shareable link
+            var shareLink = ' | <a href="'+schoolURL+'podium/default.aspx?t=23189&id='+ListID+'&name='+ListName+'&type=Run">Link</a>'
+            $(this).find(".cal2listdayitemtext").eq(1).append(shareLink)
+            // Add List ID to displayed info
+            $(this).find("tr").eq(1).children("td").eq(0).append(" | List ID: "+ListID)
+        }
     });
 
     //$(document).on('click', ".add-list-to-favorites", function(){
@@ -2390,7 +2407,7 @@ function HighlightInvalidAttendanceRow(jNode)
     console.log("Function: " + arguments.callee.name)
     if (window.location.href == schoolURL+"app/academics#studentattendance")
     {
-        if ($(jNode).children("td").eq(4).text() == "HR")
+        if ($(jNode).children("td").eq(4).text() == "HR" || $(jNode).children("td").eq(4).text() == "HRK5")
         {
             // Block: Homeroom
             if ($(jNode).children("td").eq(6).text().includes("[Class]"))
