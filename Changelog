@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.2.0] - 2019-08-14
+### Fixed
+- Highlight Invalid Attendance not identifying new HRK5 block as a Homeroom block.
+### Added
+- Advanced List links can be copied and shared with other users.  Recipient must be running the script in order for
+the link to work and run the corresponding list.
+
 ## [2.1.1] - 2019-08-12
 ### Fixed
 - Advanced list favorites broken for list IDs with 6 or more digits.
