@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.2.1
+// @version      2.2.2
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -258,13 +258,13 @@ function gmMain(){
         case "Academics-Roster":
             waitForKeyElements(".bb-page-heading", PostLinkRosterFaculty)
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
-            waitForKeyElements(".bb-btn-secondary:first", CreateRosterCheckboxes)
+            waitForKeyElements(".bb-btn-secondary", CreateRosterCheckboxes)
             EmailAllParentsOfStudent();
             break;
         case "Faculty-Roster":
             waitForKeyElements(".bb-page-heading", PostLinkRosterAcademics)
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
-            waitForKeyElements(".bb-btn-secondary:first", CreateRosterCheckboxes)
+            waitForKeyElements(".bb-btn-secondary", CreateRosterCheckboxes)
             waitForKeyElements(".dropdown-toggle:first", SaveRosterEmails)
             waitForKeyElements("#group-header-Classes", ClassesMenuSortOrder)
             EmailAllParentsOfStudent();
