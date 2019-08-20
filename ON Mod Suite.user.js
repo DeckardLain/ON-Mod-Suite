@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.2.0
+// @version      2.2.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -274,6 +274,7 @@ function gmMain(){
             waitForKeyElements(".btn-contact-card:first", AddLinkToFacultyProgress)
         case "Other Roster":
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
+            waitForKeyElements(".bb-btn-secondary", CreateRosterCheckboxes)
             break;
         case "Manage Student Enrollment":
             waitForKeyElements("#LevelNum", EnrollInAll)
@@ -821,6 +822,7 @@ function AddRosterStudentCount(jNode)
     console.log("Function: " + arguments.callee.name)
     var memberCount = $("#roster-count").text();
     var teacherCount = 0;
+/*
     var nonStudentConditions = ["Teacher", "Co-Teacher", "Assistant Teacher", "Activity Leader", "Owner", "Coach"]
 
     $(".bb-card-title").each(function(index){
@@ -830,14 +832,22 @@ function AddRosterStudentCount(jNode)
            teacherCount++;
        }
     });
-
+*/
     if (!($("#RosterCardContainer").length))
     {
         memberCount = $("h4.pull-left").text();
         memberCount = memberCount.replace(" Members", "");
     }
 
+    $(".bb-btn-secondary").next().each(function(index){
+        if ($(this).find(".bb-dropdown-item").length == 1)
+        {
+            teacherCount++;
+        }
+    });
+
     var studentCount = memberCount - teacherCount;
+
     var studentCountText = "  /  ";
     studentCountText = studentCountText.concat(studentCount, " Students");
 
@@ -847,6 +857,7 @@ function AddRosterStudentCount(jNode)
         {
             $("#RosterCardContainer").siblings("h4").append(studentCountText);
         }
+        $("#RosterCardContainer").attr("count", studentCount);
     } else
     {
         if (!$("h4.pull-left").includes("Students"))
@@ -1447,24 +1458,21 @@ function CreateRosterCheckboxes(jNode)
     {
 
         // Add menu items to Send Communication
-        $("#roster-reports").prev().find("li:eq(2)").after('<li><a id="selected-students" href="javascript:void(0)">Selected Students</a></li>');
-        $("#roster-reports").prev().find("li:eq(3)").after('<li><a id="selected-parents" href="javascript:void(0)">Selected Students\x27 Parents</a></li>');
-        $("#roster-reports").prev().find("li:eq(4)").after('<li><a id="selected-students-and-parents" href="javascript:void(0)">Selected Students and Parents</a></li>');
+        if (window.location.href.indexOf("communitypage") > 0)
+        {
+            $("#rosterManageButton").next().find("li:eq(1)").after('<li><a id="selected-students" href="javascript:void(0)">Selected Students</a></li>');
+            $("#rosterManageButton").next().find("li:eq(2)").after('<li><a id="selected-parents" href="javascript:void(0)">Selected Students\x27 Parents</a></li>');
+            $("#rosterManageButton").next().find("li:eq(3)").after('<li><a id="selected-students-and-parents" href="javascript:void(0)">Selected Students and Parents</a></li>');
+        } else
+        {
+            $("#roster-reports").prev().find("li:eq(2)").after('<li><a id="selected-students" href="javascript:void(0)">Selected Students</a></li>');
+            $("#roster-reports").prev().find("li:eq(3)").after('<li><a id="selected-parents" href="javascript:void(0)">Selected Students\x27 Parents</a></li>');
+            $("#roster-reports").prev().find("li:eq(4)").after('<li><a id="selected-students-and-parents" href="javascript:void(0)">Selected Students and Parents</a></li>');
+        }
 
         // Create Select All checkbox
         $("#roster-count").closest("h4").after('<label><input type="checkbox" class="Select_all">Select All</label>');
 
-        // Create checkboxes for each student's card
-        $(".bb-btn-secondary").each(function(index){
-            cardHeader = $(this).closest(".roster-card").find(".bb-card-title:first").text()
-            if(!nonStudentConditions.some(el => cardHeader.includes(el)) && !$(this).closest(".roster-relationships").length)
-                // Only if not a teacher and not for relationships popup
-            {
-                input = document.createElement("input");
-                input.type = "checkbox";
-                $(this).before(input);
-            }
-        });
 
         // Click events for Send Communication menu items
         $("#selected-students").bind("click", function(){
@@ -1482,27 +1490,62 @@ function CreateRosterCheckboxes(jNode)
             if ($(this).is(":checked"))
             {
                 $("input[type='checkbox']").not(".Select_all").prop("checked", true);
+                var selectedCount = $('input[type="checkbox"]:checked').not('.Select_all').length;
+                var studentCount = $("#RosterCardContainer").attr("count")
+                if (selectedCount > 0 && selectedCount != studentCount)
+                {
+                    waitForKeyElements("#selected-count", function(){
+                        $("#selected-count").after('<span id="warning"> **Not all student cards are loaded on the page.  Scroll down until all students appear, then toggle Select All again.**</span>')
+                    }, true);
+                    $("#selected-count").after('<span id="warning"> **Not all student cards are loaded on the page.  Scroll down until all students appear, then toggle Select All again.**</span>')
+
+                }
+
             } else
             {
                 $("input[type='checkbox']").not(".Select_all").prop("checked", false);
+                $("#warning").remove()
             }
         });
 
-        // Create/update selected count after any checkbox click
-        $("input[type='checkbox']").bind("click", function(){
-            selectedCount = $('input[type="checkbox"]:checked').not('.Select_all').length;
-            if ($("#selected-count").length)
-            {
-                $("#selected-count").text("  [" + selectedCount + " Selected]")
-            } else
-            {
-                var selectedSpan = document.createElement("span");
-                selectedSpan.id = "selected-count";
-                selectedSpan.innerHTML = "  [" + selectedCount + " Selected]"
-                $("#roster-count").closest("h4").append(selectedSpan);
-            }
-        });
+
     }
+
+    // Student cards can be loaded dynamically for large rosters
+    // Create checkboxes for each student's card
+    $(".bb-btn-secondary").each(function(index){
+        if (!$(this).closest(".bb-card-actions").find("input[type='checkbox']").length)
+        {  // Create checkbox only if doesn't already exist
+            cardHeader = $(this).closest(".roster-card").find(".bb-card-title:first").text()
+            //if(!nonStudentConditions.some(el => cardHeader.includes(el)) && !$(this).closest(".roster-relationships").length)
+            // Only if not a teacher and not for relationships popup (Changed to checking for View Relationships option instead)
+            if($(this).next().find(".user-relationships-initial").length && !$(this).closest(".roster-relationships").length)
+            {  // Only if View Relationships option exists; should handle students who are also owners of community groups
+                input = document.createElement("input");
+                input.type = "checkbox";
+                $(this).before(input);
+            }
+        }
+    });
+
+    // Create/update selected count after any checkbox click
+    $("input[type='checkbox']").bind("click", function(){
+        selectedCount = $('input[type="checkbox"]:checked').not('.Select_all').length;
+        if ($("#selected-count").length)
+        {
+            $("#selected-count").text("  [" + selectedCount + " Selected]")
+        } else
+        {
+            var selectedSpan = document.createElement("span");
+            selectedSpan.id = "selected-count";
+            selectedSpan.innerHTML = "  [" + selectedCount + " Selected]"
+            $("#roster-count").closest("h4").append(selectedSpan);
+        }
+        if (!$(this).hasClass("Select_all"))
+        {
+            $("#warning").remove()
+        }
+    });
 }
 
 function EmailSelectedParents(studentsToo)
