@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.2.1] - 2019-08-20
+### Fixed
+- Roster student select not creating checkboxes for all students because some student cards are loaded dynamically (upon
+scrolling down) for large rosters.
+### Changed
+- Roster student count now identifies teachers vs. students by looking for the View Relationships option in the roster
+card menu.
+- Roster student select now creates checkboxes for students who are group owners or activity leaders.
+### Added
+- Roster student select enabled for community groups.
+
 ## [2.2.0] - 2019-08-14
 ### Fixed
 - Highlight Invalid Attendance not identifying new HRK5 block as a Homeroom block.
