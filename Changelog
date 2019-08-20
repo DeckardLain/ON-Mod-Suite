@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.2.2] - 2019-08-20
+### Fixed
+- Class rosters not included in previous fix for dynamically loaded students (only activity and community rosters were).
+
 ## [2.2.1] - 2019-08-20
 ### Fixed
 - Roster student select not creating checkboxes for all students because some student cards are loaded dynamically (upon
