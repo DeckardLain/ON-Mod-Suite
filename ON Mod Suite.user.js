@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.2.2
+// @version      2.3.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -61,6 +61,7 @@
 [INDEX030] Highlight Row on Hover
 [INDEX031] Manage Student Enrollments Shortcuts
 [INDEX032] List Role Access Shortcuts
+[INDEX033] Enter Grades by Class Textbox Size
 [INDEX900] Misc. Helper Functions
 
 
@@ -189,6 +190,10 @@ Completed Mods:
 29 - List Role Access Shortcuts
      When editing advanced list role access, hover over a role and press a keyboard shortcut to select Run, Copy, or No Access
      without needing to click the radio button.
+
+30 - Enter Grades By Class Textbox Size
+     Increases width of grade textboxes in Enter Grades by Class, which are too small to fit values using multiple decimal places.
+     Also adjusts sizes for Faculty Record Grades.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -321,6 +326,12 @@ function gmMain(){
             break;
         case "List Role Access":
             waitForKeyElements(".tbl", ListRoleAccessShortcuts, true)
+            break;
+        case "Enter Grades By Class":
+            waitForKeyElements(".ch2", EnterGradesByClassTextboxSize, true)
+            break;
+        case "Record Grades":
+            waitForKeyElements(".ch", EnterGradesByClassTextboxSize)
     }
 
     // People Finder Quick Select
@@ -362,6 +373,12 @@ function GetModule(strURL)
     if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.indexOf("app/faculty#gradesrecord/") >= 0)
+    {
+        return "Record Grades";
+    } else if (strURL == schoolURL+"podium/default.aspx?t=35230")
+    {
+        return "Enter Grades By Class";
     } else if (strURL == schoolURL+"app/enrollment-management#lists/contracts")
     {
         return "Contracts List"
@@ -2498,7 +2515,7 @@ function OfficialNotesImprovements(jNode)
     console.log("Function: " + arguments.callee.name)
     var html;
     html = '<section class="bb-tile filter-tile" id="options"><div class="bb-tile-title"><div class="bb-tile-header-with-content"><h2 class="bb-tile-header p1-0">Options</h2></div></div><div class="bb-tile-content">'
-    html += '<input type="checkbox" id="UnreadAtTop"><label for="UnreadAtTop" title="NOTE: The script currently cannot find unread messages that have not been loaded on the page.">Unread Messages At Top</label><br>'
+//    html += '<input type="checkbox" id="UnreadAtTop"><label for="UnreadAtTop" title="NOTE: The script currently cannot find unread messages that have not been loaded on the page.">Unread Messages At Top</label><br>'
     html += '<input type="checkbox" id="RemoveAdmissionsOnly"><label for="RemoveAdmissionsOnly" title="Remove all notes of type Admissions Only.  The page needs to be scrolled manually to load more notes.">Remove [Admissions Only]</label><br>'
     html += '</div></section>'
 
@@ -2508,11 +2525,13 @@ function OfficialNotesImprovements(jNode)
     }
 
     // Get existing settings
+    /* *Feature removed after Blackbaud's 9/18/19 update added Unread filter
     if (localStorage.getItem("OfficialNotesUnreadAtTop") == "True")
     {
         $("#UnreadAtTop").prop("checked", true)
         waitForKeyElements(".detail", OfficialNotesUnreadAtTop)
     }
+    */
     if (localStorage.getItem("OfficialNotesRemoveAdmissionsOnly") == "True")
     {
         $("#RemoveAdmissionsOnly").prop("checked", true)
@@ -2520,6 +2539,7 @@ function OfficialNotesImprovements(jNode)
     }
 
     // Save settings changes
+    /* *Feature removed after Blackbaud's 9/18/19 update added Unread filter
     $("#UnreadAtTop").unbind("click change").bind("click change", function(){
         if ($("#UnreadAtTop").prop("checked") == true)
         {
@@ -2532,6 +2552,7 @@ function OfficialNotesImprovements(jNode)
             location.reload()
         }
     });
+    */
     $("#RemoveAdmissionsOnly").unbind("click change").bind("click change", function(){
         if ($("#RemoveAdmissionsOnly").prop("checked") == true)
         {
@@ -2558,30 +2579,15 @@ function OfficialNotesImprovements(jNode)
 
 }
 
+/* *Feature removed after Blackbaud's 9/18/19 update added Unread filter
 function OfficialNotesUnreadAtTop()
 {
     console.log("Function: " + arguments.callee.name)
     $(".message-list").prepend($(".sky-background-color-info-light"))
 
     console.log($(".site-badge-sb-adm-notes").text() * 1)
-
-/*
-    var scroller = setInterval(function(){
-        if ($(".sky-background-color-info-light").length < $(".site-badge-sb-adm-notes").text() * 1)
-        {
-            //window.scrollTo(0,document.body.scrollHeight);
-            var scroll = document.body.scrollHeight - 200
-            $('html,body').animate({scrollTop: document.body.scrollHeight},"fast");
-            $('html,body').animate({scrollTop: scroll},"fast");
-            console.log("scroll " + scroll)
-            // progress indicator is .progress-striped .skylo
-        } else
-        {
-            clearInterval(scroller);
-        }
-    }, 1000);
-*/
 }
+*/
 
 function OfficialNotesRemoveAdmissionsOnly()
 {
@@ -3254,6 +3260,18 @@ function ListRoleAccessShortcuts()
     // Add note to top
     $(".mobile-word-break:not(.onMod)").find("br:eq(2)").after("Hover over a row and use one of the following keyboard shortcuts to select the corresponding option: R=Run / C=Copy / N=No Access")
     $(".mobile-word-break").addClass("onMod")
+}
+
+// -----------------------------------------[INDEX033]-------------------------------------
+// ----------------------------Enter Grades by Class Textbox Size--------------------------
+// ----------------------------------------------------------------------------------------
+
+function EnterGradesByClassTextboxSize()
+{
+    console.log("Function: " + arguments.callee.name)
+
+    $("input.textbox").attr("style", "width:70px;")
+    $(":text").attr("style", "width:60px;")
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
