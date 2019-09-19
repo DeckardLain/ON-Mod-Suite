@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.3.0] - 2019-09-19
+### Added
+- Increase sizes of grades checkboxes in Enter Grades by Class and Faculty Record Grades
+### Changed
+- Official Notes Unread At Top feature removed. Blackbaud's 9/18/19 update added a native Unread filter option.
+
 ## [2.2.2] - 2019-08-20
 ### Fixed
 - Class rosters not included in previous fix for dynamically loaded students (only activity and community rosters were).
