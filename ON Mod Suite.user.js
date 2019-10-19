@@ -4,7 +4,7 @@
 // @version      2.3.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
-// @match        https://hanalani.myschoolapp.com/*
+// @match        https://*.myschoolapp.com/*
 // @grant        none
 // @run-at       document-end
 // @require      https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js
