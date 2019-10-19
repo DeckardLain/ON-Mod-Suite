@@ -458,7 +458,7 @@ function AddPageFooter()
     console.log("Function: " + arguments.callee.name)
     if (window.location.href != schoolURL+"app/faculty#resourceboarddetail/"+settingsResourceBoardID)
     {
-        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2019 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
+        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite TEST v' + GM_info.script.version + '. | Copyright © 2018-2019 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
     }
 }
 
