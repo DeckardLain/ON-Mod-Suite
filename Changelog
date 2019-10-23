@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.3.2] - 2019-10-23
+### Fixed
+- Sending to large groups of email addresses wouldn't open message windows after the first one.
+
 ## [2.3.1] - 2019-10-22
 ### Added
 - On student medical profile, clicking on the Admissions Immunizations Requirements header to collapse the
