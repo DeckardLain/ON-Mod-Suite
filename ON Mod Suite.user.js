@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.3.0
+// @version      2.3.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -62,6 +62,7 @@
 [INDEX031] Manage Student Enrollments Shortcuts
 [INDEX032] List Role Access Shortcuts
 [INDEX033] Enter Grades by Class Textbox Size
+[INDEX034] Fix Immunization Requirements Collapse
 [INDEX900] Misc. Helper Functions
 
 
@@ -194,6 +195,10 @@ Completed Mods:
 30 - Enter Grades By Class Textbox Size
      Increases width of grade textboxes in Enter Grades by Class, which are too small to fit values using multiple decimal places.
      Also adjusts sizes for Faculty Record Grades.
+
+31 - Fix Admissions Immunizations Requirements Collapse
+     On student medical profile, clicking on the Admissions Immunizations Requirements header to collapse the section collapses the
+     Forms section instead because sections use the same element ID.  This function gives the immunizations section a unique ID.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -332,6 +337,10 @@ function gmMain(){
             break;
         case "Record Grades":
             waitForKeyElements(".ch", EnterGradesByClassTextboxSize)
+            break;
+        case "Medical Profile":
+            waitForKeyElements(".bb-tile-content", FixImmunizationCollapse)
+            waitForKeyElements(".bb-page-heading", PostLinkFaculty)
     }
 
     // People Finder Quick Select
@@ -373,6 +382,9 @@ function GetModule(strURL)
     if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.substring(0, schoolURL.length+19) == schoolURL+"app/faculty#profile" && strURL.substring(schoolURL.length+28, schoolURL.length+35) == "medical")
+    {
+        return "Medical Profile";
     } else if (strURL.indexOf("app/faculty#gradesrecord/") >= 0)
     {
         return "Record Grades";
@@ -3272,6 +3284,21 @@ function EnterGradesByClassTextboxSize()
 
     $("input.textbox").attr("style", "width:70px;")
     $(":text").attr("style", "width:60px;")
+}
+
+// -----------------------------------------[INDEX034]-------------------------------------
+// --------------------------Fix Immunization Requirements Collapse------------------------
+// ----------------------------------------------------------------------------------------
+
+function FixImmunizationCollapse(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+
+    if ($(jNode).parent().find("h3").text().indexOf("immunization") >= 0)
+    {
+        $(jNode).attr("id", "tile-body-immunizations")
+        $(jNode).prev(".bb-tile-title").attr("data-target", "#tile-body-immunizations")
+    }
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
