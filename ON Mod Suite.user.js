@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.3.2
+// @version      2.4.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -63,6 +63,7 @@
 [INDEX032] List Role Access Shortcuts
 [INDEX033] Enter Grades by Class Textbox Size
 [INDEX034] Fix Immunization Requirements Collapse
+[INDEX035] Default Assignment Date Filter
 [INDEX900] Misc. Helper Functions
 
 
@@ -200,6 +201,10 @@ Completed Mods:
      On student medical profile, clicking on the Admissions Immunizations Requirements header to collapse the section collapses the
      Forms section instead because sections use the same element ID.  This function gives the immunizations section a unique ID.
 
+32 - Class Assignments Default Date Filter
+     Set a default date filter (instead of always on Active) for class assignment pages.  Additional option "Current Quarter" pulls
+     dates for the current quarter to fill in the start and end date for custom date range.
+
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
 
@@ -242,7 +247,7 @@ function gmMain(){
     switch(GetModule(strURL))
     {
         case "Settings":
-            waitForKeyElements(".conDefault b:first", GenerateSettingsPage)
+            waitForKeyElements(".conDefault b:first", GenerateSettingsPage, true)
             break;
         case "Core":
             waitForKeyElements("#userName", PostLinkCore)
@@ -341,6 +346,10 @@ function gmMain(){
         case "Medical Profile":
             waitForKeyElements(".bb-tile-content", FixImmunizationCollapse)
             waitForKeyElements(".bb-page-heading", PostLinkFaculty)
+            break;
+        case "Assignments":
+            waitForKeyElements(".assignment-filter-item", DefaultClassAssignmentDateFilter)
+            waitForKeyElements("#group-header-Classes", ClassesMenuSortOrder)
     }
 
     // People Finder Quick Select
@@ -382,6 +391,9 @@ function GetModule(strURL)
     if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.substring(strURL.length-11) == "assignments")
+    {
+        return "Assignments";
     } else if (strURL.substring(0, schoolURL.length+19) == schoolURL+"app/faculty#profile" && strURL.substring(schoolURL.length+28, schoolURL.length+35) == "medical")
     {
         return "Medical Profile";
@@ -2072,6 +2084,16 @@ function GenerateSettingsPage(jNode)
     str += '<td><input type="checkbox" id="AutomaticallyExpandAll"><br>'
     str += '</td></tr>'
 
+    // Default Class Assignments Date Filter
+    str += '<tr><td valign="top"><label for="DefaultClassAssignmentsDateFilter">Default Class Assignments Date Filter</label>'
+    str += '<td><input type="radio" id="ClassAssignmentsDefaultPrevious" name="class-assignment-default-date" value="previous"><label for="ClassAssignmentsDefaultPrevious">Previous</label><br>'
+    str += '<input type="radio" id="ClassAssignmentsDefaultActive" name="class-assignment-default-date" value="active"><label for="ClassAssignmentsDefaultActive">Active</label><br>'
+    str += '<input type="radio" id="ClassAssignmentsDefaultFuture" name="class-assignment-default-date" value="future"><label for="ClassAssignmentsDefaultFuture">Future</label><br>'
+    str += '<input type="radio" id="ClassAssignmentsDefaultCurrentQuarter" name="class-assignment-default-date" value="currentquarter"><label for="ClassAssignmentsDefaultCurrentQuarter">Current Quarter</label><br>'
+    str += '<input type="radio" id="ClassAssignmentsDefaultRange" name="class-assignment-default-date" value="range"><label for="ClassAssignmentsDefaultRange">Range</label><br>'
+    str += '<label for="ClassAssignmentsDefaultStart">Start:&nbsp</label><input type="text" size="12" id="ClassAssignmentsDefaultStart" disabled><br>'
+    str += '<label for="ClassAssignmentsDefaultEnd">End:&nbsp</label><input type="text" size="12" id="ClassAssignmentsDefaultEnd" disabled>'
+
     $("#settings-table").append(str)
 
     // ----------------------------------------------------------------------------------------
@@ -2135,6 +2157,38 @@ function GenerateSettingsPage(jNode)
         }
     }
 
+    // Default Class Assignments Date Filter
+    switch (localStorage.getItem("ClassAssignmentsDefaultDate"))
+    {
+        case "Previous":
+            $("#ClassAssignmentsDefaultPrevious").prop("checked", true)
+            break;
+        case "Active":
+        default:
+            $("#ClassAssignmentsDefaultActive").prop("checked", true)
+            break;
+        case "Future":
+            $("#ClassAssignmentsDefaultFuture").prop("checked", true)
+            break;
+        case "Current Quarter":
+            $("#ClassAssignmentsDefaultCurrentQuarter").prop("checked", true)
+            $("#ClassAssignmentsDefaultStart").prop("disabled", false)
+            $("#ClassAssignmentsDefaultEnd").prop("disabled", false)
+
+            $("#ClassAssignmentsDefaultStart").val(localStorage.getItem("ClassAssignmentsDefaultStart"))
+            $("#ClassAssignmentsDefaultEnd").val(localStorage.getItem("ClassAssignmentsDefaultEnd"))
+
+            // Update quarter start and end dates
+            GetUpdatedQuarterDates("Settings")
+            break;
+        case "Range":
+            $("#ClassAssignmentsDefaultRange").prop("checked", true)
+            $("#ClassAssignmentsDefaultStart").prop("disabled", false)
+            $("#ClassAssignmentsDefaultEnd").prop("disabled", false)
+            $("#ClassAssignmentsDefaultStart").val(localStorage.getItem("ClassAssignmentsDefaultStart"))
+            $("#ClassAssignmentsDefaultEnd").val(localStorage.getItem("ClassAssignmentsDefaultEnd"))
+    }
+
     // Save changes
     $("#ClassSortByName").unbind("click change").bind("click change", function(){
         localStorage.setItem("ClassesMenuSortOrder", "name")
@@ -2171,6 +2225,44 @@ function GenerateSettingsPage(jNode)
         {
             localStorage.setItem("AutomaticallyExpandAll", "False")
         }
+    });
+    $("#ClassAssignmentsDefaultPrevious").unbind("click change").bind("click change", function(){
+        localStorage.setItem("ClassAssignmentsDefaultDate", "Previous")
+        $("#ClassAssignmentsDefaultStart").prop("disabled", true)
+        $("#ClassAssignmentsDefaultEnd").prop("disabled", true)
+    });
+    $("#ClassAssignmentsDefaultActive").unbind("click change").bind("click change", function(){
+        localStorage.setItem("ClassAssignmentsDefaultDate", "Active")
+        $("#ClassAssignmentsDefaultStart").prop("disabled", true)
+        $("#ClassAssignmentsDefaultEnd").prop("disabled", true)
+    });
+    $("#ClassAssignmentsDefaultFuture").unbind("click change").bind("click change", function(){
+        localStorage.setItem("ClassAssignmentsDefaultDate", "Future")
+        $("#ClassAssignmentsDefaultStart").prop("disabled", true)
+        $("#ClassAssignmentsDefaultEnd").prop("disabled", true)
+    });
+    $("#ClassAssignmentsDefaultCurrentQuarter").unbind("click change").bind("click change", function(){
+        localStorage.setItem("ClassAssignmentsDefaultDate", "Current Quarter")
+        $("#ClassAssignmentsDefaultStart").prop("disabled", false)
+        $("#ClassAssignmentsDefaultEnd").prop("disabled", false)
+
+        if (!$("#temp-loading").length)
+        {
+            $("#ClassAssignmentsDefaultEnd").after('<div id="temp-loading">Loading quarter dates...please wait...</div>')
+        }
+        GetUpdatedQuarterDates("Settings-First")
+    });
+    $("#ClassAssignmentsDefaultRange").unbind("click change").bind("click change", function(){
+        localStorage.setItem("ClassAssignmentsDefaultDate", "Range")
+        $("#ClassAssignmentsDefaultStart").prop("disabled", false)
+        $("#ClassAssignmentsDefaultEnd").prop("disabled", false)
+        $("#ClassAssignmentsDefaultStart").focus()
+    });
+    $("#ClassAssignmentsDefaultStart").on('input', function(){
+        localStorage.setItem("ClassAssignmentsDefaultStart", $("#ClassAssignmentsDefaultStart").val())
+    });
+    $("#ClassAssignmentsDefaultEnd").on('input', function(){
+        localStorage.setItem("ClassAssignmentsDefaultEnd", $("#ClassAssignmentsDefaultEnd").val())
     });
 
 }
@@ -3298,6 +3390,102 @@ function FixImmunizationCollapse(jNode)
     {
         $(jNode).attr("id", "tile-body-immunizations")
         $(jNode).prev(".bb-tile-title").attr("data-target", "#tile-body-immunizations")
+    }
+}
+
+// -----------------------------------------[INDEX035]-------------------------------------
+// ------------------------------Default Assignment Date Filter----------------------------
+// ----------------------------------------------------------------------------------------
+
+function DefaultClassAssignmentDateFilter(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+
+    switch (localStorage.getItem("ClassAssignmentsDefaultDate"))
+    {
+        case "Previous":
+            $(".assignmentTimeFilter[data-type-id='0']")[0].click()
+            break;
+        case "Active":
+            $(".assignmentTimeFilter[data-type-id='1']")[0].click()
+            break;
+        case "Future":
+            $(".assignmentTimeFilter[data-type-id='2']")[0].click()
+            break;
+        case "Current Quarter":
+            $(".assignmentTimeFilter[data-type-id='3']")[0].click()
+
+            $("#assignmentFilterStartDatePicker").val(localStorage.getItem("ClassAssignmentsDefaultStart"))
+            var event = document.createEvent("Event")
+            event.initEvent("change", true, false)
+            $("#assignmentFilterStartDatePicker")[0].dispatchEvent(event)
+
+            $("#assignmentFilterEndDatePicker").val(localStorage.getItem("ClassAssignmentsDefaultEnd"))
+            event = document.createEvent("Event")
+            event.initEvent("change", true, false)
+            $("#assignmentFilterEndDatePicker")[0].dispatchEvent(event)
+
+            $(".active-filter").first().html('<i class="pull-right p3icon-radioOn" style="margin-right: 5px"></i>Range (Current Quarter)')
+
+            // Get updated quarter start/end dates
+            GetUpdatedQuarterDates("Assignments")
+            break;
+        case "Range":
+            $(".assignmentTimeFilter[data-type-id='3']")[0].click()
+
+            $("#assignmentFilterStartDatePicker").val(localStorage.getItem("ClassAssignmentsDefaultStart"))
+            var event = document.createEvent("Event")
+            event.initEvent("change", true, false)
+            $("#assignmentFilterStartDatePicker")[0].dispatchEvent(event)
+
+            $("#assignmentFilterEndDatePicker").val(localStorage.getItem("ClassAssignmentsDefaultEnd"))
+            event = document.createEvent("Event")
+            event.initEvent("change", true, false)
+            $("#assignmentFilterEndDatePicker")[0].dispatchEvent(event)
+    }
+}
+
+function GetUpdatedQuarterDates(page)
+{
+    var http = new XMLHttpRequest()
+    http.onreadystatechange = function() {
+        if (http.readyState == 4 && http.status == 200)
+            UpdateQuarterDates(http.responseText, page);
+    }
+    http.open("GET", "https://script.google.com/macros/s/AKfycbzNa_Z-M7IfQr3c5tdoaUcvqgcInOgZFIs6BvbN-bQ833he-9Af/exec?key=Royals&callback=?", true)
+    http.send(null)
+}
+
+function UpdateQuarterDates(response, page)
+{
+    var dates = response.substring(1).split("|")
+    if (dates[0] != "error" && dates[1] != "error")
+    {
+        localStorage.setItem("ClassAssignmentsDefaultStart", dates[0])
+        localStorage.setItem("ClassAssignmentsDefaultEnd", dates[1])
+
+        switch (page)
+        {
+            case "Settings-First":
+                $("#temp-loading").remove()
+            case "Settings":
+                $("#ClassAssignmentsDefaultStart").val(dates[0])
+                $("#ClassAssignmentsDefaultEnd").val(dates[1])
+                break;
+            case "Assignments":
+                $("#assignmentFilterStartDatePicker").val(dates[0])
+                var event = document.createEvent("Event")
+                event.initEvent("change", true, false)
+                $("#assignmentFilterStartDatePicker")[0].dispatchEvent(event)
+
+                $("#assignmentFilterEndDatePicker").val(dates[1])
+                event = document.createEvent("Event")
+                event.initEvent("change", true, false)
+                $("#assignmentFilterEndDatePicker")[0].dispatchEvent(event)
+        }
+    } else if (page == "Settings-First")
+    {
+        $("#temp-loading").text("Error loading quarter dates")
     }
 }
 
