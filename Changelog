@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.1] - 2019-11-26
+### Changed
+- Increased delay (from 0.5 to 1.5 seconds) between launching multiple mailto links.  If too fast, browser will not
+open them.
+### Added
+- "Change Default" link for assignment date filter added so teachers know that that's a thing.
+
 ## [2.4.0] - 2019-11-06
 ### Added
 - Class Assignments Default Date Filter
