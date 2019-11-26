@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.4.0
+// @version      2.4.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -2810,7 +2810,7 @@ function EmailFromAdvancedListGatherAndSend()
                     {
                         clearInterval(timerID2)
                     }
-                }, 500);
+                }, 1500);
             }
             if ($("[title='Previous Page']").length)
             {
@@ -3400,6 +3400,11 @@ function FixImmunizationCollapse(jNode)
 function DefaultClassAssignmentDateFilter(jNode)
 {
     console.log("Function: " + arguments.callee.name)
+
+    if (!$("#DefaultLink").length)
+    {
+        $(".assignmentFiltersContainer").children(".bb-tile").eq(1).find(".bb-tile-header-with-content").after('<div id="DefaultLink"><h5><a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">Change Default</a></h5></div>')
+    }
 
     switch (localStorage.getItem("ClassAssignmentsDefaultDate"))
     {
