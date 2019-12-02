@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.2] - 2019-12-02
+### Fixed
+- Assignments default was causing list to reload many times unnecessarily.
+
 ## [2.4.1] - 2019-11-26
 ### Changed
 - Increased delay (from 0.5 to 1.5 seconds) between launching multiple mailto links.  If too fast, browser will not
