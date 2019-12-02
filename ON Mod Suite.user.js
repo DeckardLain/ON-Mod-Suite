@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.4.1
+// @version      2.4.2
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -348,7 +348,7 @@ function gmMain(){
             waitForKeyElements(".bb-page-heading", PostLinkFaculty)
             break;
         case "Assignments":
-            waitForKeyElements(".assignment-filter-item", DefaultClassAssignmentDateFilter)
+            waitForKeyElements(".assignment-filter-item", DefaultClassAssignmentDateFilter, true)
             waitForKeyElements("#group-header-Classes", ClassesMenuSortOrder)
     }
 
@@ -3404,49 +3404,49 @@ function DefaultClassAssignmentDateFilter(jNode)
     if (!$("#DefaultLink").length)
     {
         $(".assignmentFiltersContainer").children(".bb-tile").eq(1).find(".bb-tile-header-with-content").after('<div id="DefaultLink"><h5><a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">Change Default</a></h5></div>')
-    }
 
-    switch (localStorage.getItem("ClassAssignmentsDefaultDate"))
-    {
-        case "Previous":
-            $(".assignmentTimeFilter[data-type-id='0']")[0].click()
-            break;
-        case "Active":
-            $(".assignmentTimeFilter[data-type-id='1']")[0].click()
-            break;
-        case "Future":
-            $(".assignmentTimeFilter[data-type-id='2']")[0].click()
-            break;
-        case "Current Quarter":
-            $(".assignmentTimeFilter[data-type-id='3']")[0].click()
+        switch (localStorage.getItem("ClassAssignmentsDefaultDate"))
+        {
+            case "Previous":
+                $(".assignmentTimeFilter[data-type-id='0']")[0].click()
+                break;
+            case "Active":
+                $(".assignmentTimeFilter[data-type-id='1']")[0].click()
+                break;
+            case "Future":
+                $(".assignmentTimeFilter[data-type-id='2']")[0].click()
+                break;
+            case "Current Quarter":
+                $(".assignmentTimeFilter[data-type-id='3']")[0].click()
 
-            $("#assignmentFilterStartDatePicker").val(localStorage.getItem("ClassAssignmentsDefaultStart"))
-            var event = document.createEvent("Event")
-            event.initEvent("change", true, false)
-            $("#assignmentFilterStartDatePicker")[0].dispatchEvent(event)
+                $("#assignmentFilterStartDatePicker").val(localStorage.getItem("ClassAssignmentsDefaultStart"))
+                var event = document.createEvent("Event")
+                event.initEvent("change", true, false)
+                $("#assignmentFilterStartDatePicker")[0].dispatchEvent(event)
 
-            $("#assignmentFilterEndDatePicker").val(localStorage.getItem("ClassAssignmentsDefaultEnd"))
-            event = document.createEvent("Event")
-            event.initEvent("change", true, false)
-            $("#assignmentFilterEndDatePicker")[0].dispatchEvent(event)
+                $("#assignmentFilterEndDatePicker").val(localStorage.getItem("ClassAssignmentsDefaultEnd"))
+                event = document.createEvent("Event")
+                event.initEvent("change", true, false)
+                $("#assignmentFilterEndDatePicker")[0].dispatchEvent(event)
 
-            $(".active-filter").first().html('<i class="pull-right p3icon-radioOn" style="margin-right: 5px"></i>Range (Current Quarter)')
+                $(".active-filter").first().html('<i class="pull-right p3icon-radioOn" style="margin-right: 5px"></i>Range (Current Quarter)')
 
-            // Get updated quarter start/end dates
-            GetUpdatedQuarterDates("Assignments")
-            break;
-        case "Range":
-            $(".assignmentTimeFilter[data-type-id='3']")[0].click()
+                // Get updated quarter start/end dates
+                GetUpdatedQuarterDates("Assignments")
+                break;
+            case "Range":
+                $(".assignmentTimeFilter[data-type-id='3']")[0].click()
 
-            $("#assignmentFilterStartDatePicker").val(localStorage.getItem("ClassAssignmentsDefaultStart"))
-            var event = document.createEvent("Event")
-            event.initEvent("change", true, false)
-            $("#assignmentFilterStartDatePicker")[0].dispatchEvent(event)
+                $("#assignmentFilterStartDatePicker").val(localStorage.getItem("ClassAssignmentsDefaultStart"))
+                var event = document.createEvent("Event")
+                event.initEvent("change", true, false)
+                $("#assignmentFilterStartDatePicker")[0].dispatchEvent(event)
 
-            $("#assignmentFilterEndDatePicker").val(localStorage.getItem("ClassAssignmentsDefaultEnd"))
-            event = document.createEvent("Event")
-            event.initEvent("change", true, false)
-            $("#assignmentFilterEndDatePicker")[0].dispatchEvent(event)
+                $("#assignmentFilterEndDatePicker").val(localStorage.getItem("ClassAssignmentsDefaultEnd"))
+                event = document.createEvent("Event")
+                event.initEvent("change", true, false)
+                $("#assignmentFilterEndDatePicker")[0].dispatchEvent(event)
+        }
     }
 }
 
@@ -3466,27 +3466,30 @@ function UpdateQuarterDates(response, page)
     var dates = response.substring(1).split("|")
     if (dates[0] != "error" && dates[1] != "error")
     {
-        localStorage.setItem("ClassAssignmentsDefaultStart", dates[0])
-        localStorage.setItem("ClassAssignmentsDefaultEnd", dates[1])
-
-        switch (page)
+        if (localStorage.getItem("ClassAssignmentsDefaultStart") != dates[0] || localStorage.getItem("ClassAssignmentsDefaultEnd") != dates[1])
         {
-            case "Settings-First":
-                $("#temp-loading").remove()
-            case "Settings":
-                $("#ClassAssignmentsDefaultStart").val(dates[0])
-                $("#ClassAssignmentsDefaultEnd").val(dates[1])
-                break;
-            case "Assignments":
-                $("#assignmentFilterStartDatePicker").val(dates[0])
-                var event = document.createEvent("Event")
-                event.initEvent("change", true, false)
-                $("#assignmentFilterStartDatePicker")[0].dispatchEvent(event)
+            localStorage.setItem("ClassAssignmentsDefaultStart", dates[0])
+            localStorage.setItem("ClassAssignmentsDefaultEnd", dates[1])
 
-                $("#assignmentFilterEndDatePicker").val(dates[1])
-                event = document.createEvent("Event")
-                event.initEvent("change", true, false)
-                $("#assignmentFilterEndDatePicker")[0].dispatchEvent(event)
+            switch (page)
+            {
+                case "Settings-First":
+                    $("#temp-loading").remove()
+                case "Settings":
+                    $("#ClassAssignmentsDefaultStart").val(dates[0])
+                    $("#ClassAssignmentsDefaultEnd").val(dates[1])
+                    break;
+                case "Assignments":
+                    $("#assignmentFilterStartDatePicker").val(dates[0])
+                    var event = document.createEvent("Event")
+                    event.initEvent("change", true, false)
+                    $("#assignmentFilterStartDatePicker")[0].dispatchEvent(event)
+
+                    $("#assignmentFilterEndDatePicker").val(dates[1])
+                    event = document.createEvent("Event")
+                    event.initEvent("change", true, false)
+                    $("#assignmentFilterEndDatePicker")[0].dispatchEvent(event)
+            }
         }
     } else if (page == "Settings-First")
     {
