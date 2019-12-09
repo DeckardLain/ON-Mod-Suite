@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.4.2
+// @version      2.5.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -168,6 +168,8 @@ Completed Mods:
 23 - Pushpage Improvements
      Increase Distribution Group List Box Size - When creating or editing a distribution group, increases the size of the
      list selection box so that it is actually usable.
+     Add user IDs and the ability to open contact cards to static user search, so that when there are users with the same last name,
+     you can select the appropriate one more easily.
 
 24 - ENR-12 Shortcuts
      To improve ENR-12 processing speed, when viewing registries for the ENR-12 form, shortcuts to view contract status or send
@@ -324,6 +326,7 @@ function gmMain(){
             break;
         case "Create Distribution Group":
             waitForKeyElements("[style='height:75px;width:200px;visibility:visible !important;']", IncreaseDistributionGroupListBoxSize, true)
+            waitForKeyElements("#L_c1i0_cb143638_ctl12_lstResult", AddUserIDsToList)
             break;
         case "Edit Registry":
             waitForKeyElements("#L_c1i0_cb88911_ct88911_ctl00_f_7", ENR12Shortcuts, true)
@@ -2828,6 +2831,35 @@ function IncreaseDistributionGroupListBoxSize(jNode)
 {
     console.log("Function: " + arguments.callee.name)
     jNode.css({"height": "200px", "width": "400px"});
+}
+
+function AddUserIDsToList(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+    jNode.children("option").each(function() {
+        $(this).text($(this).text()+" ["+$(this).val()+"]")
+    });
+
+    AddContactCardLink(jNode)
+}
+
+function AddContactCardLink(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+    if (!$("#contact-card-link").length)
+    {
+        $(jNode).after('<td class="tblcell" width="25%" align="left" style="padding-left:14px;padding-right:12px;"><a class="link" id="contact-card-link" href="javascript:void()" title="Select one or more names in the list, then click this link to open all of their contact cards.">Open Contact Card(s)</a></td>')
+        $("#contact-card-link").unbind("click").bind("click", function(){
+            var idsFlat = $(jNode).val()
+            var ids = idsFlat.toString().split(",")
+            for (var i = 0; i < ids.length; i++)
+            {
+                var link = schoolURL+"app/Core#userprofile/"+ids[i]+"/contactcard"
+                window.open(link, "_blank")
+            }
+        });
+    }
+    $(jNode).attr("style", "height:150px;width:551px;visibility:visible !important;")
 }
 
 // -----------------------------------------[INDEX027]-------------------------------------
