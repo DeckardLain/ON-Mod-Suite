@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.5.0] - 2019-12-09
+### Added
+- Pushpage Distribution Lists: Add user IDs and the ability to open contact cards to static user search,
+so that when there are users with the same last name, you can select the appropriate one more easily.
+
 ## [2.4.2] - 2019-12-02
 ### Fixed
 - Assignments default was causing list to reload many times unnecessarily.
