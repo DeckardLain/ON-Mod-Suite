@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.5.0
+// @version      2.5.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -11,7 +11,7 @@
 // @require      https://gist.github.com/raw/2625891/waitForKeyElements.js
 // ==/UserScript==
 
-/* Copyright (C) 2018-2019  Hanalani Schools
+/* Copyright (C) 2018-2020  Hanalani Schools
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -275,12 +275,14 @@ function gmMain(){
         case "Academics-Roster":
             waitForKeyElements(".bb-page-heading", PostLinkRosterFaculty)
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
+            waitForKeyElements(".bb-card-title",ConvertGradYearToGradeLevel)
             waitForKeyElements(".bb-btn-secondary", CreateRosterCheckboxes)
             EmailAllParentsOfStudent();
             break;
         case "Faculty-Roster":
             waitForKeyElements(".bb-page-heading", PostLinkRosterAcademics)
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
+            waitForKeyElements(".bb-card-title",ConvertGradYearToGradeLevel)
             waitForKeyElements(".bb-btn-secondary", CreateRosterCheckboxes)
             waitForKeyElements(".dropdown-toggle:first", SaveRosterEmails)
             waitForKeyElements("#group-header-Classes", ClassesMenuSortOrder)
@@ -288,9 +290,11 @@ function gmMain(){
             break;
         case "Team Roster":
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
+            waitForKeyElements(".bb-card-title",ConvertGradYearToGradeLevel)
             waitForKeyElements(".btn-contact-card:first", AddLinkToFacultyProgress)
         case "Other Roster":
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
+            waitForKeyElements(".bb-card-title",ConvertGradYearToGradeLevel)
             waitForKeyElements(".bb-btn-secondary", CreateRosterCheckboxes)
             break;
         case "Manage Student Enrollment":
@@ -485,7 +489,7 @@ function AddPageFooter()
     console.log("Function: " + arguments.callee.name)
     if (window.location.href != schoolURL+"app/faculty#resourceboarddetail/"+settingsResourceBoardID)
     {
-        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2019 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
+        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2020 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
     }
 }
 
@@ -914,7 +918,7 @@ function AddRosterStudentCount(jNode)
     AddManualAttendanceSheetToMenu();
     $("#ManualAttendanceSheet").bind("click", LaunchManualAttendanceSheet);
 
-    ConvertGradYearToGradeLevel();
+    //ConvertGradYearToGradeLevel();
 
 }
 
@@ -1038,34 +1042,44 @@ function ConvertGradYearToGradeLevel()
         // Add menu
         $("#roster-reports").after('<div id="show-menu" class="btn-group" style="margin-left:10px;"><button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" style="display: inline-block;" data-original-title="" title="" aria-expanded="false">Show <span class="caret"></span></button><ul class="dropdown-menu"><li><a id="gradyear" href="javascript:void(0)">Grad Year</a></li><li><a id="gradelevel" href="javascript:void(0)">Grade Level</a></li><li><a id="both" href="javascript:void(0)">Both</a></li><li><a id="none" href="javascript:void(0)">None</a></li></ul></div>')
     }
-        $("#gradyear").bind("click", function(){
-            localStorage.setItem("GradeLevelSetting", 1);
-            location.reload();
-        });
-        $("#gradelevel").bind("click", function(){
-            localStorage.setItem("GradeLevelSetting", 2);
-            location.reload();
-        });
-        $("#both").bind("click", function(){
-            localStorage.setItem("GradeLevelSetting", 3);
-            location.reload();
-        });
-        $("#none").bind("click", function(){
-            localStorage.setItem("GradeLevelSetting", 4);
-            location.reload();
-        });
+    $("#gradyear").bind("click", function(){
+        localStorage.setItem("GradeLevelSetting", 1);
+        location.reload();
+    });
+    $("#gradelevel").bind("click", function(){
+        localStorage.setItem("GradeLevelSetting", 2);
+        location.reload();
+    });
+    $("#both").bind("click", function(){
+        localStorage.setItem("GradeLevelSetting", 3);
+        location.reload();
+    });
+    $("#none").bind("click", function(){
+        localStorage.setItem("GradeLevelSetting", 4);
+        location.reload();
+    });
 
-        var grade;
-        var name;
+    var grade;
+    var name;
 
-        switch (localStorage.getItem("GradeLevelSetting"))
-        {
-            case "1":
+    switch (localStorage.getItem("GradeLevelSetting"))
+    {
+        case "1":
+            if ($("#show-menu").attr("selection-marked") != "true")
+            {
                 $("#gradyear").prepend(">");
-                break;
-            case "2":
+                $("#show-menu").attr("selection-marked","true")
+            }
+            break;
+        case "2":
+            if ($("#show-menu").attr("selection-marked") != "true")
+            {
                 $("#gradelevel").prepend(">");
-                $(".bb-card-title").each(function(index){
+                $("#show-menu").attr("selection-marked","true")
+            }
+            $(".bb-card-title").each(function(index){
+                if ($(this).attr("onmodsuite") != "true")
+                {
                     name = $(this).text();
                     grade = GetGradeLevel(name);
                     if (grade)
@@ -1073,35 +1087,59 @@ function ConvertGradYearToGradeLevel()
                         name = name.substring(0, name.length-4);
                         name = name.concat(grade);
                         $(this).text(name);
+                        $(this).attr("onmodsuite","true");
                     }
-                });
-                break;
-            case "3":
+                }
+            });
+            break;
+        case "3":
+            if ($("#show-menu").attr("selection-marked") != "true")
+            {
                 $("#both").prepend(">");
-                $(".bb-card-title").each(function(index){
+                $("#show-menu").attr("selection-marked","true")
+            }
+            $(".bb-card-title").each(function(index){
+                if ($(this).attr("onmodsuite") != "true")
+                {
                     grade = GetGradeLevel($(this).text())
                     if (grade)
                     {
                         $(this).append(grade);
+                        $(this).attr("onmodsuite","true");
                     }
-                });
-                break;
-            case "4":
+                }
+            });
+            break;
+        case "4":
+            if ($("#show-menu").attr("selection-marked") != "true")
+            {
                 $("#none").prepend(">");
-                $(".bb-card-title").each(function(index){
+                $("#show-menu").attr("selection-marked","true")
+            }
+            $(".bb-card-title").each(function(index){
+                if ($(this).attr("onmodsuite") != "true")
+                {
                     name = $(this).text();
                     grade = GetGradeLevel(name);
                     if (grade)
                     {
                         name = name.substring(0, name.length-4);
                         $(this).text(name);
+                        $(this).attr("onmodsuite","true");
                     }
-                });
-                break;
-            default:
+                }
+            });
+            break;
+        default:
+            if ($("#show-menu").attr("selection-marked") != "true")
+            {
                 $("#gradelevel").text(">Grade Level (Default)");
                 localStorage.setItem("GradeLevelSetting", 2);
-                $(".bb-card-title").each(function(index){
+                $("#show-menu").attr("selection-marked","true")
+            }
+            $(".bb-card-title").each(function(index){
+                if ($(this).attr("onmodsuite") != "true")
+                {
                     name = $(this).text();
                     grade = GetGradeLevel(name);
                     if (grade)
@@ -1109,10 +1147,13 @@ function ConvertGradYearToGradeLevel()
                         name = name.substring(0, name.length-4);
                         name = name.concat(grade);
                         $(this).text(name);
+                        $(this).attr("onmodsuite","true");
                     }
-                });
-                break;
-        }
+                }
+            });
+            break;
+    }
+
 }
 
 function GetGradeLevel(str)
