@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.5.1] - 2020-03-04
+### Fixed
+- Convert grad year to grade level was not working for roster cards dynamically loaded when scrolling down in long rosters
+
 ## [2.5.0] - 2019-12-09
 ### Added
 - Pushpage Distribution Lists: Add user IDs and the ability to open contact cards to static user search,
