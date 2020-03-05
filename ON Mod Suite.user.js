@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.5.1
+// @version      2.6.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
-// @grant        none
+// @grant        GM_setValue
+// @grant        GM_getValue
 // @run-at       document-end
 // @require      https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js
 // @require      https://gist.github.com/raw/2625891/waitForKeyElements.js
@@ -64,6 +65,7 @@
 [INDEX033] Enter Grades by Class Textbox Size
 [INDEX034] Fix Immunization Requirements Collapse
 [INDEX035] Default Assignment Date Filter
+[INDEX036] Math Year Averages
 [INDEX900] Misc. Helper Functions
 
 
@@ -207,6 +209,10 @@ Completed Mods:
      Set a default date filter (instead of always on Active) for class assignment pages.  Additional option "Current Quarter" pulls
      dates for the current quarter to fill in the start and end date for custom date range.
 
+33 - Math Year Averages
+     From Schedule & Performance gradebooks list, for A/B math classes, launch lookup with custom external API to get the class
+     students' full year averages.
+
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
 
@@ -318,6 +324,7 @@ function gmMain(){
             waitForKeyElements("#accordionSchedules:first", CreateClassCheckboxes)
             waitForKeyElements("#group-header-Classes", ClassesMenuSortOrder)
             waitForKeyElements(".bb-dialog-header", ReverseAttendanceDefault)
+            waitForKeyElements("[data-gradebook]", MathYearAverages, true)
             break;
         case "Core Dashboard":
             waitForKeyElements(".core-dashboard", AdvancedListFavorites)
@@ -434,7 +441,7 @@ function GetModule(strURL)
     } else if (strURL == schoolURL+"edu-core/dashboard")
     {
         return "Core Dashboard";
-    } else if (strURL == schoolURL+"app/faculty#resourceboarddetail/"+settingsResourceBoardID)
+    } else if (strURL.substring(strURL.length-21-settingsResourceBoardID.length) == "#resourceboarddetail/"+settingsResourceBoardID)
     {
         return "Settings";
     } else if (strURL == schoolURL+"app/faculty#myday/schedule-performance")
@@ -487,9 +494,24 @@ function GetModule(strURL)
 function AddPageFooter()
 {
     console.log("Function: " + arguments.callee.name)
-    if (window.location.href != schoolURL+"app/faculty#resourceboarddetail/"+settingsResourceBoardID)
+    if (window.location.href.substring(window.location.href.length-21-settingsResourceBoardID.length) != "#resourceboarddetail/"+settingsResourceBoardID)
     {
         $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2020 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
+
+        // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
+        var skipNotificationVersions = []
+        var oldVersion = GM_getValue("FirstRunVersionCheck")
+
+        if (oldVersion != GM_info.script.version)
+        {
+            GM_setValue("FirstRunVersionCheck", GM_info.script.version)
+            if (skipNotificationVersions.indexOf(oldVersion) < 0)
+            {
+                setTimeout(function(){
+                    window.open("https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/"+settingsResourceBoardID)
+                }, 1000);
+            }
+        }
     }
 }
 
@@ -2096,6 +2118,18 @@ function GenerateSettingsPage(jNode)
 {
     console.log("Function: " + arguments.callee.name)
     var str
+
+    // Check for first run
+    if (GM_info.script.version != localStorage.getItem("FirstRunVersionCheck"))
+    {
+        $(".conDefault").eq(1).prepend('<p><b>Script updated to version '+GM_info.script.version+'! See what changed <a href="https://raw.githubusercontent.com/DeckardLain/ON-Mod-Suite/master/Changelog" target="_blank">here</a>.</b>')
+        localStorage.setItem("FirstRunVersionCheck", GM_info.script.version)
+    }
+
+
+    // Load school-specific settings
+    localStorage.setItem("math-averages-api-url", $("#math-averages-api-url").val())
+
     // Build Page
     document.title = "ON Mod Suite Settings"
     jNode.text(" ")
@@ -3568,6 +3602,37 @@ function UpdateQuarterDates(response, page)
     {
         $("#temp-loading").text("Error loading quarter dates")
     }
+}
+
+// -----------------------------------------[INDEX036]-------------------------------------
+// ------------------------------------Math Year Averages----------------------------------
+// ----------------------------------------------------------------------------------------
+
+function MathYearAverages()
+{
+    console.log("Function: " + arguments.callee.name)
+
+    $("[data-gradebook]").each(function(){
+        if (!$(this).siblings().find(".math-averages").length)
+        {
+            var course = $(this).text()
+            course = course.substring(0,course.indexOf(" - "))
+            if (course.substring(course.length-1) == "A" || course.substring(course.length-1) == "B")
+            {
+                var url = localStorage.getItem("math-averages-api-url")
+                if (url === null)
+                {
+                    var html = '<br><small><small><a href = "https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" class="math-averages" target="_blank">[Open Settings Page to Enable Year Averages]</a></small></small>'
+                } else
+                {
+                    course = encodeURIComponent(course)
+                    url += "&course="+course
+                    var html = '<br><small><a href = "'+url+'" class="math-averages" target="_blank">[Year Averages]</a></small>'
+                }
+                    $(this).after(html)
+            }
+        }
+    });
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
