@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.6.0] - 2020-03-05
+### Added
+- Math Year Averages: From Schedule & Performance gradebooks list, click the link to get full year averages (combining
+A/B classes) for the students
+### Changed
+- The first time the script is run after being updated, the script Settings page will open in a new tab as a notification,
+but also more importantly to load school-specific settings from that page.
+### Fixed
+- Settings page wouldn't load if the user doesn't have access to the Faculty module.
+
 ## [2.5.1] - 2020-03-04
 ### Fixed
 - Convert grad year to grade level was not working for roster cards dynamically loaded when scrolling down in long rosters
