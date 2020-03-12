@@ -1,12 +1,11 @@
 // ==UserScript==
-// @name         ON Mod Suite
+// @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
 // @version      2.6.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
-// @match        https://hanalani.myschoolapp.com/*
-// @grant        GM_setValue
-// @grant        GM_getValue
+// @match        https://*.myschoolapp.com/*
+// @grant        none
 // @run-at       document-end
 // @require      https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js
 // @require      https://gist.github.com/raw/2625891/waitForKeyElements.js
@@ -36,7 +35,6 @@
 [INDEX004] Switch Roster to Faculty
 [INDEX005] Email All Parents of Student
 [INDEX006] Enroll in All
-[INDEX007] Remove Connect5 Info
 [INDEX008] Roster Student Count
 [INDEX009] Manual Attendance Sheet
 [INDEX010] Convert Grad Year to Grade Level
@@ -47,16 +45,13 @@
 [INDEX015] Classes Menu Sort Order
 [INDEX016] Default Class Page
 [INDEX017] Settings Page
-[INDEX018] Reverse Attendance Default
 [INDEX019] Page Number Navigation
 [INDEX020] Advanced List Favorites
 [INDEX021] WYSIWYG Editor Improvements
-[INDEX022] Highlight Invalid Attendance
 [INDEX023] Automatically Expand All
 [INDEX024] Official Notes Improvements
 [INDEX025] Email From Advanced List
 [INDEX026] Pushpage Improvements
-[INDEX027] ENR-12 Shortcuts
 [INDEX028] Salutation Formulas
 [INDEX029] Admin Field Auto-Add
 [INDEX030] Highlight Row on Hover
@@ -65,7 +60,6 @@
 [INDEX033] Enter Grades by Class Textbox Size
 [INDEX034] Fix Immunization Requirements Collapse
 [INDEX035] Default Assignment Date Filter
-[INDEX036] Math Year Averages
 [INDEX900] Misc. Helper Functions
 
 
@@ -90,8 +84,7 @@ Completed Mods:
      emails for this student's parents.
 
 5 - Enroll in All
-     Button added when editing group enrollments, primarily for LS, who add all classes for a specific
-     homeroom.
+     Button added when editing group enrollments
 
 6 - Roster Student Count
      Rosters (class, activity, community, and athletic groups) show total members, including teachers/
@@ -130,7 +123,7 @@ Completed Mods:
      The default page that classes open to from the Classes menu can be changed to Topics, Assignments, Schedule, or
      Roster instead of the default Bulletin Board.
 
-15 - Reverse Attendance Default
+15 - Reverse Attendance Default (Not available in generic version)
      Adds option on the Record Attendance screen to set all students to Unexcused Absence, then allowing the teacher to
      one-click mark students as Present.
 
@@ -151,7 +144,7 @@ Completed Mods:
      The (vertical) size of the editor is also very small.  Expand button has been added, which can be clicked on to
      increase the size of the box.  Added in v1.6.1: The starting height of all editor boxes can be customized on the Settings page.
 
-19 - Highlight Invalid Attendance
+19 - Highlight Invalid Attendance (Not available in generic version)
      Invalid attendance (class codes in Homeroom or non-class codes in classes) will be highlighted on the Student Attendance
      page to easily see which attendance entries need to be fixed.
 
@@ -173,7 +166,7 @@ Completed Mods:
      Add user IDs and the ability to open contact cards to static user search, so that when there are users with the same last name,
      you can select the appropriate one more easily.
 
-24 - ENR-12 Shortcuts
+24 - ENR-12 Shortcuts (Not available in generic version)
      To improve ENR-12 processing speed, when viewing registries for the ENR-12 form, shortcuts to view contract status or send
      email to the parent have been added.  Also, when opening the contract list from the registration, the student link will
      open to their Academics->Groups page for adding additional programs.
@@ -206,12 +199,7 @@ Completed Mods:
      Forms section instead because sections use the same element ID.  This function gives the immunizations section a unique ID.
 
 32 - Class Assignments Default Date Filter
-     Set a default date filter (instead of always on Active) for class assignment pages.  Additional option "Current Quarter" pulls
-     dates for the current quarter to fill in the start and end date for custom date range.
-
-33 - Math Year Averages
-     From Schedule & Performance gradebooks list, for A/B math classes, launch lookup with custom external API to get the class
-     students' full year averages.
+     Set a default date filter (instead of always on Active) for class assignment pages.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -223,8 +211,7 @@ Notes:
 // ----------------------------------------------------------------------------------------
 
 this.$ = this.jQuery = jQuery.noConflict(true);
-const schoolURL = "https://hanalani.myschoolapp.com/"
-const settingsResourceBoardID = "16184"
+const schoolURL = window.location.href.substring(0,window.location.href.indexOf("myschoolapp.com")+16)
 
 // Check for page hashchanges
 // Borrowed from: https://stackoverflow.com/questions/18989345/how-do-i-reload-a-greasemonkey-script-when-ajax-changes-the-url-without-reloadin
@@ -255,7 +242,7 @@ function gmMain(){
     switch(GetModule(strURL))
     {
         case "Settings":
-            waitForKeyElements(".conDefault b:first", GenerateSettingsPage, true)
+            waitForKeyElements("#startpage", GenerateSettingsPage, true)
             break;
         case "Core":
             waitForKeyElements("#userName", PostLinkCore)
@@ -323,14 +310,9 @@ function gmMain(){
         case "Schedule and Performance":
             waitForKeyElements("#accordionSchedules:first", CreateClassCheckboxes)
             waitForKeyElements("#group-header-Classes", ClassesMenuSortOrder)
-            waitForKeyElements(".bb-dialog-header", ReverseAttendanceDefault)
-            waitForKeyElements("[data-gradebook]", MathYearAverages, true)
             break;
         case "Core Dashboard":
             waitForKeyElements(".core-dashboard", AdvancedListFavorites)
-            break;
-        case "Student Attendance":
-            waitForKeyElements(".inline-edit:first", HighlightInvalidAttendance)
             break;
         case "Official Notes Admissions":
             waitForKeyElements(".bb-tile-content-section:first", OfficialNotesImprovements)
@@ -338,12 +320,6 @@ function gmMain(){
         case "Create Distribution Group":
             waitForKeyElements("[style='height:75px;width:200px;visibility:visible !important;']", IncreaseDistributionGroupListBoxSize, true)
             waitForKeyElements("#L_c1i0_cb143638_ctl12_lstResult", AddUserIDsToList)
-            break;
-        case "Edit Registry":
-            waitForKeyElements("#L_c1i0_cb88911_ct88911_ctl00_f_7", ENR12Shortcuts, true)
-            break;
-        case "Contracts List":
-            waitForKeyElements(".bb-search-input-container", ContractListAutoSearch, true)
             break;
         case "Manage Student Enrollments Promote":
             waitForKeyElements(".tbl", ManageStudentEnrollmentsShortcuts, true)
@@ -369,9 +345,6 @@ function gmMain(){
     // People Finder Quick Select
     waitForKeyElements(".people-finder-search-box", PeopleFinderQuickSelect)
     waitForKeyElements("sis-people-finder", PeopleFinderQuickSelect)
-
-    // Remove Connect5 Info
-    waitForKeyElements(".emergencyemaildetail p", RemoveConnect5Info)
 
     // Page footer
     waitForKeyElements("#site-footer-fixed", AddPageFooter)
@@ -426,9 +399,6 @@ function GetModule(strURL)
     } else if (strURL == schoolURL+"podium/default.aspx?t=2948")
     {
         return "Manage Student Enrollments Promote"
-    } else if (strURL == schoolURL+"podium/default.aspx?t=36655")
-    {
-        return "Edit Registry";
     } else if (strURL == schoolURL+"podium/default.aspx?t=52800" || strURL == schoolURL+"podium/default.aspx?t=52801" || strURL == schoolURL+"podium/default.aspx?t=52802")
     {
         return "Create Distribution Group";
@@ -441,7 +411,7 @@ function GetModule(strURL)
     } else if (strURL == schoolURL+"edu-core/dashboard")
     {
         return "Core Dashboard";
-    } else if (strURL.substring(strURL.length-21-settingsResourceBoardID.length) == "#resourceboarddetail/"+settingsResourceBoardID)
+    } else if (strURL.indexOf("account/login")+13 == strURL.length)
     {
         return "Settings";
     } else if (strURL == schoolURL+"app/faculty#myday/schedule-performance")
@@ -494,24 +464,9 @@ function GetModule(strURL)
 function AddPageFooter()
 {
     console.log("Function: " + arguments.callee.name)
-    if (window.location.href.substring(window.location.href.length-21-settingsResourceBoardID.length) != "#resourceboarddetail/"+settingsResourceBoardID)
+    if (window.location.href.indexOf("account/login")+13 != window.location.href.length)
     {
-        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2020 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
-
-        // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
-        var skipNotificationVersions = []
-        var oldVersion = GM_getValue("FirstRunVersionCheck")
-
-        if (oldVersion != GM_info.script.version)
-        {
-            GM_setValue("FirstRunVersionCheck", GM_info.script.version)
-            if (skipNotificationVersions.indexOf(oldVersion) < 0)
-            {
-                setTimeout(function(){
-                    window.open("https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/"+settingsResourceBoardID)
-                }, 1000);
-            }
-        }
+        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by <a href="https://github.com/DeckardLain/ON-Mod-Suite/wiki" target="_blank">ON Mod Suite (Generic Edition)</a> v' + GM_info.script.version + '. | Copyright © 2018-2020 Hanalani Schools | Click <a href="'+schoolURL+'#account/login" target="_blank">here</a> to change settings.</div>')
     }
 }
 
@@ -862,26 +817,6 @@ function EnrollInAll(jNode)
     }
 }
 
-// -----------------------------------------[INDEX007]-------------------------------------
-// ------------------------------------Remove Connect5 Info--------------------------------
-// ----------------------------------------------------------------------------------------
-
-function RemoveConnect5Info(jNode)
-{
-    console.log("Function: " + arguments.callee.name)
-    var str;
-
-    setTimeout(function(){
-        $(".emergencyphonedetail p, .emergencyemaildetail p").each(function(index){
-            str = $(this).html();
-            str = str.replace("Automated call: Never", "");
-            str = str.replace("Automated call: Emergency Only", "");
-            str = str.replace("Automated email: Never", "");
-            str = str.replace("Automated email: Emergency Only", "");
-            $(this).html(str);
-        });
-    }, 100);
-}
 
 // ----------------------------------------[INDEX008]--------------------------------------
 // -----------------------------------Roster Student Count---------------------------------
@@ -892,17 +827,7 @@ function AddRosterStudentCount(jNode)
     console.log("Function: " + arguments.callee.name)
     var memberCount = $("#roster-count").text();
     var teacherCount = 0;
-/*
-    var nonStudentConditions = ["Teacher", "Co-Teacher", "Assistant Teacher", "Activity Leader", "Owner", "Coach"]
 
-    $(".bb-card-title").each(function(index){
-       var str = $(this).text();
-        if(nonStudentConditions.some(el => str.includes(el)))
-       {
-           teacherCount++;
-       }
-    });
-*/
     if (!($("#RosterCardContainer").length))
     {
         memberCount = $("h4.pull-left").text();
@@ -939,8 +864,6 @@ function AddRosterStudentCount(jNode)
     // Manual Attendance Sheet
     AddManualAttendanceSheetToMenu();
     $("#ManualAttendanceSheet").bind("click", LaunchManualAttendanceSheet);
-
-    //ConvertGradYearToGradeLevel();
 
 }
 
@@ -2119,21 +2042,10 @@ function GenerateSettingsPage(jNode)
     console.log("Function: " + arguments.callee.name)
     var str
 
-    // Check for first run
-    if (GM_info.script.version != localStorage.getItem("FirstRunVersionCheck"))
-    {
-        $(".conDefault").eq(1).prepend('<p><b>Script updated to version '+GM_info.script.version+'! See what changed <a href="https://raw.githubusercontent.com/DeckardLain/ON-Mod-Suite/master/Changelog" target="_blank">here</a>.</b>')
-        localStorage.setItem("FirstRunVersionCheck", GM_info.script.version)
-    }
-
-
-    // Load school-specific settings
-    localStorage.setItem("math-averages-api-url", $("#math-averages-api-url").val())
-
     // Build Page
-    document.title = "ON Mod Suite Settings"
-    jNode.text(" ")
-    jNode.parent().append('<style scoped>th, td { padding: 10px; } form label {font-weight:normal;}</style><table id="settings-table"><tr><td valign="top">Classes menu sort order</td><td><input type="radio" id="ClassSortByName" name="class-sort" value="name"><label for="ClassSortByName">By Name</label><br><input type="radio" id="ClassSortByPeriod" name="class-sort" value="period"><label for="ClassSortByPeriod">By Period</label></td></tr></table>')
+    jNode.closest(".bb-tile").after('<section class="bb-tile" id="settings-tile"><div class="bb-tile-title"><div><h2 class="bb-tile-header">ON Mod Suite Settings</h2></div></div><div class="bb-tile-content"><div class="bb-tile-content-section"><div id="settings-tile-content"></div></div></div></section>')
+
+    $("#settings-tile-content").append('<style scoped>th, td { padding: 10px; } form label {font-weight:normal;}</style><table id="settings-table"><tr><td valign="top">Classes menu sort order</td><td><input type="radio" id="ClassSortByName" name="class-sort" value="name"><label for="ClassSortByName">By Name</label><br><input type="radio" id="ClassSortByPeriod" name="class-sort" value="period"><label for="ClassSortByPeriod">By Period</label></td></tr></table>')
 
     // Default Class Page
     str = '<tr><td valign="top">Classes menu default page</td>'
@@ -2167,7 +2079,6 @@ function GenerateSettingsPage(jNode)
     str += '<td><input type="radio" id="ClassAssignmentsDefaultPrevious" name="class-assignment-default-date" value="previous"><label for="ClassAssignmentsDefaultPrevious">Previous</label><br>'
     str += '<input type="radio" id="ClassAssignmentsDefaultActive" name="class-assignment-default-date" value="active"><label for="ClassAssignmentsDefaultActive">Active</label><br>'
     str += '<input type="radio" id="ClassAssignmentsDefaultFuture" name="class-assignment-default-date" value="future"><label for="ClassAssignmentsDefaultFuture">Future</label><br>'
-    str += '<input type="radio" id="ClassAssignmentsDefaultCurrentQuarter" name="class-assignment-default-date" value="currentquarter"><label for="ClassAssignmentsDefaultCurrentQuarter">Current Quarter</label><br>'
     str += '<input type="radio" id="ClassAssignmentsDefaultRange" name="class-assignment-default-date" value="range"><label for="ClassAssignmentsDefaultRange">Range</label><br>'
     str += '<label for="ClassAssignmentsDefaultStart">Start:&nbsp</label><input type="text" size="12" id="ClassAssignmentsDefaultStart" disabled><br>'
     str += '<label for="ClassAssignmentsDefaultEnd">End:&nbsp</label><input type="text" size="12" id="ClassAssignmentsDefaultEnd" disabled>'
@@ -2343,47 +2254,6 @@ function GenerateSettingsPage(jNode)
         localStorage.setItem("ClassAssignmentsDefaultEnd", $("#ClassAssignmentsDefaultEnd").val())
     });
 
-}
-
-// ----------------------------------------[INDEX018]--------------------------------------
-// ---------------------------------Reverse Attendance Default-----------------------------
-// ----------------------------------------------------------------------------------------
-
-function ReverseAttendanceDefault(jNode)
-{
-    console.log("Function: " + arguments.callee.name)
-    if (jNode.text() == "Record Attendance")
-    {
-        $(".modal-body").prepend('<a href="javascript:void(0)" id="reverse-attendance">Click to set all students to Unexcused Absence</a>')
-
-        $("#reverse-attendance").unbind("click").bind("click", function(){
-            if ($(".slide").find("th").text().trim().substring(0, 8) == "Homeroom")
-            {
-                // If Homeroom, choose the Homeroom code
-                $(".form-control:contains('Attended Class'):not(:disabled)").val("3385")
-            } else
-            {
-                // Otherwise, choose the Class code
-                $(".form-control:contains('Attended Class'):not(:disabled)").val("3996")
-            }
-
-            // Create links for marking as Present
-            if (!$(".mark-present").length)
-            {
-                $(".table-condensed tbody tr").each(function() {
-                    if (!$(this).find("select").attr("disabled"))
-                    {
-                        $(this).find("td").eq(1).append('<br><a href="javascript:void(0)" class="mark-present"> Present--&gt</a>')
-                    }
-                });
-            }
-        });
-
-        // Click handler for Present link
-        $(document).on('click', ".mark-present", function(){
-            $(this).parents("tr").find("select").val("3384")
-        });
-    }
 }
 
 // -----------------------------------------[INDEX019]-------------------------------------
@@ -2626,53 +2496,6 @@ function EditorImprovements(jNode)
             $(this).closest("tr").find("iframe").css("height", +$(this).closest("tr").find("iframe").css("height").substr(0, $(this).closest("tr").find("iframe").css("height").length-2)+100 + "px")
         }
     });
-}
-
-// -----------------------------------------[INDEX022]-------------------------------------
-// --------------------------------Highlight Invalid Attendance----------------------------
-// ----------------------------------------------------------------------------------------
-
-function HighlightInvalidAttendance(jNode)
-{
-    console.log("Function: " + arguments.callee.name)
-    $("tbody").children("tr").each(function(index){
-        HighlightInvalidAttendanceRow(this)
-    });
-
-    $(".inline-edit[data-action='reason']").bind("click", function(){
-        HighlightInvalidAttendanceRow($(this).closest("tr"));
-    });
-}
-
-function HighlightInvalidAttendanceRow(jNode)
-{
-    console.log("Function: " + arguments.callee.name)
-    if (window.location.href == schoolURL+"app/academics#studentattendance")
-    {
-        if ($(jNode).children("td").eq(4).text() == "HR" || $(jNode).children("td").eq(4).text() == "HRK5")
-        {
-            // Block: Homeroom
-            if ($(jNode).children("td").eq(6).text().includes("[Class]"))
-            {
-                // Class code
-                $(jNode).css("background-color", "red");
-            } else
-            {
-                $(jNode).css("background-color", "");
-            }
-        } else
-        {
-            // Block: Not Homeroom
-            if (!$(jNode).children("td").eq(6).text().includes("[Class]"))
-            {
-                // Not Class code
-                $(jNode).css("background-color", "red");
-            } else
-            {
-                $(jNode).css("background-color", "");
-            }
-        }
-    }
 }
 
 // ---------------------------------------[INDEX023]---------------------------------------
@@ -2937,64 +2760,7 @@ function AddContactCardLink(jNode)
     $(jNode).attr("style", "height:150px;width:551px;visibility:visible !important;")
 }
 
-// -----------------------------------------[INDEX027]-------------------------------------
-// --------------------------------------ENR-12 Shortcuts----------------------------------
-// ----------------------------------------------------------------------------------------
 
-function ENR12Shortcuts(jNode)
-{
-    console.log("Function: " + arguments.callee.name)
-
-    if ($(".thHistoryLink").find("span").text().includes("ENR-12") || $(".thHistoryLink").find("span").text().includes("SUM-02") || $(".thHistoryLink").find("span").text().includes("SUM-03"))
-    {
-        // Add Email hyperlink
-        var mailToHTML = '<a href="mailto:' + $(".maintext:contains('Parent E-Mail Address')").next(".maintext").find("input").val() + '">Send Email</a>'
-        $(".maintext:contains('Parent E-Mail Address')").next(".maintext").find("input").after(mailToHTML)
-
-        // Add button to view contract status
-        $("#L_c1i0_cb88911_ct88911_ctl00_f_1_txtf_1").after('<a href="javascript:void(0)" id="ViewContractStatus">View Contract Status</a>')
-
-        $("#ViewContractStatus").unbind("click").bind("click", function(){
-            var StudentName = $("#L_c1i0_cb88911_ct88911_ctl00_f_1_txtf_1").val() + " " + $("#L_c1i0_cb88911_ct88911_ctl00_f_3_txtf_3").val()
-            localStorage.setItem("ContractListSearchName", StudentName)
-            window.open(schoolURL+"app/enrollment-management#lists/contracts", "Contract List", "top=0,left=0,menubar=yes,toolbar=yes")
-        });
-    }
-}
-
-function ContractListAutoSearch(jNode)
-{
-    console.log("Function: " + arguments.callee.name)
-
-    if (localStorage.getItem("ContractListSearchName"))
-    {
-        console.log(localStorage.getItem("ContractListSearchName"))
-        $(jNode).find("input").focus()
-        $(jNode).find("input").val(localStorage.getItem("ContractListSearchName"))
-        $("#search-button").eq(0).click()
-        localStorage.removeItem("ContractListSearchName")
-
-        waitForKeyElements("td[aria-describedby*='ContractStatus']", function(jNode){
-            switch ($(jNode).text())
-            {
-                case "Submitted":
-                case "Processed":
-                    $(jNode).css('background-color', 'green')
-                    break;
-                case "None":
-                case "Saved":
-                    $(jNode).css('background-color', 'red')
-                    break;
-            }
-        });
-
-        waitForKeyElements('[aria-describedby*="FullName"]', function(jNode){
-            var link = schoolURL+"app/academics#academicprofile/" + GetID($(jNode).find("a").attr("href")) + "/enrollment"
-            $(jNode).find("a").attr("href", link)
-        });
-
-    }
-}
 
 // -----------------------------------------[INDEX028]-------------------------------------
 // ------------------------------------Salutation Formulas---------------------------------
@@ -3523,24 +3289,6 @@ function DefaultClassAssignmentDateFilter(jNode)
             case "Future":
                 $(".assignmentTimeFilter[data-type-id='2']")[0].click()
                 break;
-            case "Current Quarter":
-                $(".assignmentTimeFilter[data-type-id='3']")[0].click()
-
-                $("#assignmentFilterStartDatePicker").val(localStorage.getItem("ClassAssignmentsDefaultStart"))
-                var event = document.createEvent("Event")
-                event.initEvent("change", true, false)
-                $("#assignmentFilterStartDatePicker")[0].dispatchEvent(event)
-
-                $("#assignmentFilterEndDatePicker").val(localStorage.getItem("ClassAssignmentsDefaultEnd"))
-                event = document.createEvent("Event")
-                event.initEvent("change", true, false)
-                $("#assignmentFilterEndDatePicker")[0].dispatchEvent(event)
-
-                $(".active-filter").first().html('<i class="pull-right p3icon-radioOn" style="margin-right: 5px"></i>Range (Current Quarter)')
-
-                // Get updated quarter start/end dates
-                GetUpdatedQuarterDates("Assignments")
-                break;
             case "Range":
                 $(".assignmentTimeFilter[data-type-id='3']")[0].click()
 
@@ -3555,84 +3303,6 @@ function DefaultClassAssignmentDateFilter(jNode)
                 $("#assignmentFilterEndDatePicker")[0].dispatchEvent(event)
         }
     }
-}
-
-function GetUpdatedQuarterDates(page)
-{
-    var http = new XMLHttpRequest()
-    http.onreadystatechange = function() {
-        if (http.readyState == 4 && http.status == 200)
-            UpdateQuarterDates(http.responseText, page);
-    }
-    http.open("GET", "https://script.google.com/macros/s/AKfycbzNa_Z-M7IfQr3c5tdoaUcvqgcInOgZFIs6BvbN-bQ833he-9Af/exec?key=Royals&callback=?", true)
-    http.send(null)
-}
-
-function UpdateQuarterDates(response, page)
-{
-    var dates = response.substring(1).split("|")
-    if (dates[0] != "error" && dates[1] != "error")
-    {
-        if (localStorage.getItem("ClassAssignmentsDefaultStart") != dates[0] || localStorage.getItem("ClassAssignmentsDefaultEnd") != dates[1])
-        {
-            localStorage.setItem("ClassAssignmentsDefaultStart", dates[0])
-            localStorage.setItem("ClassAssignmentsDefaultEnd", dates[1])
-
-            switch (page)
-            {
-                case "Settings-First":
-                    $("#temp-loading").remove()
-                case "Settings":
-                    $("#ClassAssignmentsDefaultStart").val(dates[0])
-                    $("#ClassAssignmentsDefaultEnd").val(dates[1])
-                    break;
-                case "Assignments":
-                    $("#assignmentFilterStartDatePicker").val(dates[0])
-                    var event = document.createEvent("Event")
-                    event.initEvent("change", true, false)
-                    $("#assignmentFilterStartDatePicker")[0].dispatchEvent(event)
-
-                    $("#assignmentFilterEndDatePicker").val(dates[1])
-                    event = document.createEvent("Event")
-                    event.initEvent("change", true, false)
-                    $("#assignmentFilterEndDatePicker")[0].dispatchEvent(event)
-            }
-        }
-    } else if (page == "Settings-First")
-    {
-        $("#temp-loading").text("Error loading quarter dates")
-    }
-}
-
-// -----------------------------------------[INDEX036]-------------------------------------
-// ------------------------------------Math Year Averages----------------------------------
-// ----------------------------------------------------------------------------------------
-
-function MathYearAverages()
-{
-    console.log("Function: " + arguments.callee.name)
-
-    $("[data-gradebook]").each(function(){
-        if (!$(this).siblings().find(".math-averages").length)
-        {
-            var course = $(this).text()
-            course = course.substring(0,course.indexOf(" - "))
-            if (course.substring(course.length-1) == "A" || course.substring(course.length-1) == "B")
-            {
-                var url = localStorage.getItem("math-averages-api-url")
-                if (url === null)
-                {
-                    var html = '<br><small><small><a href = "https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" class="math-averages" target="_blank">[Open Settings Page to Enable Year Averages]</a></small></small>'
-                } else
-                {
-                    course = encodeURIComponent(course)
-                    url += "&course="+course
-                    var html = '<br><small><a href = "'+url+'" class="math-averages" target="_blank">[Year Averages]</a></small>'
-                }
-                    $(this).after(html)
-            }
-        }
-    });
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
