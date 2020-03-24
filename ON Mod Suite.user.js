@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.6.0
+// @version      2.6.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -959,6 +959,10 @@ function LaunchManualAttendanceSheet()
 function AddManualAttendanceSheetToMenu()
 {
     console.log("Function: " + arguments.callee.name)
+
+    // Remove Blackbaud's menu option because it still requires users to select the teacher/class
+    $("#roster-reports").find("li:contains('Manual Attendance Sheet - By Teacher And Section')").remove()
+
     var html = '<li><a href="javascript:void(0)" id="ManualAttendanceSheet">Manual Attendance Sheet</a></li>'
     $("#roster-reports .dropdown-menu").append(html);
 }
