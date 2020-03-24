@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.6.1
+// @version      2.7.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
@@ -59,6 +59,7 @@
 [INDEX033] Enter Grades by Class Textbox Size
 [INDEX034] Fix Immunization Requirements Collapse
 [INDEX035] Default Assignment Date Filter
+[INDEX037] Show All Section Sizes
 [INDEX900] Misc. Helper Functions
 
 
@@ -200,6 +201,9 @@ Completed Mods:
 32 - Class Assignments Default Date Filter
      Set a default date filter (instead of always on Active) for class assignment pages.
 
+34 - Show All Section Sizes
+     When editing student enrollments, show section sizes on the grid next to each section number.
+
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
 
@@ -336,6 +340,10 @@ function gmMain(){
         case "Assignments":
             waitForKeyElements(".assignment-filter-item", DefaultClassAssignmentDateFilter, true)
             waitForKeyElements("#group-header-Classes", ClassesMenuSortOrder)
+            break;
+        case "Scheduling":
+            waitForKeyElements(".sky-toolbar-items", ShowAllSectionSizes)
+            break;
     }
 
     // People Finder Quick Select
@@ -374,6 +382,9 @@ function GetModule(strURL)
     if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.indexOf("/sis-scheduling/") >= 0)
+    {
+        return "Scheduling"
     } else if (strURL.substring(strURL.length-11) == "assignments")
     {
         return "Assignments";
@@ -3187,6 +3198,66 @@ function DefaultClassAssignmentDateFilter(jNode)
                 $("#assignmentFilterEndDatePicker")[0].dispatchEvent(event)
         }
     }
+}
+
+// -----------------------------------------[INDEX037]-------------------------------------
+// ----------------------------------Show All Section Sizes--------------------------------
+// ----------------------------------------------------------------------------------------
+
+function ShowAllSectionSizes(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+
+    if (jNode.find($(".sky-btn:contains('Find a section')")).length)
+    {
+        $(".sky-toolbar-items").append('<sky-toolbar-item><div class="sky-toolbar-item"><button class="sky-btn sky-btn-default show-all-section-sizes"> Show all section sizes </button></div></sky-toolbar-item>')
+
+        $(".show-all-section-sizes").unbind("click").bind("click", function(){
+            GetSectionSize($(".section-link:not(:empty)"), 0)
+        });
+    }
+}
+
+function GetSectionSize(jNodes, index)
+{
+    console.log("Function: " + arguments.callee.name)
+
+    jNodes.eq(index).click()
+
+    var timeoutID = setTimeout(function()
+    {
+        console.log("timeout")
+        clearInterval(timerID)
+        $(document).click()
+        GetSectionSize(jNodes,index)
+    }, 2000);
+
+    var timerID = setInterval(function()
+    {
+        var className = $(".sky-popover-container").find(".sky-emphasized").text().trim()
+        var courseName = jNodes.eq(index).closest("tr").children("td").eq(1).find("div").text().trim()
+        var courseID = jNodes.eq(index).closest("tr").children("td").eq(1).find("div").find("span").text()
+        if (courseID.length > 0)
+        {
+            courseName = courseName.substring(0,courseName.indexOf(courseID)-1)
+        }
+        courseName += " - " + jNodes.eq(index).text()
+
+        if(courseName == className)
+        {
+            clearInterval(timerID)
+            clearTimeout(timeoutID)
+
+            var size = $(".sky-column:contains('Current size')").next().text().trim()
+            jNodes.eq(index).after('<span><small> &lt;'+size+'&gt;</small></span>')
+            $(document).click()
+
+            if (index < jNodes.length - 1)
+            {
+                GetSectionSize(jNodes, index+1)
+            }
+        }
+    }, 100);
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
