@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.6.1] - 2020-03-24
+### Changed
+- Manual Attendance Sheet - script removes Blackbaud's menu option because it still requires the user to select the class
+and teacher.
+
 ## [2.6.0] - 2020-03-05
 ### Added
 - Math Year Averages: From Schedule & Performance gradebooks list, click the link to get full year averages (combining
