@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.6.1] - 2020-03-24
+### Changed
+- Removed manual attendance sheet because it was using hard-coded ID values for school level and term and because
+Blackbaud added the menu option themselves.
+
 ## [2.6.0] - 2020-03-05
 ### Added
 - Math Year Averages: From Schedule & Performance gradebooks list, click the link to get full year averages (combining
