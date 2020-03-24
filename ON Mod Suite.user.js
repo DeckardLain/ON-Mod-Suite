@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.6.0
+// @version      2.6.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
@@ -36,7 +36,6 @@
 [INDEX005] Email All Parents of Student
 [INDEX006] Enroll in All
 [INDEX008] Roster Student Count
-[INDEX009] Manual Attendance Sheet
 [INDEX010] Convert Grad Year to Grade Level
 [INDEX011] Advanced List ID Links
 [INDEX012] Roster Student Select
@@ -90,7 +89,7 @@ Completed Mods:
      Rosters (class, activity, community, and athletic groups) show total members, including teachers/
      coaches.  This also displays the total number of students in the group, which is a more useful number.
 
-7 - Manual Attendance Sheet Improvements
+7 - Manual Attendance Sheet Improvements (Not available in generic version)
      Manual Attendance Sheet report added to roster reports menu and loads the class that you ran the
      report from.
 
@@ -292,9 +291,6 @@ function gmMain(){
             break;
         case "Manage Student Enrollment":
             waitForKeyElements("#LevelNum", EnrollInAll)
-            break;
-        case "Manual Attendance Sheet Report":
-            waitForKeyElements("#L_c1i0_cb3224_ct3224_cTool_lbtnRefresh", ManualAttendanceSheet)
             break;
         case "Advanced List - Run":
             waitForKeyElements("#L_c1i0_cb143420_ct143420_ctl05_grdResult", AddAdvancedListIDLinks)
@@ -861,118 +857,6 @@ function AddRosterStudentCount(jNode)
         }
     }
 
-    // Manual Attendance Sheet
-    AddManualAttendanceSheetToMenu();
-    $("#ManualAttendanceSheet").bind("click", LaunchManualAttendanceSheet);
-
-}
-
-// -----------------------------------------[INDEX009]-------------------------------------
-// ----------------------------------Manual Attendance Sheet-------------------------------
-// ----------------------------------------------------------------------------------------
-
-
-function LaunchManualAttendanceSheet()
-{
-    console.log("Function: " + arguments.callee.name)
-    SaveClassAndTeacher();
-    window.open("/podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359", "_blank");
-}
-
-function AddManualAttendanceSheetToMenu()
-{
-    console.log("Function: " + arguments.callee.name)
-    var html = '<li><a href="javascript:void(0)" id="ManualAttendanceSheet">Manual Attendance Sheet</a></li>'
-    $("#roster-reports .dropdown-menu").append(html);
-}
-
-function SaveClassAndTeacher()
-{
-    console.log("Function: " + arguments.callee.name)
-    var userID;
-
-    // Save class ID
-    localStorage.setItem("ClassID", GetID(window.location.href));
-
-    // Save teacher's user ID
-    $(".bb-card-title").each(function(index){
-       var str = $(this).text();
-       if (str == "Teacher")
-       {
-           userID = GetID($(this).closest("header").next().next().find(".bb-dropdown-item").html());
-           return false;
-       }
-    });
-    localStorage.setItem("TeacherID", userID);
-
-    // Save class school level
-    var details = $(".lead").text();
-    if (details.includes("Upper School"))
-    {
-        localStorage.setItem("SchoolLevel", "1568");
-    } else if (details.includes("Elementary"))
-    {
-        localStorage.setItem("SchoolLevel", "1567");
-    } else if (details.includes("Early Childhood"))
-    {
-        localStorage.setItem("SchoolLevel", "1566");
-    }
-
-    // Save term
-    if (details.includes("Fall Semester"))
-    {
-        localStorage.setItem("Term", "98719");
-    } else if (details.includes("Summer Semester"))
-    {
-        localStorage.setItem("Term", "98718");
-    } else if (details.includes("Spring Semester"))
-    {
-        localStorage.setItem("Term", "98720");
-    } else if (details.includes("Year Long"))
-    {
-        localStorage.setItem("Term", "98725");
-    } else if (details.includes("Summer Term"))
-    {
-        localStorage.setItem("Term", "98724");
-    }
-
-    localStorage.setItem("ManualAttendanceSheetNewInfo", "1");
-}
-
-function ManualAttendanceSheet()
-{
-    console.log("Function: " + arguments.callee.name)
-    switch(localStorage.getItem("ManualAttendanceSheetNewInfo"))
-    {
-        case "1":
-            {
-                $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_l$ctl00']").val(localStorage.getItem("SchoolLevel"));
-                localStorage.setItem("ManualAttendanceSheetNewInfo", "2");
-                setTimeout('__doPostBack(\'L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00\',\'\')', 0)
-                break;
-            }
-        case "2":
-            {
-                $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00']").val(localStorage.getItem("Term"));
-                localStorage.setItem("ManualAttendanceSheetNewInfo", "3");
-                setTimeout('__doPostBack(\'L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00\',\'\')', 0)
-                break;
-            }
-        case "3":
-            {
-                $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_t$ctl00']").val(localStorage.getItem("TeacherID"));
-                localStorage.setItem("ManualAttendanceSheetNewInfo", "4");
-                setTimeout('__doPostBack(\'L$c1i0$cb3224$ct3224$ct3$ddl_d$ctl00\',\'\')', 0)
-                break;
-            }
-        case "4":
-            {
-                $("[name='L$c1i0$cb3224$ct3224$ct3$ddl_s$ctl00']").val(localStorage.getItem("ClassID"));
-                localStorage.setItem("ManualAttendanceSheetNewInfo", "0");
-                __doPostBack('L$c1i0$cb3224$ct3224$cTool$lbtnPDF','');
-                break;
-            }
-    }
 }
 
 // ---------------------------------------[INDEX010]---------------------------------------
