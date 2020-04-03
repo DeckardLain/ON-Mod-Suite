@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.8.0] - 2020-04-03
+### Added
+- Fix blank page when first opening a group from Group Finder.
+- Email Delimeter Default - If you change the delimiter option in the Send Communication screen, the script remembers your
+choice and automatically loads it next time.
+### Changed
+- Advanced List shareable link now copies to clipbord when clicking on it. No need to right-click and copy as link anymore.
+### Fixed
+- Remove duplicate Send Communication menu from roster pages.
+- Classes Menu Sort Order works with multiple columns now.
+
 ## [2.7.0] - 2020-03-24
 ### Added
 - Show All Section Sizes: When editing student enrollments, click a button to show section sizes on the grid next to
