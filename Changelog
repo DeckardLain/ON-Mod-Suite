@@ -11,6 +11,8 @@ choice and automatically loads it next time.
 ### Fixed
 - Remove duplicate Send Communication menu from roster pages.
 - Classes Menu Sort Order works with multiple columns now.
+- Increase Distribution Group Listbox Size was reverting to small size after adding a list that required a User Base
+selection
 
 ## [2.7.0] - 2020-03-24
 ### Added
