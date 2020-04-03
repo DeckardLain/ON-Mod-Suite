@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.7.0
+// @version      2.8.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
-// @grant        none
+// @grant        GM_setClipboard
 // @run-at       document-end
 // @require      https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js
 // @require      https://gist.github.com/raw/2625891/waitForKeyElements.js
@@ -60,6 +60,7 @@
 [INDEX034] Fix Immunization Requirements Collapse
 [INDEX035] Default Assignment Date Filter
 [INDEX037] Show All Section Sizes
+[INDEX038] Email Delimiter Default
 [INDEX900] Misc. Helper Functions
 
 
@@ -204,6 +205,9 @@ Completed Mods:
 34 - Show All Section Sizes
      When editing student enrollments, show section sizes on the grid next to each section number.
 
+35 - Email Delimiter Default
+     When sending email to students and/or parents from a roster, remember last used delimiter option and select it by default.
+
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
 
@@ -242,6 +246,8 @@ function gmMain(){
     console.log("Function: " + arguments.callee.name)
     var strURL = window.location.href
 
+    fixURL()
+
     switch(GetModule(strURL))
     {
         case "Settings":
@@ -273,6 +279,7 @@ function gmMain(){
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
             waitForKeyElements(".bb-card-title",ConvertGradYearToGradeLevel)
             waitForKeyElements(".bb-btn-secondary", CreateRosterCheckboxes)
+            waitForKeyElements(".delimiter-btn:first", EmailDelimiterDefault)
             EmailAllParentsOfStudent();
             break;
         case "Faculty-Roster":
@@ -282,16 +289,19 @@ function gmMain(){
             waitForKeyElements(".bb-btn-secondary", CreateRosterCheckboxes)
             waitForKeyElements(".dropdown-toggle:first", SaveRosterEmails)
             waitForKeyElements("#group-header-Classes", ClassesMenuSortOrder)
+            waitForKeyElements(".delimiter-btn:first", EmailDelimiterDefault)
             EmailAllParentsOfStudent();
             break;
         case "Team Roster":
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
             waitForKeyElements(".bb-card-title",ConvertGradYearToGradeLevel)
             waitForKeyElements(".btn-contact-card:first", AddLinkToFacultyProgress)
+            waitForKeyElements(".delimiter-btn:first", EmailDelimiterDefault)
         case "Other Roster":
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
             waitForKeyElements(".bb-card-title",ConvertGradYearToGradeLevel)
             waitForKeyElements(".bb-btn-secondary", CreateRosterCheckboxes)
+            waitForKeyElements(".delimiter-btn:first", EmailDelimiterDefault)
             break;
         case "Manage Student Enrollment":
             waitForKeyElements("#LevelNum", EnrollInAll)
@@ -318,7 +328,7 @@ function gmMain(){
             waitForKeyElements(".bb-tile-content-section:first", OfficialNotesImprovements)
             break;
         case "Create Distribution Group":
-            waitForKeyElements("[style='height:75px;width:200px;visibility:visible !important;']", IncreaseDistributionGroupListBoxSize, true)
+            waitForKeyElements("[style='height:75px;width:200px;visibility:visible !important;']", IncreaseDistributionGroupListBoxSize)
             waitForKeyElements("#L_c1i0_cb143638_ctl12_lstResult", AddUserIDsToList)
             break;
         case "Manage Student Enrollments Promote":
@@ -474,6 +484,14 @@ function AddPageFooter()
     if (window.location.href.indexOf("account/login")+13 != window.location.href.length)
     {
         $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by <a href="https://github.com/DeckardLain/ON-Mod-Suite/wiki" target="_blank">ON Mod Suite (Generic Edition)</a> v' + GM_info.script.version + '. | Copyright © 2018-2020 Hanalani Schools | Click <a href="'+schoolURL+'#account/login" target="_blank">here</a> to change settings.</div>')
+    }
+}
+
+function fixURL()
+{
+    if (window.location.href.indexOf("//0/") >= 0)
+    {
+        window.location.href = window.location.href.replace("//0/","/0/")
     }
 }
 
@@ -1395,6 +1413,15 @@ function CreateRosterCheckboxes(jNode)
             $("#roster-reports").prev().find("li:eq(4)").after('<li><a id="selected-students-and-parents" href="javascript:void(0)">Selected Students and Parents</a></li>');
         }
 
+        // Remove duplicate menu
+        $(".btn-group:contains('Send Communication to')").each(function(){
+            //console.log($(this).find("li").length)
+            if ($(this).find("li").length != 6)
+            {
+                $(this).remove()
+            }
+        });
+
         // Create Select All checkbox
         $("#roster-count").closest("h4").after('<label><input type="checkbox" class="Select_all">Select All</label>');
 
@@ -1790,22 +1817,28 @@ function GrabEmails()
 function ClassesMenuSortOrder(jNode)
 {
     console.log("Function: " + arguments.callee.name)
+
     // Get saved value
     if (localStorage.getItem("ClassesMenuSortOrder") == "period")
     {
-        // Sort class list
-        jNode.siblings(".subnav").find("ul:first").html(
-            jNode.siblings(".subnav").find("ul:first").children("li").sort(function (a, b) {
-                return GetPeriodSortOrder(GetPeriod($(a).find(".title").text())) - GetPeriodSortOrder(GetPeriod($(b).find(".title").text()));
-            })
-                                             );
+        var classes = jNode.siblings(".subnav").find("li:not(:contains('View Other Classes')):not(:empty)")
 
-        // Rename menu items to put period in front
-        jNode.siblings(".subnav").find("ul:first").children("li").each(function (index) {
+        var orderedClasses = classes.sort(function (a, b) {
+            return GetPeriodSortOrder(GetPeriod($(a).find(".title").text())) - GetPeriodSortOrder(GetPeriod($(b).find(".title").text()));
+            })
+
+        orderedClasses.each(function (index) {
             if ($(this).find(".title").text().indexOf("(") != -1)
             {
                 $(this).find(".title").text("[" + GetPeriod($(this).find(".title").text()) + "] " + $(this).find(".title").text().substring(0, $(this).find(".title").text().indexOf("(")))
             }
+        });
+
+        var numPerColumn = jNode.siblings(".subnav").find("ul").eq(0).find("li:not(:contains('View Other Classes')):not(:empty)").length
+
+        orderedClasses.each(function (index) {
+            var column = Math.floor(index / numPerColumn)
+            jNode.siblings(".subnav").find("ul").eq(column).append($(this))
         });
     }
 
@@ -1873,7 +1906,7 @@ function GetPeriod(className)
     console.log("Function: " + arguments.callee.name)
     if (className.indexOf("(") == -1)
     {
-        return null
+        return "None"
     } else
     {
         return className.substring(className.indexOf("(")+1, className.indexOf(")"))
@@ -2295,16 +2328,22 @@ function CreateAddToFavoritesLink()
             link = ' | <a href="javascript:void(0)" class="add-list-to-favorites" data-id="' + ListID + '" data-name="' + ListName + '">Add to Favorites</a>'
             $(this).find(".cal2listdayitemtext").eq(1).append(link)
             // Also add shareable link
-            var shareLink = ' | <a href="'+schoolURL+'podium/default.aspx?t=23189&id='+ListID+'&name='+ListName+'&type=Run">Link</a>'
+            var ListName = ListName.replace("[","-").replace("]","-")  // Can't have brackets in the URL, even if encoded
+            //var shareLink = ' | <a href="'+schoolURL+'podium/default.aspx?t=23189&id='+ListID+'&name='+ListName+'&type=Run">Link</a>'
+            var shareLink = ' | <a href="javascript:void(0)" class="list-link" data="'+schoolURL+'podium/default.aspx?t=23189&id='+ListID+'&name='+ListName+'&type=Run">Copy Link to List</a>'
             $(this).find(".cal2listdayitemtext").eq(1).append(shareLink)
             // Add List ID to displayed info
             $(this).find("tr").eq(1).children("td").eq(0).append(" | List ID: "+ListID)
         }
     });
 
-    //$(document).on('click', ".add-list-to-favorites", function(){
     $(".add-list-to-favorites").unbind("click").bind("click", function(){
         AddAdvancedListFavorite($(this).attr("data-id"), $(this).attr("data-name"))
+    });
+
+    $(".list-link").unbind("click").bind("click", function(){
+        GM_setClipboard(encodeURI($(this).attr("data")), "text")
+        $(this).text("Copied to Clipboard!")
     });
 }
 
@@ -3258,6 +3297,31 @@ function GetSectionSize(jNodes, index)
             }
         }
     }, 100);
+}
+
+// -----------------------------------------[INDEX038]-------------------------------------
+// ----------------------------------Email Delimiter Default-------------------------------
+// ----------------------------------------------------------------------------------------
+
+function EmailDelimiterDefault(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+
+    var lastUsedOption = localStorage.getItem("EmailDelimiter")
+
+    // If delimiter was changed previously, select the same option
+    if (lastUsedOption != null)
+    {
+        var event = document.createEvent("Event")
+        event.initEvent("click", true, false)
+        $("[data-delimiter-value='"+lastUsedOption+"']")[0].dispatchEvent(event)
+    }
+
+    // On change, save delimiter option to local storage
+    $("[data-delimiter-value]").bind("click", function(){
+        console.log($(this).attr("data-delimiter-value"))
+        localStorage.setItem("EmailDelimiter", $(this).attr("data-delimiter-value"))
+    });
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
