@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 ## [2.8.0] - 2020-04-03
 ### Added
 - Fix blank page when first opening a group from Group Finder.
-- Email Delimeter Default - If you change the delimiter option in the Send Communication screen, the script remembers your
+- Email Delimiter Default - If you change the delimiter option in the Send Communication screen, the script remembers your
 choice and automatically loads it next time.
 ### Changed
 - Advanced List shareable link now copies to clipbord when clicking on it. No need to right-click and copy as link anymore.
