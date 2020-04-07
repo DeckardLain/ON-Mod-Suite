@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.9.0
+// @version      2.9.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
@@ -3342,7 +3342,7 @@ function WordCount(jNode)
 {
     console.log("Function: " + arguments.callee.name)
 
-    if ($(jNode).find(".word-count").length == 0)
+    if ($(jNode).find(".word-count").length == 0 && $(jNode).closest(".discussion-message").length == 0)
     {
         var count = $(jNode).closest("div").find("[style='font-size:14px; line-height:20px; margin-right:50px']").eq(0).text().trim().split(/\s+/).length
         $(jNode).append('<span class="word-count"> ('+count+' words)</span>')
