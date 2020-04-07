@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.8.0
+// @version      2.9.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -69,6 +69,7 @@
 [INDEX036] Math Year Averages
 [INDEX037] Show All Section Sizes
 [INDEX038] Email Delimiter Default
+[INDEX039] Word Count for Discussion Responses
 [INDEX900] Misc. Helper Functions
 
 
@@ -221,6 +222,9 @@ Completed Mods:
 
 35 - Email Delimiter Default
      When sending email to students and/or parents from a roster, remember last used delimiter option and select it by default.
+
+36 - Word Count for Discussion Responses
+     Adds a word count for each response added to discussions.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -383,6 +387,9 @@ function gmMain(){
         case "Scheduling":
             waitForKeyElements(".sky-toolbar-items", ShowAllSectionSizes)
             break;
+        case "Discussion":
+            waitForKeyElements(".discussion-name", WordCount)
+            break;
     }
 
     // People Finder Quick Select
@@ -427,6 +434,9 @@ function GetModule(strURL)
     } else if (strURL.indexOf("/sis-scheduling/") >= 0)
     {
         return "Scheduling"
+    } else if (strURL.indexOf("#discussionsectiondetail/") >= 0)
+    {
+        return "Discussion"
     } else if (strURL.substring(strURL.length-11) == "assignments")
     {
         return "Assignments";
@@ -3773,6 +3783,22 @@ function EmailDelimiterDefault(jNode)
         console.log($(this).attr("data-delimiter-value"))
         localStorage.setItem("EmailDelimiter", $(this).attr("data-delimiter-value"))
     });
+}
+
+// -----------------------------------------[INDEX039]-------------------------------------
+// ----------------------------Word Count for Discussion Responses-------------------------
+// ----------------------------------------------------------------------------------------
+
+function WordCount(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+
+    if ($(jNode).find(".word-count").length == 0)
+    {
+        var count = $(jNode).closest("div").find("[style='font-size:14px; line-height:20px; margin-right:50px']").eq(0).text().trim().split(/\s+/).length
+        $(jNode).append('<span class="word-count"> ('+count+' words)</span>')
+    }
+
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
