@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.9.1] - 2020-04-07
+### Fixed
+- Stop showing word count for discussion message (topic)
+
 ## [2.9.0] - 2020-04-07
 ### Added
 - Discussion Word Count
