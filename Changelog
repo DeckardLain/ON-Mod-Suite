@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.9.0] - 2020-04-07
+### Added
+- Discussion Word Count
+
 ## [2.8.0] - 2020-04-03
 ### Added
 - Fix blank page when first opening a group from Group Finder.
