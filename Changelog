@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.9.2] - 2020-04-22
+### Fixed
+- Word count not working when discussion posts contain certain HTML formatting.
+
 ## [2.9.1] - 2020-04-07
 ### Fixed
 - Stop showing word count for discussion message (topic)
