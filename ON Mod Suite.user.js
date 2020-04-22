@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.9.1
+// @version      2.9.2
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -531,7 +531,7 @@ function AddPageFooter()
         $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2020 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
-        var skipNotificationVersions = ["2.9.0"]
+        var skipNotificationVersions = ["2.9.0","2.9.1"]
         var oldVersion = GM_getValue("FirstRunVersionCheck")
 
         if (oldVersion != GM_info.script.version)
@@ -3795,7 +3795,23 @@ function WordCount(jNode)
 
     if ($(jNode).find(".word-count").length == 0 && $(jNode).closest(".discussion-message").length == 0)
     {
-        var count = $(jNode).closest("div").find("[style='font-size:14px; line-height:20px; margin-right:50px']").eq(0).text().trim().split(/\s+/).length
+        var discussion = $(jNode).closest("div").find("[style='font-size:14px; line-height:20px; margin-right:50px']").eq(0)
+        var count = 0
+        var text = discussion.text().trim()
+        if (text.length == 0)
+        {
+            if (discussion.next().text().trim().length == 0)
+            {
+                count = 0
+            } else
+            {
+                count = discussion.next().text().trim().split(/\s+/).length
+            }
+        } else
+        {
+            count = text.split(/\s+/).length
+        }
+
         $(jNode).append('<span class="word-count"> ('+count+' words)</span>')
     }
 
