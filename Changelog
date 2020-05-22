@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.9.4] - 2020-05-22
+### Fixed
+- Community group roster Send Communication button missing.
+- Word count not working when discussion posts contain certain HTML formatting.
+- Email All Parents of Student not appearing when roster is loaded in the Extracurricular module.
+
 ## [2.9.1] - 2020-04-07
 ### Fixed
 - Stop showing word count for discussion message (topic)
