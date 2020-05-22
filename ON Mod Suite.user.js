@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.9.1
+// @version      2.9.4
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
@@ -306,6 +306,7 @@ function gmMain(){
             waitForKeyElements(".bb-card-title",ConvertGradYearToGradeLevel)
             waitForKeyElements(".bb-btn-secondary", CreateRosterCheckboxes)
             waitForKeyElements(".delimiter-btn:first", EmailDelimiterDefault)
+            EmailAllParentsOfStudent();
             break;
         case "Manage Student Enrollment":
             waitForKeyElements("#LevelNum", EnrollInAll)
@@ -1426,7 +1427,7 @@ function CreateRosterCheckboxes(jNode)
         // Remove duplicate menu
         $(".btn-group:contains('Send Communication to')").each(function(){
             //console.log($(this).find("li").length)
-            if ($(this).find("li").length != 6)
+            if ($(this).find("li").length < 5)
             {
                 $(this).remove()
             }
@@ -3344,7 +3345,23 @@ function WordCount(jNode)
 
     if ($(jNode).find(".word-count").length == 0 && $(jNode).closest(".discussion-message").length == 0)
     {
-        var count = $(jNode).closest("div").find("[style='font-size:14px; line-height:20px; margin-right:50px']").eq(0).text().trim().split(/\s+/).length
+        var discussion = $(jNode).closest("div").find("[style='font-size:14px; line-height:20px; margin-right:50px']").eq(0)
+        var count = 0
+        var text = discussion.text().trim()
+        if (text.length == 0)
+        {
+            if (discussion.next().text().trim().length == 0)
+            {
+                count = 0
+            } else
+            {
+                count = discussion.next().text().trim().split(/\s+/).length
+            }
+        } else
+        {
+            count = text.split(/\s+/).length
+        }
+
         $(jNode).append('<span class="word-count"> ('+count+' words)</span>')
     }
 
