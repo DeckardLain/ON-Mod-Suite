@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.10.0
+// @version      2.10.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -3846,20 +3846,24 @@ function ImpersonationPage(jNode)
 
     // Display pins
     $(".DelImp").each(function(){
-        var id = $(this).attr("curruser")
-        var name = $(this).closest(".row").find(".ImpUser:first").text()
-        $(this).after('<a href="javascript:void(0)" class="PinImp" curruser="'+id+'" currname="'+name.replace(/"/g, '&quot;')+'"><img src="'+pinImage+'"></a>')
-        $(this).parent().attr("class","col-md-3")
-        $(this).closest(".row").find(".col-md-10").attr("class","col-md-9")
+        if (!$(this).find(".PinImp").length)
+        {
+            var id = $(this).attr("curruser")
+            var name = $(this).closest(".row").find(".ImpUser:first").text()
+            $(this).after('<a href="javascript:void(0)" class="PinImp" curruser="'+id+'" currname="'+name.replace(/"/g, '&quot;')+'"><img src="'+pinImage+'"></a>')
+            $(this).parent().attr("class","col-md-3")
+            $(this).closest(".row").find(".col-md-10").attr("class","col-md-9")
+        }
     });
 
     // Display recent impersonations
     var recentImpersonationsString = localStorage.getItem("RecentImpersonations")
+    var recentHeading = '<div class="row RecentImpersonations"><div class="col-md-12"><span style="font-weight:600;">Recent</span></div></div>'
+    var names = "";
+
     if (recentImpersonationsString != null)
     {
         var recentImpersonations = JSON.parse(recentImpersonationsString)
-        var recentHeading = '<div class="row RecentImpersonations"><div class="col-md-12"><span style="font-weight:600;">Recent</span></div></div>'
-        var names = "";
 
         for (var i = recentImpersonations.length-1; i >= 0; i--)
         {
@@ -3869,9 +3873,9 @@ function ImpersonationPage(jNode)
             names += '</div>'
         }
 
-        $("#pastImpCol").children("div:first").prepend(recentHeading+names+'<div>&nbsp;</div>')
     }
 
+    $("#pastImpCol").children("div:first").prepend(recentHeading+names+'<div>&nbsp;</div>')
 
     // Click Handlers
     $(".ImpUser").unbind("click").bind("click", function(){
