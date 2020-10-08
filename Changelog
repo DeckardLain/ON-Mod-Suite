@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.10.1] - 2020-10-07
+### Added
+- Impersonation Recent & Pinned
+
 ## [2.9.4] - 2020-05-22
 ### Fixed
 - Community group roster Send Communication button missing.
