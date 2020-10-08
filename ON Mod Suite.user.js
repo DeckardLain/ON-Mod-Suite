@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.9.4
+// @version      2.10.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
@@ -62,6 +62,7 @@
 [INDEX037] Show All Section Sizes
 [INDEX038] Email Delimiter Default
 [INDEX039] Word Count for Discussion Responses
+[INDEX040] Impersonation Recent & Pinned
 [INDEX900] Misc. Helper Functions
 
 
@@ -211,6 +212,9 @@ Completed Mods:
 
 36 - Word Count for Discussion Responses
      Adds a word count for each response added to discussions.
+
+37 - Impersonation Recent & Pinned
+     Show recently impersonated users and enable pinning of any user in the recent/past list for quick access.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -362,6 +366,10 @@ function gmMain(){
         case "Discussion":
             waitForKeyElements(".discussion-name", WordCount)
             break;
+        case "Impersonate":
+            waitForKeyElements(".ImpUser:first", ImpersonationPage)
+            waitForKeyElements(".SearchResultRow:first", ImpersonationSearchResults)
+            break;
     }
 
     // People Finder Quick Select
@@ -400,6 +408,9 @@ function GetModule(strURL)
     if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.substring(strURL.length-12) == "#impersonate")
+    {
+        return "Impersonate"
     } else if (strURL.indexOf("/sis-scheduling/") >= 0)
     {
         return "Scheduling"
@@ -3221,7 +3232,7 @@ function DefaultClassAssignmentDateFilter(jNode)
 
     if (!$("#DefaultLink").length)
     {
-        $(".assignmentFiltersContainer").children(".bb-tile").eq(1).find(".bb-tile-header-with-content").after('<div id="DefaultLink"><h5><a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">Change Default</a></h5></div>')
+        $(".assignmentFiltersContainer").children(".bb-tile").eq(1).find(".bb-tile-header-with-content").after('<div id="DefaultLink"><h5><a href="'+schoolURL+'#account/login" target="_blank">Change Default</a></h5></div>')
 
         switch (localStorage.getItem("ClassAssignmentsDefaultDate"))
         {
@@ -3365,6 +3376,198 @@ function WordCount(jNode)
         $(jNode).append('<span class="word-count"> ('+count+' words)</span>')
     }
 
+}
+
+// -----------------------------------------[INDEX040]-------------------------------------
+// -------------------------------Impersonation Recent & Pinned----------------------------
+// ----------------------------------------------------------------------------------------
+
+function ImpersonationPage(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+    var pinImage = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADCSURBVDhPvdLNCgFhFIfx8ZGSlAU3odyAu7BQVspFYG9hpeQiLKzsxdbeQi7Bxk52xPOfztQ742PGFE/9Os2U875lvH9WshkqZzNJU9Sw859StMANXf/pywa4m9CSjE23Clqo4oAGxgjSTU4Y4qIX0YqYY4QzgpOlj0RpyRruj3XiU1mb0a7QEre9zVDvFkzQxBYbvaC6zdg60JVnKEA3WaGH2HTKEVripiX6dz5WxhKJr+qm76ENLUlVHq8+ql/neQ+f5yBZW+N1ugAAAABJRU5ErkJggg=='
+
+    if ($(".RecentImpersonations").length)
+    {
+        return;
+    }
+
+    // Display pins
+    $(".DelImp").each(function(){
+        if (!$(this).find(".PinImp").length)
+        {
+            var id = $(this).attr("curruser")
+            var name = $(this).closest(".row").find(".ImpUser:first").text()
+            $(this).after('<a href="javascript:void(0)" class="PinImp" curruser="'+id+'" currname="'+name.replace(/"/g, '&quot;')+'"><img src="'+pinImage+'"></a>')
+            $(this).parent().attr("class","col-md-3")
+            $(this).closest(".row").find(".col-md-10").attr("class","col-md-9")
+        }
+    });
+
+    // Display recent impersonations
+    var recentImpersonationsString = localStorage.getItem("RecentImpersonations")
+    var recentHeading = '<div class="row RecentImpersonations"><div class="col-md-12"><span style="font-weight:600;">Recent</span></div></div>'
+    var names = "";
+
+    if (recentImpersonationsString != null)
+    {
+        var recentImpersonations = JSON.parse(recentImpersonationsString)
+
+        for (var i = recentImpersonations.length-1; i >= 0; i--)
+        {
+            names += '<div class="row" style="line-height:30px;">'
+            names += '<div class="col-md-10"><a href="#" class="ImpUser" curruser="'+recentImpersonations[i].id+'">'+recentImpersonations[i].name+'</a></div>'
+            names += '<div class="col-md-2"><a href="javascript:void(0)" class="PinImp pull-right" curruser="'+recentImpersonations[i].id+'" currname="'+recentImpersonations[i].name.replace(/"/g, '&quot;')+'"><img src="'+pinImage+'"></a></div>'
+            names += '</div>'
+        }
+
+    }
+
+    $("#pastImpCol").children("div:first").prepend(recentHeading+names+'<div>&nbsp;</div>')
+
+    // Click Handlers
+    $(".ImpUser").unbind("click").bind("click", function(){
+        var newImpersonation = {};
+        newImpersonation.id = $(this).attr("curruser")
+        newImpersonation.name = $(this).text()
+
+        var recentImpersonationsString = localStorage.getItem("RecentImpersonations")
+        if (recentImpersonationsString == null)
+        {
+            var recentImpersonations = [];
+        } else
+        {
+            var recentImpersonations = JSON.parse(recentImpersonationsString)
+        }
+
+        var found = false;
+        for (var i = 0; i < recentImpersonations.length; i++)
+        {
+            if (recentImpersonations[i].id == newImpersonation.id)
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            recentImpersonations.push(newImpersonation);
+
+            if (recentImpersonations.length > 10)
+            {
+                recentImpersonations.splice(0,1)
+            }
+
+            localStorage.setItem("RecentImpersonations", JSON.stringify(recentImpersonations))
+        }
+    });
+
+    $(".PinImp").unbind("click").bind("click", function(){
+        console.log("pin")
+        var newPin = {};
+        newPin.id = $(this).attr("curruser")
+        newPin.name = $(this).attr("currname")
+
+        var pinnedImpersonationsString = localStorage.getItem("PinnedImpersonations")
+        if (pinnedImpersonationsString == null)
+        {
+            var pinnedImpersonations = [];
+        } else
+        {
+            var pinnedImpersonations = JSON.parse(pinnedImpersonationsString);
+        }
+
+        var found = false;
+        for (var i = 0; i < pinnedImpersonations.length; i++)
+        {
+            if (pinnedImpersonations[i].id == newPin.id)
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            pinnedImpersonations.push(newPin);
+            localStorage.setItem("PinnedImpersonations", JSON.stringify(pinnedImpersonations))
+            DisplayPinnedImpersonations()
+        }
+    });
+
+    // Display pinned impersonations
+    DisplayPinnedImpersonations()
+
+}
+
+function DisplayPinnedImpersonations()
+{
+    console.log("Function: " + arguments.callee.name)
+
+    var pinnedImpersonationsString = localStorage.getItem("PinnedImpersonations")
+
+    $(".PinnedImpersonation").remove()
+
+    if (pinnedImpersonationsString != null)
+    {
+        var pinnedImpersonations = JSON.parse(pinnedImpersonationsString)
+
+        if (pinnedImpersonations.length > 0)
+        {
+            var pinnedHeading = '<div class="row PinnedImpersonation"><div class="col-md-12"><span style="font-weight:600;">Pinned</span></div></div>'
+            var names = "";
+
+            for (var i = 0; i < pinnedImpersonations.length; i++)
+            {
+                names += '<div class="row PinnedImpersonation" style="line-height:30px;">'
+                names += '<div class="col-md-10"><a href="#" class="ImpUser" curruser="'+pinnedImpersonations[i].id+'">'+pinnedImpersonations[i].name+'</a></div>'
+                names += '<div class="col-md-2"><a href="javascript:void(0)" class="UnpinImp pull-right" currindex="'+i+'"><i style="font-size: 13px; color: #292a2b" class="fa fa-close"></i></a></div>'
+                names += '</div>'
+            }
+
+            $("#pastImpCol").children("div:first").prepend(pinnedHeading+names+'<div class="PinnedImpersonation">&nbsp;</div>')
+        }
+    }
+
+    $(".UnpinImp").unbind("click").bind("click", function(){
+
+        var pinnedImpersonations = JSON.parse(localStorage.getItem("PinnedImpersonations"))
+
+        pinnedImpersonations.splice(parseInt($(this).attr("currindex")), 1)
+
+        localStorage.setItem("PinnedImpersonations", JSON.stringify(pinnedImpersonations))
+        DisplayPinnedImpersonations()
+    });
+}
+
+function ImpersonationSearchResults(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+
+    $(".SearchResultRow").unbind("click").bind("click", function(){
+        var newImpersonation = {};
+        newImpersonation.id = $(this).attr("curruser")
+        newImpersonation.name = $(this).children(".impersonateColumnMax90:first").text()
+
+        var recentImpersonationsString = localStorage.getItem("RecentImpersonations")
+        if (recentImpersonationsString == null)
+        {
+            var recentImpersonations = [];
+        } else
+        {
+            var recentImpersonations = JSON.parse(recentImpersonationsString)
+        }
+
+        recentImpersonations.push(newImpersonation);
+
+        if (recentImpersonations.length > 10)
+        {
+            recentImpersonations.splice(0,1)
+        }
+
+        localStorage.setItem("RecentImpersonations", JSON.stringify(recentImpersonations))
+    });
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
