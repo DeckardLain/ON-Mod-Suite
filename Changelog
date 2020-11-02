@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.11.0] - 2020-11-02
+### Added
+- Gradebook link from the new class assignments page now opens in a new window like it does everywhere else.
+
 ## [2.10.2] - 2020-11-02
 ### Added
 - Fix position of classes menu, which goes off screen when very large.
