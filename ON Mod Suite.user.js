@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.10.2
+// @version      2.11.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -71,6 +71,8 @@
 [INDEX038] Email Delimiter Default
 [INDEX039] Word Count for Discussion Responses
 [INDEX040] Impersonation Recent & Pinned
+[INDEX041] Fix Classes Menu Off Screen
+[INDEX042] Fix Gradebook Link
 [INDEX900] Misc. Helper Functions
 
 
@@ -399,6 +401,9 @@ function gmMain(){
             waitForKeyElements(".ImpUser:first", ImpersonationPage)
             waitForKeyElements(".SearchResultRow:first", ImpersonationSearchResults)
             break;
+        case "New Assignments Page":
+            waitForKeyElements("#sky-tab-4-nav-btn", FixGradebookLink, true)
+            break;
     }
 
     // People Finder Quick Select
@@ -439,9 +444,13 @@ function gmMain(){
 function GetModule(strURL)
 {
     console.log("Function: " + arguments.callee.name + "(" + strURL + ")")
+
     if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.indexOf("lms-assignment/assignment-center/") > 0)
+    {
+        return "New Assignments Page"
     } else if (strURL.substring(strURL.length-12) == "#impersonate")
     {
         return "Impersonate"
@@ -545,7 +554,7 @@ function AddPageFooter()
         $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2020 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
-        var skipNotificationVersions = ["2.10.1"]
+        var skipNotificationVersions = []
         var oldVersion = GM_getValue("FirstRunVersionCheck")
 
         if (oldVersion != GM_info.script.version)
@@ -4046,8 +4055,47 @@ function FixClassesMenuOffScreen(jNode)
     });
 }
 
+// -----------------------------------------[INDEX042]-------------------------------------
+// -------------------------------------Fix Gradebook Link---------------------------------
+// ----------------------------------------------------------------------------------------
+
+function FixGradebookLink(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+
+    var url = window.location.href
+    var pos = url.indexOf("/course/")+8
+    var classID = url.substring(pos, url.indexOf("/", pos))
+
+    var gradebookURL = schoolURL+"app/faculty#gradebook/"+classID
+
+    $(jNode).changeElementType("span")
+
+    $("#sky-tab-4-nav-btn").unbind().bind("click", function(event){
+        window.open(gradebookURL, "_blank", "location=0");
+    });
+
+}
+
 // -----------------------------------------[INDEX900]-------------------------------------
 // -----------------------------------Misc. Helper Functions-------------------------------
+// ----------------------------------------------------------------------------------------
+
+// Change element type, taken from https://stackoverflow.com/questions/8584098/how-to-change-an-element-type-using-jquery
+(function($) {
+    $.fn.changeElementType = function(newType) {
+        var attrs = {};
+
+        $.each(this[0].attributes, function(idx, attr) {
+            attrs[attr.nodeName] = attr.nodeValue;
+        });
+
+        this.replaceWith(function() {
+            return $("<" + newType + "/>", attrs).append($(this).contents());
+        });
+    };
+})(jQuery);
+
 // ----------------------------------------------------------------------------------------
 
 function trimAtChar(str, trimAt)
