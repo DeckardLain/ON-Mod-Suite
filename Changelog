@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.10.2] - 2020-11-02
+### Added
+- Fix position of classes menu, which goes off screen when very large.
+
 ## [2.10.1] - 2020-10-07
 ### Fixed
 - Impersonation changes not working properly before recent impersonations have been saved.
