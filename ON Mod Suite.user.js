@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.10.1
+// @version      2.10.2
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -431,6 +431,8 @@ function gmMain(){
     // Highlight row on hover
     HighlightRowOnHover()
 
+    // Fix Classes Menu Off Screen
+    waitForKeyElements(".subnav", FixClassesMenuOffScreen)
 }
 
 
@@ -543,7 +545,7 @@ function AddPageFooter()
         $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2020 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
-        var skipNotificationVersions = ["2.9.0","2.9.1","2.9.2"]
+        var skipNotificationVersions = ["2.10.1"]
         var oldVersion = GM_getValue("FirstRunVersionCheck")
 
         if (oldVersion != GM_info.script.version)
@@ -4019,6 +4021,28 @@ function ImpersonationSearchResults(jNode)
         }
 
         localStorage.setItem("RecentImpersonations", JSON.stringify(recentImpersonations))
+    });
+}
+
+// -----------------------------------------[INDEX041]-------------------------------------
+// --------------------------------Fix Classes Menu Off Screen-----------------------------
+// ----------------------------------------------------------------------------------------
+
+function FixClassesMenuOffScreen(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+
+    $("#topnav-containter").find(".subnav").mouseover(function() {
+        var left = $(this).css("left")
+        if (left.length > 0)
+        {
+            left = left.substring(0,left.length-2);
+        }
+
+        if(left < 0)
+        {
+            $(this).css("left", 0);
+        }
     });
 }
 
