@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.12.0] - 2020-12-02
+### Added
+- When viewing a user profile page in Core, Academics, or Enrollment Management, set the page title in the browser
+to include the name and tab you're on, so you can actually use the browser history to see and navigate where you've been.
+
 ## [2.11.0] - 2020-11-02
 ### Added
 - Gradebook link from the new class assignments page now opens in a new window like it does everywhere else.
