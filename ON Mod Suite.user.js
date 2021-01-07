@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.12.0
+// @version      2.12.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -561,7 +561,7 @@ function AddPageFooter()
         $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2020 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
-        var skipNotificationVersions = []
+        var skipNotificationVersions = ["2.12.0"]
         var oldVersion = GM_getValue("FirstRunVersionCheck")
 
         if (oldVersion != GM_info.script.version)
@@ -2458,6 +2458,7 @@ function ReverseAttendanceDefault(jNode)
     console.log("Function: " + arguments.callee.name)
     if (jNode.text() == "Record Attendance")
     {
+        $(".modal-body").prepend('<br><a href="javascript:void(0)" id="virtual-present">Click to set all students to Virtual-Present</a>')
         $(".modal-body").prepend('<a href="javascript:void(0)" id="reverse-attendance">Click to set all students to Unexcused Absence</a>')
 
         $("#reverse-attendance").unbind("click").bind("click", function(){
@@ -2480,6 +2481,13 @@ function ReverseAttendanceDefault(jNode)
                         $(this).find("td").eq(1).append('<br><a href="javascript:void(0)" class="mark-present"> Present--&gt</a>')
                     }
                 });
+            }
+        });
+
+        $("#virtual-present").unbind("click").bind("click", function(){
+            if ($(".slide").find("th").text().trim().substring(0, 8) != "Homeroom")
+            {
+                $(".form-control:contains('Attended Class'):not(:disabled)").val("7717")
             }
         });
 
