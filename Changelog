@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.12.1] - 2021-01-07
+### Added
+- Attendance shortcut to set all students to Virtual-Present.
+
 ## [2.12.0] - 2020-12-02
 ### Added
 - When viewing a user profile page in Core, Academics, or Enrollment Management, set the page title in the browser
