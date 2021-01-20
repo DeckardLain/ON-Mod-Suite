@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.12.1
+// @version      2.12.2
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -74,6 +74,7 @@
 [INDEX041] Fix Classes Menu Off Screen
 [INDEX042] Fix Gradebook Link
 [INDEX043] Update Page Title
+[INDEX044] Directory Medical Link
 [INDEX900] Misc. Helper Functions
 
 
@@ -236,6 +237,9 @@ Completed Mods:
 38 - Update Page Title
      When viewing a user profile page in Core, Academics, or Enrollment Management, set the page title in the browser to include the
      name and tab you're on, so you can actually use the browser history to see and navigate where you've been.
+
+39 - Directory Medical Link
+     Directory results Options menu includes a link to medical page.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -410,6 +414,9 @@ function gmMain(){
         case "New Assignments Page":
             waitForKeyElements("#sky-tab-4-nav-btn", FixGradebookLink, true)
             break;
+        case "Directory":
+            waitForKeyElements("#directory-items-container", DirectoryMedicalLink)
+            break;
     }
 
     // People Finder Quick Select
@@ -455,6 +462,9 @@ function GetModule(strURL)
     if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.indexOf("#directory/") > 0)
+    {
+        return "Directory"
     } else if (strURL.indexOf("lms-assignment/assignment-center/") > 0)
     {
         return "New Assignments Page"
@@ -561,7 +571,7 @@ function AddPageFooter()
         $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2020 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
-        var skipNotificationVersions = ["2.12.0"]
+        var skipNotificationVersions = ["2.12.0","2.12.1"]
         var oldVersion = GM_getValue("FirstRunVersionCheck")
 
         if (oldVersion != GM_info.script.version)
@@ -4130,6 +4140,21 @@ function UpdatePageTitle(jNode)
     {
         document.title = document.title+" | "+$(jNode).text()+" | "+url[url.length-1]
     }
+}
+
+// -----------------------------------------[INDEX044]-------------------------------------
+// ----------------------------------Directory Medical Link--------------------------------
+// ----------------------------------------------------------------------------------------
+
+function DirectoryMedicalLink(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+
+    $(".medical-link").remove()
+
+    $(jNode).find(".user-options-button").each(function () {
+        $(this).siblings(".dropdown-menu").append('<li class="medical-link"><a href="#profile/'+$(this).data("userid")+'/medical">Medical</a></li>')
+    });
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
