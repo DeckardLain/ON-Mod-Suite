@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.12.2] - 2021-01-20
+### Added
+- Directory results Options menu includes a link to medical page.
+
 ## [2.12.1] - 2021-01-07
 ### Added
 - Attendance shortcut to set all students to Virtual-Present.
