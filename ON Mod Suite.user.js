@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.12.2
+// @version      2.12.3
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -2515,7 +2515,7 @@ function ReverseAttendanceDefault(jNode)
 function CopyPageNumberNavigation(jNode)
 {
     console.log("Function: " + arguments.callee.name)
-    if (window.location.href == schoolURL+"podium/default.aspx?t=12200")
+    if (window.location.href == schoolURL+"podium/default.aspx?t=12200" || window.location.href == schoolURL+"podium/default.aspx?t=52555&wapp=1")
     {
         return;
     }
@@ -3652,7 +3652,7 @@ function DefaultClassAssignmentDateFilter(jNode)
                 $(".assignmentTimeFilter[data-type-id='2']")[0].click()
                 break;
             case "Current Quarter":
-                $(".assignmentTimeFilter[data-type-id='3']")[0].click()
+                $(".assignment-time-filter[data-type-id='3']")[0].click()
 
                 $("#assignmentFilterStartDatePicker").val(localStorage.getItem("ClassAssignmentsDefaultStart"))
                 var event = document.createEvent("Event")
@@ -3670,7 +3670,7 @@ function DefaultClassAssignmentDateFilter(jNode)
                 GetUpdatedQuarterDates("Assignments")
                 break;
             case "Range":
-                $(".assignmentTimeFilter[data-type-id='3']")[0].click()
+                $(".assignment-time-filter[data-type-id='3']")[0].click()
 
                 $("#assignmentFilterStartDatePicker").val(localStorage.getItem("ClassAssignmentsDefaultStart"))
                 var event = document.createEvent("Event")
