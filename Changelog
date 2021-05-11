@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.12.3] - 2021-05-10
+### Fixed
+- Assignment date filter element class changed.
+- Master Schedule - Edit Cycle possibly affected by page number navigation.
+
 ## [2.12.2] - 2021-01-20
 ### Added
 - Directory results Options menu includes a link to medical page.
