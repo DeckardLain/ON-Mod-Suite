@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.12.4] - 2021-05-13
+### Fixed
+- WYSIWYG editor expand not working
+
 ## [2.12.3] - 2021-05-10
 ### Fixed
 - Assignment date filter element class changed.
