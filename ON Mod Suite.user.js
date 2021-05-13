@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.12.0
+// @version      2.12.4
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
@@ -2244,7 +2244,7 @@ function GenerateSettingsPage(jNode)
 function CopyPageNumberNavigation(jNode)
 {
     console.log("Function: " + arguments.callee.name)
-    if (window.location.href == schoolURL+"podium/default.aspx?t=12200")
+    if (window.location.href == schoolURL+"podium/default.aspx?t=12200" || window.location.href == schoolURL+"podium/default.aspx?t=52555&wapp=1")
     {
         return;
     }
@@ -2474,7 +2474,7 @@ function EditorImprovements(jNode)
     $(".expand-editor").unbind("click").bind("click", function(){
         if ($(this).closest(".row").length)
         {
-            $(this).closest(".row").find("iframe").css("height", +$(this).closest(".row").find("iframe").css("height").substr(0, $(this).closest(".row").find("iframe").css("height").length-2)+100 + "px")
+            $(this).closest(".row").find(".tox-tinymce").css("height", +$(this).closest(".row").find("iframe").css("height").substr(0, $(this).closest(".row").find("iframe").css("height").length-2)+100 + "px")
         } else if ($("iframe").closest(".form-group").length)
         {
             $(this).closest(".form-group").find("iframe").css("height", +$(this).closest(".form-group").find("iframe").css("height").substr(0, $(this).closest(".form-group").find("iframe").css("height").length-2)+100 + "px")
