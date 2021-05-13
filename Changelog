@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.12.4] - 2021-05-13
+### Fixed
+- Edit Cycle page broken by Copy Page Navigation. (hopefully fixed)
+- WYSIWYG editor expand broken
+
 ## [2.12.0] - 2020-12-02
 ### Added
 - When viewing a user profile page in Core, Academics, or Enrollment Management, set the page title in the browser
