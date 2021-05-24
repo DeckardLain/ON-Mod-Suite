@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.12.4
+// @version      2.12.5
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
@@ -379,7 +379,7 @@ function gmMain(){
             waitForKeyElements(".SearchResultRow:first", ImpersonationSearchResults)
             break;
         case "New Assignments Page":
-            waitForKeyElements("#sky-tab-4-nav-btn", FixGradebookLink, true)
+            //waitForKeyElements("#sky-tab-4-nav-btn", FixGradebookLink, true)
             break;
     }
 
@@ -521,7 +521,7 @@ function AddPageFooter()
     console.log("Function: " + arguments.callee.name)
     if (window.location.href.indexOf("account/login")+13 != window.location.href.length)
     {
-        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by <a href="https://github.com/DeckardLain/ON-Mod-Suite/wiki" target="_blank">ON Mod Suite (Generic Edition)</a> v' + GM_info.script.version + '. | Copyright © 2018-2020 Hanalani Schools | Click <a href="'+schoolURL+'#account/login" target="_blank">here</a> to change settings.</div>')
+        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by <a href="https://github.com/DeckardLain/ON-Mod-Suite/wiki" target="_blank">ON Mod Suite (Generic Edition)</a> v' + GM_info.script.version + '. | Copyright © 2018-2021 Hanalani Schools | Click <a href="'+schoolURL+'#account/login" target="_blank">here</a> to change settings.</div>')
     }
 }
 
