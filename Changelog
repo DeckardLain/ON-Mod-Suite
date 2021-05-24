@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.12.5] - 2021-05-24
+### Fixed
+- Gradebook link on assignments page fixed by Blackbaud, so this script caused a broken link.
+
 ## [2.12.4] - 2021-05-13
 ### Fixed
 - Edit Cycle page broken by Copy Page Navigation. (hopefully fixed)
