@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.12.4
+// @version      2.12.5
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -412,7 +412,7 @@ function gmMain(){
             waitForKeyElements(".SearchResultRow:first", ImpersonationSearchResults)
             break;
         case "New Assignments Page":
-            waitForKeyElements("#sky-tab-4-nav-btn", FixGradebookLink, true)
+            //waitForKeyElements("#sky-tab-4-nav-btn", FixGradebookLink, true)
             break;
         case "Directory":
             waitForKeyElements("#directory-items-container", DirectoryMedicalLink)
@@ -568,10 +568,10 @@ function AddPageFooter()
     console.log("Function: " + arguments.callee.name)
     if (window.location.href.substring(window.location.href.length-21-settingsResourceBoardID.length) != "#resourceboarddetail/"+settingsResourceBoardID)
     {
-        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2020 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
+        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2021 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
-        var skipNotificationVersions = ["2.12.0","2.12.1","2.12.2","2.12.3"]
+        var skipNotificationVersions = ["2.12.0","2.12.1","2.12.2","2.12.3","2.12.4"]
         var oldVersion = GM_getValue("FirstRunVersionCheck")
 
         if (oldVersion != GM_info.script.version)
