@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.12.6] - 2021-08-19
+### Added
+- Email Administrators (LS) option added to Send Communication window
+
 ## [2.12.5] - 2021-05-24
 ### Fixed
 - Gradebook link on assignments page fixed by Blackbaud, so this script caused a broken link.
