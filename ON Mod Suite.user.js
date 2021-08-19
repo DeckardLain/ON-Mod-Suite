@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.12.5
+// @version      2.12.6
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -75,6 +75,7 @@
 [INDEX042] Fix Gradebook Link
 [INDEX043] Update Page Title
 [INDEX044] Directory Medical Link
+[INDEX045] Email Administrators
 [INDEX900] Misc. Helper Functions
 
 
@@ -325,6 +326,7 @@ function gmMain(){
             waitForKeyElements(".dropdown-toggle:first", SaveRosterEmails)
             waitForKeyElements("#group-header-Classes", ClassesMenuSortOrder)
             waitForKeyElements(".delimiter-btn:first", EmailDelimiterDefault)
+            waitForKeyElements(".copy-addresses", EmailAdministrators)
             EmailAllParentsOfStudent();
             break;
         case "Team Roster":
@@ -4155,6 +4157,52 @@ function DirectoryMedicalLink(jNode)
     $(jNode).find(".user-options-button").each(function () {
         $(this).siblings(".dropdown-menu").append('<li class="medical-link"><a href="#profile/'+$(this).data("userid")+'/medical">Medical</a></li>')
     });
+}
+
+// -----------------------------------------[INDEX045]-------------------------------------
+// ------------------------------------Email Administrators--------------------------------
+// ----------------------------------------------------------------------------------------
+
+function EmailAdministrators(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+    var adminEmails = ";blee@hanalani.org;mlemon@hanalani.org"
+
+    var timer = setInterval(function() {
+        if ($("#email-list-textarea").text() != "")
+        {
+            clearInterval(timer)
+
+            if (!$("#email-administrators").length)
+            {
+                $("#copy-message").before('<div id="email-administrators"><input type="checkbox" id="email-administrators-checkbox"><label style="padding-left:4px;" for="email-administrators-checkbox">Also email LS administrators (blee/mlemon)</label></div>')
+            }
+
+            $("#email-administrators").data("original-mailto", $("#email-list-launch-mail").attr("href"))
+            $("#email-administrators").data("original-list", $("#email-list-textarea").text())
+
+            if (localStorage.getItem("EmailAdministrators") == "Y")
+            {
+                $("#email-administrators-checkbox").prop("checked", true)
+                $("#email-list-launch-mail").attr("href", $("#email-administrators").data("original-mailto")+adminEmails)
+                $("#email-list-textarea").text($("#email-administrators").data("original-list")+adminEmails)
+            }
+
+            $("#email-administrators-checkbox").bind("change", function() {
+                if ($("#email-administrators-checkbox").is(":checked"))
+                {
+                    $("#email-list-launch-mail").attr("href", $("#email-administrators").data("original-mailto")+adminEmails)
+                    $("#email-list-textarea").text($("#email-administrators").data("original-list")+adminEmails)
+                    localStorage.setItem("EmailAdministrators", "Y")
+                } else
+                {
+                    $("#email-list-launch-mail").attr("href", $("#email-administrators").data("original-mailto"))
+                    $("#email-list-textarea").text($("#email-administrators").data("original-list"))
+                    localStorage.setItem("EmailAdministrators", "N")
+                }
+            });
+        }
+    }, 500);
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
