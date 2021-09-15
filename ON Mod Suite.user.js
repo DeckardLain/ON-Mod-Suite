@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.13.0
+// @version      2.13.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -4282,7 +4282,7 @@ function EmailMedicalVisit(jNode)
 
                     body += '\n\n'
 
-                    mailtoLink += '&subject='+subject
+                    mailtoLink += '?subject='+subject
                     mailtoLink += '&body='+encodeURIComponent(body)
 
                     document.location.href = mailtoLink
@@ -4319,7 +4319,7 @@ function EmailMedicalVisit(jNode)
 
             body += '\n\n'
 
-            mailtoLink += '&subject='+subject
+            mailtoLink += '?subject='+subject
             mailtoLink += '&body='+encodeURIComponent(body)
 
             document.location.href = mailtoLink
