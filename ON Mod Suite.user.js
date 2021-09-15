@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.12.6
+// @version      2.13.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -13,7 +13,7 @@
 // @require      https://gist.github.com/raw/2625891/waitForKeyElements.js
 // ==/UserScript==
 
-/* Copyright (C) 2018-2020  Hanalani Schools
+/* Copyright (C) 2018-2021  Hanalani Schools
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -76,6 +76,7 @@
 [INDEX043] Update Page Title
 [INDEX044] Directory Medical Link
 [INDEX045] Email Administrators
+[INDEX046] Medical Visit Email
 [INDEX900] Misc. Helper Functions
 
 
@@ -242,6 +243,9 @@ Completed Mods:
 39 - Directory Medical Link
      Directory results Options menu includes a link to medical page.
 
+40 - Medical Visit Email
+     Create message in default email client with medical visit info.
+
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
 
@@ -398,6 +402,7 @@ function gmMain(){
         case "Medical Profile":
             waitForKeyElements(".bb-tile-content", FixImmunizationCollapse)
             waitForKeyElements(".bb-page-heading", PostLinkFaculty)
+            waitForKeyElements("#Invalid", EmailMedicalVisit)
             break;
         case "Assignments":
             waitForKeyElements(".assignment-filter-item", DefaultClassAssignmentDateFilter, true)
@@ -419,6 +424,11 @@ function gmMain(){
         case "Directory":
             waitForKeyElements("#directory-items-container", DirectoryMedicalLink)
             break;
+        case "Nurse's Office":
+            waitForKeyElements("#Invalid", EmailMedicalVisit)
+            break;
+        case "Medical Contact Card":
+            waitForKeyElements("#contact-relationship", SaveParentEmails, true)
     }
 
     // People Finder Quick Select
@@ -464,6 +474,9 @@ function GetModule(strURL)
     if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.indexOf("/app/faculty#myday/nurses-office") > 0)
+    {
+        return "Nurse's Office"
     } else if (strURL.indexOf("#directory/") > 0)
     {
         return "Directory"
@@ -485,6 +498,9 @@ function GetModule(strURL)
     } else if (strURL.substring(0, schoolURL.length+19) == schoolURL+"app/faculty#profile" && strURL.substring(schoolURL.length+28, schoolURL.length+35) == "medical")
     {
         return "Medical Profile";
+    } else if (strURL.indexOf("/app/faculty#profile/") > 0 && strURL.indexOf("/contactcard") > 0)
+    {
+        return "Medical Contact Card";
     } else if (strURL.indexOf("app/faculty#gradesrecord/") >= 0)
     {
         return "Record Grades";
@@ -573,7 +589,7 @@ function AddPageFooter()
         $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2021 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
-        var skipNotificationVersions = ["2.12.0","2.12.1","2.12.2","2.12.3","2.12.4"]
+        var skipNotificationVersions = []
         var oldVersion = GM_getValue("FirstRunVersionCheck")
 
         if (oldVersion != GM_info.script.version)
@@ -4203,6 +4219,131 @@ function EmailAdministrators(jNode)
             });
         }
     }, 500);
+}
+
+// -----------------------------------------[INDEX046]-------------------------------------
+// ------------------------------------Medical Visit Email---------------------------------
+// ----------------------------------------------------------------------------------------
+
+function EmailMedicalVisit(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+    const subject = "Note from the Nurse"
+
+    if (!$("#email-visit").length)
+    {
+        $(".modal-footer").append('<button class="btn btn-link" id="email-visit">Create Email</button>')
+    }
+
+    $("#email-visit").unbind().bind("click", function() {
+        var emails = [];
+
+        if ($(".bb-dialog-header").text().indexOf("Edit a visit") >= 0)
+        {
+            // Existing visit
+
+            // Get parent emails from contact card
+            localStorage.setItem("SaveParentEmailsString", "")
+            localStorage.setItem("SaveParentEmailsActive", 1)
+            var url = 'https://hanalani.myschoolapp.com/app/faculty#profile/'+GetID(window.location.href)+'/contactcard'
+            window.open(url)
+
+            var timer = setInterval(function() {
+                if (localStorage.getItem("SaveParentEmailsActive") == 0)
+                {
+                    clearInterval(timer)
+                    var emailString = localStorage.getItem("SaveParentEmailsString")
+                    var datetime = $("#Summary .row div:first").text()
+                    var name = $("label[for='Summary']").text()
+                    var reason = $("#MedicalVisitReasons").text()
+                    var assessment = $("#Assessment").text()
+                    var intervention = $("#Intervention").text()
+                    var outcome = $("#MedicalVisitOutcomeId").find("option:selected:not(:contains('-- Select --'))").text()
+
+                    var notes = $("#VisitNotes").text()
+
+                    console.log(datetime)
+                    console.log(name)
+                    console.log(reason)
+                    console.log(assessment)
+                    console.log(intervention)
+                    console.log(notes)
+
+                    var mailtoLink = "mailto:"+emailString
+
+                    var body = 'Medical Visit Recorded: '+datetime+'\n'+
+                        'Student: '+name+'\n'+
+                        'Reason: '+reason+'\n\n'+
+                        'Assessment:\n'+assessment+'\n\n'+
+                        'Intervention:\n'+intervention+'\n\n'+
+                        'Outcome:\n'+outcome+'\n\n'
+                    if (notes.length > 0)
+                        body += 'Notes:\n'+notes;
+
+                    body += '\n\n'
+
+                    mailtoLink += '&subject='+subject
+                    mailtoLink += '&body='+encodeURIComponent(body)
+
+                    document.location.href = mailtoLink
+                }
+            }, 500);
+        } else
+        {
+            // New visit
+            $(".vertical-align-top:contains('(Email)')").each(function() {
+                emails.push($(this).text().substring(0,$(this).text().indexOf(" (Email)")))
+            });
+            var emailString = emails.join(";")
+
+            var datetime = $("#Date").val() + " " + $("#TimeIn").val()
+            var name = $(".token-input-token:first-child").text().substring(0,$(".token-input-token:first-child").text().indexOf(" '"))
+            var reason = $("#ReasonList").find("option:selected:not(:contains('-- Select --'))").text()
+            if ($.isArray(reason))
+                reason = reason.join(" / ")
+            var assessment = $("#Assessment").val()
+            var intervention = $("#Intervention").val()
+            var outcome = $("#MedicalVisitOutcome").find("option:selected:not(:contains('-- Select --'))").text()
+            var notes = $("#Notes").text()
+
+            var mailtoLink = "mailto:"+emailString
+
+            var body = 'Medical Visit Recorded: '+datetime+'\n'+
+                'Student: '+name+'\n'+
+                'Reason: '+reason+'\n\n'+
+                'Assessment:\n'+assessment+'\n\n'+
+                'Intervention:\n'+intervention+'\n\n'+
+                'Outcome:\n'+outcome+'\n\n'
+            if (notes.length > 0)
+                body += 'Notes:\n'+notes;
+
+            body += '\n\n'
+
+            mailtoLink += '&subject='+subject
+            mailtoLink += '&body='+encodeURIComponent(body)
+
+            document.location.href = mailtoLink
+        }
+    });
+}
+
+function SaveParentEmails()
+{
+    console.log("Function: " + arguments.callee.name)
+    if (localStorage.getItem("SaveParentEmailsActive") == 1)
+    {
+        setTimeout(function() {
+            var emails = []
+            console.log($("div:contains('Parental Access')").closest("tr").find("[href^='mailto']").length)
+            $("div:contains('Parental Access')").closest("tr").find("[href^='mailto']").each(function() {
+                emails.push($(this).text())
+            })
+            var emailString = emails.join(";")
+            localStorage.setItem("SaveParentEmailsString", emailString)
+            localStorage.setItem("SaveParentEmailsActive", 0)
+            window.close()
+        }, 1000)
+    }
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
