@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.13.0] - 2021-09-14
+### Added
+- Medical visit email - create message in default email client with medical visit info. Works with new and existing visits.
+
 ## [2.12.6] - 2021-08-19
 ### Added
 - Email Administrators (LS) option added to Send Communication window
