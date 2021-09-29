@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.13.1
+// @version      2.14.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -11,6 +11,12 @@
 // @run-at       document-end
 // @require      https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js
 // @require      https://gist.github.com/raw/2625891/waitForKeyElements.js
+// @require      https://code.jquery.com/ui/1.12.1/jquery-ui.min.js
+// @resource     IMPORTED_CSS https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css
+// @require      https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js
+// @grant        GM.xmlHttpRequest
+// @connect      script.google.com
+// @connect      script.googleusercontent.com
 // ==/UserScript==
 
 /* Copyright (C) 2018-2021  Hanalani Schools
@@ -77,6 +83,7 @@
 [INDEX044] Directory Medical Link
 [INDEX045] Email Administrators
 [INDEX046] Medical Visit Email
+[INDEX047] Dialer
 [INDEX900] Misc. Helper Functions
 
 
@@ -246,6 +253,9 @@ Completed Mods:
 40 - Medical Visit Email
      Create message in default email client with medical visit info.
 
+41 - Dialer
+     Phone numbers open a popup dialer to connect a user's extension with the destination number.
+
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
 
@@ -321,6 +331,7 @@ function gmMain(){
             waitForKeyElements(".bb-btn-secondary", CreateRosterCheckboxes)
             waitForKeyElements(".delimiter-btn:first", EmailDelimiterDefault)
             EmailAllParentsOfStudent();
+            DialerInterval()
             break;
         case "Faculty-Roster":
             waitForKeyElements(".bb-page-heading", PostLinkRosterAcademics)
@@ -332,18 +343,21 @@ function gmMain(){
             waitForKeyElements(".delimiter-btn:first", EmailDelimiterDefault)
             waitForKeyElements(".copy-addresses", EmailAdministrators)
             EmailAllParentsOfStudent();
+            DialerInterval()
             break;
         case "Team Roster":
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
             waitForKeyElements(".bb-card-title",ConvertGradYearToGradeLevel)
             waitForKeyElements(".btn-contact-card:first", AddLinkToFacultyProgress)
             waitForKeyElements(".delimiter-btn:first", EmailDelimiterDefault)
+            DialerInterval()
         case "Other Roster":
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
             waitForKeyElements(".bb-card-title",ConvertGradYearToGradeLevel)
             waitForKeyElements(".bb-btn-secondary", CreateRosterCheckboxes)
             waitForKeyElements(".delimiter-btn:first", EmailDelimiterDefault)
             EmailAllParentsOfStudent();
+            DialerInterval()
             break;
         case "Manage Student Enrollment":
             waitForKeyElements("#LevelNum", EnrollInAll)
@@ -464,6 +478,7 @@ function gmMain(){
     // Fix Classes Menu Off Screen
     waitForKeyElements(".subnav", FixClassesMenuOffScreen)
 
+    waitForKeyElements(".userprofile", DialerInterval)
 }
 
 
@@ -4343,6 +4358,136 @@ function SaveParentEmails()
             localStorage.setItem("SaveParentEmailsActive", 0)
             window.close()
         }, 1000)
+    }
+}
+
+// -----------------------------------------[INDEX047]-------------------------------------
+// -------------------------------------------Dialer---------------------------------------
+// ----------------------------------------------------------------------------------------
+
+function LoadDialer()
+{
+    console.log("Function: " + arguments.callee.name)
+    $(":not(:has(*)):not(.phone-link):not(#dialer-number)").each(function() {
+        var rxNumber = $(this).text().match(/(\d{3}[-\.\s]??\d{3}[-\.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-\.\s]??\d{4}|\d{3}[-\.\s]??\d{4})/)
+        if ($(this).text().length < 35 && rxNumber)
+        {
+            $(this).addClass("phone-link")
+            $(this).css("color","#007ca6")
+            $(this).css("text-decoration","underline")
+            $(this).css("cursor","pointer")
+        }
+    });
+    waitForKeyElements("#on-mod-suite-footer", InsertDialerInterface)
+
+    $(".phone-link").unbind().bind("click", function() {
+        ShowDialer(this)
+    });
+}
+
+function ShowDialer(elm)
+{
+    var ext = localStorage.getItem("DialerExt")
+    $("#dialer-ext").val(ext)
+    $("#dialer-number").text(GetCleanPhoneNumber($(elm).text().match(/(\d{3}[-\.\s]??\d{3}[-\.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-\.\s]??\d{4}|\d{3}[-\.\s]??\d{4})/)[0]))
+    $("#dialer-container").show()
+    $("#dialer-container").position({
+        my: "top",
+        at: "bottom",
+        of: elm
+    })
+    $("#dialer-call").text("Call").prop("disabled", false);
+}
+
+function InsertDialerInterface()
+{
+    if ($("#dialer-container").length == 0)
+    {
+        $("#on-mod-suite-footer").after('<div id="dialer-container" style="display:none; border-style: ridge;border-radius: 16px;border: 1px solid;background-color: #E3F2FD;height: 150px;width: 150px;font-size: smaller;padding: 8px;"><div id="dialer-heading" style="display: flex;justify-content: center;font-weight: bold;padding-bottom: 6px;"><span>Dialer</span><div class="help-icon" style="font-size: inherit;position: absolute;right: 6px;display: flex;justify-content: center;align-items: center;font-family: sans-serif;font-weight: 700;width: 2.5ex;height: 2.5ex;font-size: 12px;border-radius: 100%;box-sizing: content-box;cursor: default;" title="Phone system will dial your extension first. After you pick up, the destination number will be dialed automatically.">?</div></div>Ext: <input type="number" min="100" max="999" id="dialer-ext" style="width:60px;"><br><div id="dialer-remember-container"><input type="checkbox" id="dialer-remember"><label for="dialer-remember">Remember</label></div>to call: <span id="dialer-number" style="font-weight: bold;"></span><br><div id="dialer-buttons" style="display: flex;justify-content: space-evenly;padding-top: 8px;"><button id="dialer-call">Call</button><button id="dialer-cancel">Cancel</button></div></div>')
+
+        $("#dialer-call").bind("click", function() {
+            $("#dialer-call").text("Calling...").prop("disabled", true);
+            var ext = $("#dialer-ext").val()
+            if (ext != "")
+            {
+                DialerCall(ext, $("#dialer-number").text())
+            }
+
+            if ($("#dialer-remember").is(":checked"))
+            {
+                localStorage.setItem("DialerExt", ext)
+            }
+        })
+
+        $("#dialer-cancel").unbind().bind("click", function() {
+            $("#dialer-container").hide();
+        });
+    }
+}
+
+function DialerCall(ext, number)
+{
+    var url = localStorage.getItem("dialer-url")+'&ext='+ext+'&number='+number+'&callerid=ONModSuite'
+    GM.xmlHttpRequest({
+        method: "GET",
+        url: url,
+        onreadystatechange: function(response) {
+            if (response.readyState == 4)
+            {
+                if (response.status == 200)
+                {
+                    if (this.responseText == "Success")
+                    {
+                        toastr.success("Call initiated successfully")
+                        $("#dialer-call").text("Call").prop("disabled", false)
+                        $("#dialer-container").hide(2000)
+                        return;
+                    }
+                }
+                toastr.error("Dialer error")
+                $("#dialer-call").text("Call").prop("disabled", false)
+            }
+        }
+    })
+}
+
+function DialerInterval()
+{
+    setTimeout(function() {
+        LoadDialer()
+        setTimeout(LoadDialer, 5000)
+    }, 5000);
+}
+
+function GetCleanPhoneNumber(number)
+{
+    var cleaned = number;
+
+    // Remove extension
+    cleaned = cleaned.replace(/x(.*)/g, "");
+
+    // Remove non-numeric characters
+    cleaned = cleaned.replace(/\D+/g, "");
+
+    // Remove leading 1
+    if (cleaned.substr(0,1) == "1")
+    {
+        cleaned = cleaned.substring(1);
+    }
+
+    // If 7-digit, add area code
+    if (cleaned.length == 7)
+    {
+        cleaned = "808"+cleaned
+    }
+
+    if (cleaned.length == 10)
+    {
+        return cleaned;
+    } else
+    {
+        // Not 10 digits, invalid
+        return "";
     }
 }
 
