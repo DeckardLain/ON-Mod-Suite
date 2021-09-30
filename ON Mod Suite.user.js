@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.14.0
+// @version      2.14.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -2276,6 +2276,8 @@ function GenerateSettingsPage(jNode)
 
     // Load school-specific settings
     localStorage.setItem("math-averages-api-url", $("#math-averages-api-url").val())
+    localStorage.setItem("dialer-url", $("#dialer-url").val())
+
 
     // Build Page
     document.title = "ON Mod Suite Settings"
