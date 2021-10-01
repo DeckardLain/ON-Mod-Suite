@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.14.2] - 2021-10-01
+### Changed
+- Enabled dialer on Enrollment Management profile pages.
+
 ## [2.14.1] - 2021-09-29
 ### Fixed
 - Dialer not getting API address from settings page.
