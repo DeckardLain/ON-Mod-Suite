@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.14.1
+// @version      2.14.2
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -479,6 +479,7 @@ function gmMain(){
     waitForKeyElements(".subnav", FixClassesMenuOffScreen)
 
     waitForKeyElements(".userprofile", DialerInterval)
+    waitForKeyElements(".candidate-header", DialerInterval)
 }
 
 
@@ -604,7 +605,7 @@ function AddPageFooter()
         $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2021 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
-        var skipNotificationVersions = []
+        var skipNotificationVersions = ["2.14.0","2.14.1"]
         var oldVersion = GM_getValue("FirstRunVersionCheck")
 
         if (oldVersion != GM_info.script.version)
