@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.14.2
+// @version      2.14.3
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -443,6 +443,10 @@ function gmMain(){
             break;
         case "Medical Contact Card":
             waitForKeyElements("#contact-relationship", SaveParentEmails, true)
+            break;
+        case "Medical Contact Card Group":
+            DialerInterval()
+            break;
     }
 
     // People Finder Quick Select
@@ -480,6 +484,7 @@ function gmMain(){
 
     waitForKeyElements(".userprofile", DialerInterval)
     waitForKeyElements(".candidate-header", DialerInterval)
+    waitForKeyElements(".student-header", DialerInterval)
 }
 
 
@@ -493,6 +498,9 @@ function GetModule(strURL)
     } else if (strURL.indexOf("/app/faculty#myday/nurses-office") > 0)
     {
         return "Nurse's Office"
+    } else if (strURL.indexOf("medical-contactcard-group/") > 0)
+    {
+        return "Medical Contact Card Group"
     } else if (strURL.indexOf("#directory/") > 0)
     {
         return "Directory"
@@ -605,7 +613,7 @@ function AddPageFooter()
         $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2021 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
-        var skipNotificationVersions = ["2.14.0","2.14.1"]
+        var skipNotificationVersions = ["2.14.0","2.14.1","2.14.2"]
         var oldVersion = GM_getValue("FirstRunVersionCheck")
 
         if (oldVersion != GM_info.script.version)
