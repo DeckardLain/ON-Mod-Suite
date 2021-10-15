@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.14.3] - 2021-10-15
+### Changed
+- Dialer added to medical contact card and student headers.
+
 ## [2.14.2] - 2021-10-01
 ### Changed
 - Enabled dialer on Enrollment Management profile pages.
