@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.15.0] - 2021-12-15
+### Added
+- Load and view past grades when recording grades.
+
 ## [2.14.3] - 2021-10-15
 ### Changed
 - Dialer added to medical contact card and student headers.
