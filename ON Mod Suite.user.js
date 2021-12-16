@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.14.3
+// @version      2.15.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -84,6 +84,7 @@
 [INDEX045] Email Administrators
 [INDEX046] Medical Visit Email
 [INDEX047] Dialer
+[INDEX048] Grade History
 [INDEX900] Misc. Helper Functions
 
 
@@ -256,6 +257,9 @@ Completed Mods:
 41 - Dialer
      Phone numbers open a popup dialer to connect a user's extension with the destination number.
 
+42 - Grade History
+     When recording grades, click Load Past Grades to display past quarter(s) grades for reference.
+
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
 
@@ -412,6 +416,7 @@ function gmMain(){
             break;
         case "Record Grades":
             waitForKeyElements(".ch", EnterGradesByClassTextboxSize)
+            waitForKeyElements(".ddlb-label", GradeHistory, true)
             break;
         case "Medical Profile":
             waitForKeyElements(".bb-tile-content", FixImmunizationCollapse)
@@ -525,7 +530,7 @@ function GetModule(strURL)
     } else if (strURL.indexOf("/app/faculty#profile/") > 0 && strURL.indexOf("/contactcard") > 0)
     {
         return "Medical Contact Card";
-    } else if (strURL.indexOf("app/faculty#gradesrecord/") >= 0)
+    } else if (strURL.indexOf("/faculty#gradesrecord/") >= 0)
     {
         return "Record Grades";
     } else if (strURL == schoolURL+"podium/default.aspx?t=35230")
@@ -613,7 +618,7 @@ function AddPageFooter()
         $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2021 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
-        var skipNotificationVersions = ["2.14.0","2.14.1","2.14.2"]
+        var skipNotificationVersions = []
         var oldVersion = GM_getValue("FirstRunVersionCheck")
 
         if (oldVersion != GM_info.script.version)
@@ -2286,6 +2291,7 @@ function GenerateSettingsPage(jNode)
     // Load school-specific settings
     localStorage.setItem("math-averages-api-url", $("#math-averages-api-url").val())
     localStorage.setItem("dialer-url", $("#dialer-url").val())
+    localStorage.setItem("grade-history-url", $("#grade-history-url").val())
 
 
     // Build Page
@@ -4500,6 +4506,212 @@ function GetCleanPhoneNumber(number)
         // Not 10 digits, invalid
         return "";
     }
+}
+
+// -----------------------------------------[INDEX048]-------------------------------------
+// ---------------------------------------Grade History------------------------------------
+// ----------------------------------------------------------------------------------------
+
+function GradeHistory(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+
+    $("#header").find(".ddlb-container").prepend('<button id="load-past-grades" class="btn btn-default" style="float:right;">Load Past Grades</button>')
+
+    $("#load-past-grades").unbind().bind("click", LoadGradeHistory)
+}
+
+function LoadGradeHistory()
+{
+    console.log("Function: " + arguments.callee.name)
+
+    var selectedClass = $("#header").find(".active").find("a")
+    var groupID = selectedClass.attr("href").substring(selectedClass.attr("href").indexOf("|")+1)
+    $("#load-past-grades").text("Loading...").prop("disabled", true)
+
+    if (selectedClass.text().substring(0,9) == "K5 Skills" || selectedClass.text().substring(0,19) == "Character & Conduct")
+    {
+        // Assessment format
+        if (sessionStorage.getItem("grade-history-group-id") == groupID)
+        {
+            // Cached
+            LoadStudentAssessmentGrades()
+        } else
+        {
+            if (selectedClass.text().substring(0,2) == "K5")
+            {
+                GetGradeHistory(groupID, "K5")
+            } else
+            {
+                GetGradeHistory(groupID, "CC")
+            }
+        }
+
+    } else
+    {
+        // Standard format
+        if (sessionStorage.getItem("grade-history-group-id") == groupID)
+        {
+            LoadStandardGrades()
+        } else
+        {
+            GetGradeHistory(groupID, "ST")
+        }
+    }
+}
+
+function LoadStudentAssessmentGrades()
+{
+    if ($(".StudentList").find(".active").attr("id") != undefined)
+    {
+        var studentID = $(".StudentList").find(".active").attr("id")
+        var data = JSON.parse(sessionStorage.getItem("grade-history-data"))
+        var gradePlan = $("#gpddlb option:selected").text()
+        var currentQuarter = gradePlan.substr(gradePlan.indexOf(" - ")+4,1)
+        var headersAdded = false;
+        $(".grade-history").remove()
+
+        $("#AssesmentGrades").find("tr").each(function() {
+            if ($(this).find(".assessment-type-description").length && !$(this).text().includes("Comment"))
+            {
+                // Category header - add row below with marking column headings
+                var html = '<tr class="gr-field grade-history"><td></td>'
+                for (var i = 1; i <= currentQuarter; i++)
+                {
+                    html += '<td style="width:27px;text-align:center;">Q'+i+'</td>'
+                }
+                html += '</tr>'
+                $(this).after(html)
+                headersAdded = true;
+            } else if ($(this).find(".assessment-grade[data-category-use!='c']").length)
+            {
+                // Grade
+                var gradeDesc = $(this).find("td:first").text().trim()
+                if (gradeDesc.substr(0,1) == "*")
+                    gradeDesc = gradeDesc.substr(1)
+
+                for (var i = 1; i < currentQuarter; i++)
+                {
+                    $(this).children("td:first").after('<td class="grade-history grade-cell" style="text-align:center;border:1px dashed black;">'+GetAssessmentGrade(data,studentID,gradeDesc,i)+'</td>')
+                }
+            }
+        });
+
+        if (!headersAdded)
+        {
+            var html = '<tr class="gr-field grade-history"><td></td>'
+            for (var i = 1; i <= currentQuarter; i++)
+            {
+                html += '<td style="width:25px;text-align:center;">Q'+i+'</td>'
+            }
+            html += '</tr>'
+            $("#AssesmentGrades").find("tbody").prepend(html);
+        }
+    }
+
+    $("#load-past-grades").text("Load Past Grades").prop("disabled", false)
+}
+
+function GetAssessmentGrade(data,studentID,gradeDesc,quarter)
+{
+    var list = data["q"+quarter]
+    for (var i = 0; i < list.length; i++)
+    {
+        if (list[i][1] == studentID && list[i][2].trim() == gradeDesc)
+        {
+            return list[i][3];
+        }
+    }
+    return "";
+}
+
+function GetStandardGrade(data,studentID,quarter)
+{
+    for (var i = 0; i < data.length; i++)
+    {
+        if (data[i][1] == studentID && data[i][2] == "Q"+quarter)
+        {
+            switch (data[i][4].substr(0,1))
+            {
+                case "S":
+                case "N":
+                case "U":
+                    return data[i][4];
+                default:
+                    return data[i][3];
+            }
+        }
+    }
+}
+
+function LoadStandardGrades()
+{
+    var data = JSON.parse(sessionStorage.getItem("grade-history-data"))
+    var gradePlan = $("#gpddlb option:selected").text()
+    var currentQuarter = gradePlan.substr(gradePlan.indexOf(" - ")+4,1)
+    $(".grade-history").remove()
+
+    // Headers
+    var html = "";
+    for (var i = 1; i < currentQuarter; i++)
+    {
+        html += '<td class="bold grade-history" style="vertical-align:bottom;text-align:center;">Q'+i+'</td>'
+    }
+    $("table tr:first td:first").after(html)
+
+    // Students
+    $("table").find("tr").each(function() {
+        var rowLabel = $(this).find("td").eq(0)
+        if (rowLabel.hasClass("student"))
+        {
+            var studentID = rowLabel.data("student-id")
+            for (var i = 1; i < currentQuarter; i++)
+            {
+                rowLabel.after('<td class="grade-history" style="vertical-align:middle;text-align:center;">'+GetStandardGrade(data,studentID,i)+'</td>')
+            }
+        }
+    });
+
+    $("#load-past-grades").text("Load Past Grades").prop("disabled", false)
+}
+
+function GetGradeHistory(groupID, type)
+{
+    var url = localStorage.getItem("grade-history-url")+"&groupID="+groupID+"&type="+type
+
+    GM.xmlHttpRequest({
+        method: "GET",
+        url: url,
+        onreadystatechange: function(response) {
+            if (response.readyState == 4)
+            {
+                if (response.status == 200)
+                {
+                    if (this.responseText.substring(0,6) == "Failed")
+                    {
+                        toastr.error(this.responseText)
+                    } else
+                    {
+                        sessionStorage.setItem("grade-history-data", this.responseText)
+                        sessionStorage.setItem("grade-history-group-id", groupID)
+                        if (type == "ST")
+                        {
+                            LoadStandardGrades()
+                        } else
+                        {
+                            LoadStudentAssessmentGrades()
+                        }
+                        return;
+                    }
+                } else
+                {
+                    toastr.error("Error loading past grades")
+                }
+
+                $("#load-past-grades").text("Load Past Grades").prop("disabled", false)
+            }
+        }
+    })
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
