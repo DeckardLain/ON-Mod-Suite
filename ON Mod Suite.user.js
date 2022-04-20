@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.15.0
+// @version      2.15.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -10,6 +10,7 @@
 // @grant        GM_setClipboard
 // @run-at       document-end
 // @require      https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js
 // @require      https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @require      https://code.jquery.com/ui/1.12.1/jquery-ui.min.js
 // @resource     IMPORTED_CSS https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css
@@ -85,6 +86,7 @@
 [INDEX046] Medical Visit Email
 [INDEX047] Dialer
 [INDEX048] Grade History
+[INDEX049] Financial Aid Misc
 [INDEX900] Misc. Helper Functions
 
 
@@ -300,8 +302,10 @@ function gmMain(){
     var strURL = window.location.href
 
     fixURL()
+    var module = GetModule(strURL);
+    console.log("Module: "+module);
 
-    switch(GetModule(strURL))
+    switch(module)
     {
         case "Settings":
             waitForKeyElements(".conDefault b:first", GenerateSettingsPage, true)
@@ -320,6 +324,7 @@ function gmMain(){
         case "Enrollment Management":
             waitForKeyElements("#CandidateName", PostLinkEnrollmentManagement)
             waitForKeyElements(".bb-page-heading", PostLinkEnrollmentManagement)
+            waitForKeyElements("#paperwork", FinancialAidFormsDate);
             break;
         case "Faculty":
             waitForKeyElements(".bb-page-heading", PostLinkFaculty)
@@ -457,6 +462,7 @@ function gmMain(){
     // People Finder Quick Select
     waitForKeyElements(".people-finder-search-box", PeopleFinderQuickSelect)
     waitForKeyElements("sis-people-finder", PeopleFinderQuickSelect)
+    waitForKeyElements("edu-people-finder", PeopleFinderQuickSelect)
 
     // Remove Connect5 Info
     waitForKeyElements(".emergencyemaildetail p", RemoveConnect5Info)
@@ -1934,14 +1940,42 @@ function CreateClassCheckboxes()
         // Create Select All checkbox
         $(".schedule-list table thead tr th").eq(2).append('<div align="right"><label><input type="checkbox" class="Select_all">Select All</label></div>');
 
+
+        var classesInGrid = [];
+        var classesInMenu = [];
+        var classesInMenuNames = [];
+
+        $("#group-header-Classes").closest("li").find(".group-page-link-1").each(function() {
+            var classURL = $(this).attr("href");
+            var start = classURL.indexOf("#academicclass/")+15;
+            var end = classURL.indexOf("/",start+1);
+            classesInMenu.push(classURL.substring(start,end));
+            classesInMenuNames.push($(this).text());
+        });
+        console.log(classesInMenuNames);
+
         // Create checkboxes for each class
         $("#accordionSchedules").find("[href]").not(".all-present").each(function(index){
             input = document.createElement("input");
             input.type = "checkbox";
             input.className = "checkbox-class";
             $(this).before(input);
-//            $(this).after('<a id="test" href="javascript:void(0)">Test</a>')
+
+            var classURL = $(this).attr("href");
+            var start = classURL.indexOf("#academicclass/")+15;
+            var end = classURL.indexOf("/",start+1);
+            classesInGrid.push(classURL.substring(start,end));
         });
+
+        // Add classes that aren't scheduled
+        for (var i = 0; i < classesInMenu.length; i++)
+        {
+            if (!classesInGrid.includes(classesInMenu[i]))
+            {
+                var html = '<tr><td data-heading="Time">None</td><td data-heading="Block">None</td><td data-heading="Activity"><h4><input type="checkbox" class="checkbox-class"><a href="#academicclass/'+classesInMenu[i]+'/0/bulletinboard">'+classesInMenuNames[i]+'</a></h4></td><td></td><td></td></tr>'
+                $("#accordionSchedules").append(html);
+            }
+        }
 
         // Click event for Select All, to check/uncheck all students
         $("input[type='checkbox'].Select_all").bind("click", function(){
@@ -1987,6 +2021,24 @@ function EmailSelectedClasses()
         localStorage.setItem("SaveRosterEmailsFirstClass", "1");
         localStorage.setItem("SaveRosterEmailsClassDone", "1");
 
+        switch (localStorage.getItem("EmailDelimiter"))
+        {
+            case 0:
+                var delim = ",";
+                break;
+            case 1:
+                var delim = ";";
+                break;
+            case 2:
+                var delim = " ";
+                break;
+            case 3:
+                var delim = "\r\n";
+                break;
+            default:
+                var delim = ";";
+        }
+
         var timerID = setInterval(function(){
             var url
             var mailtoLink
@@ -2015,7 +2067,7 @@ function EmailSelectedClasses()
                     emails = localStorage.getItem("SaveRosterEmailsAddresses")
 
                     // Remove duplicates from emails
-                    var emailArray = emails.split("|")
+                    var emailArray = emails.split(delim)
                     var uniqueEmails = [];
                     $.each(emailArray, function(i, el){
                         if($.inArray(el, uniqueEmails) === -1) uniqueEmails.push(el);
@@ -2026,7 +2078,7 @@ function EmailSelectedClasses()
                     emails = ""
                     while (currEmail < uniqueEmails.length)
                     {
-                        emails = emails + uniqueEmails[currEmail] + ";"
+                        emails = emails + uniqueEmails[currEmail] + delim
                         if (emails.length > 1500)
                         {
                             emails = emails.substring(0, emails.length - uniqueEmails[currEmail].length - 2)
@@ -2106,9 +2158,25 @@ function GrabEmails()
                 localStorage.setItem("SaveRosterEmailsFirstClass", "0");
             } else
             {
-                str = localStorage.getItem("SaveRosterEmailsAddresses") + "| " + $("#email-list-textarea").text()
+                switch (localStorage.getItem("EmailDelimiter"))
+                {
+                    case 0:
+                        var delim = ",";
+                        break;
+                    case 1:
+                        var delim = ";";
+                        break;
+                    case 2:
+                        var delim = " ";
+                        break;
+                    case 3:
+                        var delim = "\r\n";
+                        break;
+                    default:
+                        var delim = ";";
+                }
+                str = localStorage.getItem("SaveRosterEmailsAddresses") + delim + $("#email-list-textarea").text()
             }
-            str = str.replace(/,/g, "|")  // Commas and semicolons are not allowed in cookie values
             localStorage.setItem("SaveRosterEmailsAddresses", str)
             localStorage.setItem("SaveRosterEmailsClassDone", "1")
             window.close()
@@ -3887,16 +3955,27 @@ function EmailDelimiterDefault(jNode)
     // If delimiter was changed previously, select the same option
     if (lastUsedOption != null)
     {
-        var event = document.createEvent("Event")
-        event.initEvent("click", true, false)
-        $("[data-delimiter-value='"+lastUsedOption+"']")[0].dispatchEvent(event)
+        SetEmailDelimiter(lastUsedOption);
     }
 
     // On change, save delimiter option to local storage
     $("[data-delimiter-value]").bind("click", function(){
-        console.log($(this).attr("data-delimiter-value"))
         localStorage.setItem("EmailDelimiter", $(this).attr("data-delimiter-value"))
     });
+}
+
+function SetEmailDelimiter(lastUsedOption)
+{
+    console.log("Function: " + arguments.callee.name)
+    if ($("#email-list-textarea").text().length == 0)
+    {
+        setTimeout(SetEmailDelimiter, 100, lastUsedOption);
+    } else
+    {
+        var event = document.createEvent("Event")
+        event.initEvent("click", true, false)
+        $("[data-delimiter-value='"+lastUsedOption+"']")[0].dispatchEvent(event)
+    }
 }
 
 // -----------------------------------------[INDEX039]-------------------------------------
@@ -4712,6 +4791,25 @@ function GetGradeHistory(groupID, type)
             }
         }
     })
+}
+
+// -----------------------------------------[INDEX049]-------------------------------------
+// -------------------------------------Financial Aid Misc---------------------------------
+// ----------------------------------------------------------------------------------------
+
+function FinancialAidFormsDate()
+{
+    console.log("Function: " + arguments.callee.name);
+
+    $("#paperwork").unbind().bind("change", function() {
+        if ($("#paperwork").is(":checked"))
+        {
+            $("#PaperworkDate").val(moment().format("M/D/YYYY"));
+            var event = document.createEvent("Event")
+            event.initEvent("change", true, false)
+            $("#PaperworkDate")[0].dispatchEvent(event)
+        }
+    });
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
