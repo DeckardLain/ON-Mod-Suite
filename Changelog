@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.15.1] - 2022-04-20
+### Added
+- Financial Aid - Automatically set current date when selecting Financial Aid Forms Received.
+- Schedule & Performance - Add classes that aren't scheduled to the list so they can be selected for emailing.
+### Fixed
+- Inconsistent behavior with email delimiters.
+
 ## [2.15.0] - 2021-12-15
 ### Added
 - Load and view past grades when recording grades.
