@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.12.6] - 2022-04-25
+### Fixed
+- People Finder Quick Select not working due to change on Blackbaud's end.
+
 ## [2.12.5] - 2021-05-24
 ### Fixed
 - Gradebook link on assignments page fixed by Blackbaud, so this script caused a broken link.
