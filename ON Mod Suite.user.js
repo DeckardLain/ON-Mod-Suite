@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.12.5
+// @version      2.12.6
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
@@ -386,6 +386,7 @@ function gmMain(){
     // People Finder Quick Select
     waitForKeyElements(".people-finder-search-box", PeopleFinderQuickSelect)
     waitForKeyElements("sis-people-finder", PeopleFinderQuickSelect)
+    waitForKeyElements("edu-people-finder", PeopleFinderQuickSelect)
 
     // Page footer
     waitForKeyElements("#site-footer-fixed", AddPageFooter)
