@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.15.2] - 2022-08-04
+### Fixed
+- Roster student count not identifying teachers.
+
 ## [2.15.1] - 2022-04-20
 ### Added
 - Financial Aid - Automatically set current date when selecting Financial Aid Forms Received.
