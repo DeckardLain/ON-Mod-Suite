@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.15.1
+// @version      2.15.2
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -624,7 +624,7 @@ function AddPageFooter()
         $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2021 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
-        var skipNotificationVersions = []
+        var skipNotificationVersions = ["2.15.1"]
         var oldVersion = GM_getValue("FirstRunVersionCheck")
 
         if (oldVersion != GM_info.script.version)
@@ -1040,7 +1040,7 @@ function AddRosterStudentCount(jNode)
     console.log("Function: " + arguments.callee.name)
     var memberCount = $("#roster-count").text();
     var teacherCount = 0;
-/*
+
     var nonStudentConditions = ["Teacher", "Co-Teacher", "Assistant Teacher", "Activity Leader", "Owner", "Coach"]
 
     $(".bb-card-title").each(function(index){
@@ -1050,19 +1050,12 @@ function AddRosterStudentCount(jNode)
            teacherCount++;
        }
     });
-*/
+
     if (!($("#RosterCardContainer").length))
     {
         memberCount = $("h4.pull-left").text();
         memberCount = memberCount.replace(" Members", "");
     }
-
-    $(".bb-btn-secondary").next().each(function(index){
-        if ($(this).find(".bb-dropdown-item").length == 1)
-        {
-            teacherCount++;
-        }
-    });
 
     var studentCount = memberCount - teacherCount;
 
