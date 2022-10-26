@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.12.6
+// @version      2.12.7
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
@@ -345,7 +345,7 @@ function gmMain(){
             waitForKeyElements(".bb-tile-content-section:first", OfficialNotesImprovements)
             break;
         case "Create Distribution Group":
-            waitForKeyElements("[style='height:75px;width:200px;visibility:visible !important;']", IncreaseDistributionGroupListBoxSize)
+            waitForKeyElements("[style='height:75px;max-width:900px;visibility:visible !important;']", IncreaseDistributionGroupListBoxSize)
             waitForKeyElements("#L_c1i0_cb143638_ctl12_lstResult", AddUserIDsToList)
             break;
         case "Manage Student Enrollments Promote":
@@ -2716,7 +2716,7 @@ function EmailFromAdvancedListGatherAndSend()
 function IncreaseDistributionGroupListBoxSize(jNode)
 {
     console.log("Function: " + arguments.callee.name)
-    jNode.css({"height": "200px", "width": "400px"});
+    jNode.css({"height": "200px"});
 }
 
 function AddUserIDsToList(jNode)
