@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.15.2
+// @version      2.16.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -20,7 +20,7 @@
 // @connect      script.googleusercontent.com
 // ==/UserScript==
 
-/* Copyright (C) 2018-2021  Hanalani Schools
+/* Copyright (C) 2018-2022  Hanalani Schools
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -87,6 +87,7 @@
 [INDEX047] Dialer
 [INDEX048] Grade History
 [INDEX049] Financial Aid Misc
+[INDEX050] EMS Process DOB
 [INDEX900] Misc. Helper Functions
 
 
@@ -262,6 +263,9 @@ Completed Mods:
 42 - Grade History
      When recording grades, click Load Past Grades to display past quarter(s) grades for reference.
 
+43 - DOB/Age in EMS Process
+     Add date of birth and age to Enrollment Management Process (Applications/Needs Checklist) pages
+
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
 
@@ -401,7 +405,7 @@ function gmMain(){
             waitForKeyElements(".bb-tile-content-section:first", OfficialNotesImprovements)
             break;
         case "Create Distribution Group":
-            waitForKeyElements("[style='height:75px;width:200px;visibility:visible !important;']", IncreaseDistributionGroupListBoxSize)
+            waitForKeyElements("[style='height:75px;max-width:900px;visibility:visible !important;']", IncreaseDistributionGroupListBoxSize)
             waitForKeyElements("#L_c1i0_cb143638_ctl12_lstResult", AddUserIDsToList)
             break;
         case "Edit Registry":
@@ -457,6 +461,12 @@ function gmMain(){
         case "Medical Contact Card Group":
             DialerInterval()
             break;
+        case "ProcessChecklist":
+            AddDOBCheckList();
+            break;
+        case "ProcessApplications":
+            AddDOBApplication();
+            break;
     }
 
     // People Finder Quick Select
@@ -478,7 +488,7 @@ function gmMain(){
     // WYSIWYG Editor Improvements
     if (strURL != schoolURL+"podium/default.aspx?t=52781")
     {
-        waitForKeyElements("#tinymce", EditorImprovements, false, "iframe")
+        waitForKeyElements(".tox-tinymce", EditorImprovements, false)
     }
 
     // Chevron Down
@@ -506,6 +516,12 @@ function GetModule(strURL)
     if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.includes("#process/checklist"))
+    {
+        return "ProcessChecklist"
+    } else if (strURL.includes("#process/applications"))
+    {
+        return "ProcessApplications"
     } else if (strURL.indexOf("/app/faculty#myday/nurses-office") > 0)
     {
         return "Nurse's Office"
@@ -621,10 +637,10 @@ function AddPageFooter()
     console.log("Function: " + arguments.callee.name)
     if (window.location.href.substring(window.location.href.length-21-settingsResourceBoardID.length) != "#resourceboarddetail/"+settingsResourceBoardID)
     {
-        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2021 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
+        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2022 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
-        var skipNotificationVersions = ["2.15.1"]
+        var skipNotificationVersions = []
         var oldVersion = GM_getValue("FirstRunVersionCheck")
 
         if (oldVersion != GM_info.script.version)
@@ -2829,41 +2845,45 @@ function EditorImprovements(jNode)
     // Default Size
     if (localStorage.getItem("EditorDefaultSize") > 0)
     {
-        $(jNode).siblings("head").append('<style>body {font-size:' + localStorage.getItem("EditorDefaultSize") + 'px;}</style>')
+        //$(jNode).siblings("head").append('<style>body {font-size:' + localStorage.getItem("EditorDefaultSize") + 'px;}</style>')
+        $(jNode).find("head").append('<style>body {font-size:' + localStorage.getItem("EditorDefaultSize") + 'px;}</style>')
     }
 
     // Default Height
     if (localStorage.getItem("EditorBoxHeight") > 0)
     {
-        $("iframe").css("height", localStorage.getItem("EditorBoxHeight") + 'px')
+        $(jNode).css("height", localStorage.getItem("EditorBoxHeight") + 'px')
     }
 
     // Expand Editor Size
-    if (!$("#expand-" + $("iframe").attr("id")).length)
+    if (!$(jNode).siblings(".expand-editor").length)
     {
-        if ($("iframe").closest(".row").length)
-        {
-            $("iframe").closest(".row").append('<div id="expand-' + $("iframe").attr("id") + '" align="right"><a href="javascript:void(0)" class="expand-editor"><font size="-1">&#9660Expand&#9660</font></a></div>')
-        } else if ($("iframe").closest(".form-group").length)
-        {
-            $("iframe").closest(".form-group").append('<div id="expand-' + $("iframe").attr("id") + '" align="right"><a href="javascript:void(0)" class="expand-editor"><font size="-1">&#9660Expand&#9660</font></a></div>')
-        } else
-        {
-            $("iframe").closest("tr").after('<div id="expand-' + $("iframe").attr("id") + '" align="right"><a href="javascript:void(0)" class="expand-editor"><font size="-1">&#9660Expand&#9660</font></a></div>')
-        }
+//         if ($("iframe").closest(".row").length)
+//         {
+//             $("iframe").closest(".row").append('<div id="expand-' + $("iframe").attr("id") + '" align="right"><a href="javascript:void(0)" class="expand-editor"><font size="-1">&#9660Expand&#9660</font></a></div>')
+//         } else if ($("iframe").closest(".form-group").length)
+//         {
+//             $("iframe").closest(".form-group").append('<div id="expand-' + $("iframe").attr("id") + '" align="right"><a href="javascript:void(0)" class="expand-editor"><font size="-1">&#9660Expand&#9660</font></a></div>')
+//         } else
+//         {
+//             $("iframe").closest("tr").after('<div id="expand-' + $("iframe").attr("id") + '" align="right"><a href="javascript:void(0)" class="expand-editor"><font size="-1">&#9660Expand&#9660</font></a></div>')
+//         }
+        $(jNode).after('<div align="right"><a href="javascript:void(0)" class="expand-editor"><font size="-1">&#9660Expand&#9660</font></a></div>')
     }
 
     $(".expand-editor").unbind("click").bind("click", function(){
-        if ($(this).closest(".row").length)
-        {
-            $(this).closest(".row").find(".tox-tinymce").css("height", +$(this).closest(".row").find("iframe").css("height").substr(0, $(this).closest(".row").find("iframe").css("height").length-2)+100 + "px")
-        } else if ($("iframe").closest(".form-group").length)
-        {
-            $(this).closest(".form-group").find("iframe").css("height", +$(this).closest(".form-group").find("iframe").css("height").substr(0, $(this).closest(".form-group").find("iframe").css("height").length-2)+100 + "px")
-        } else
-        {
-            $(this).closest("tr").find("iframe").css("height", +$(this).closest("tr").find("iframe").css("height").substr(0, $(this).closest("tr").find("iframe").css("height").length-2)+100 + "px")
-        }
+//         if ($(this).closest(".row").length)
+//         {
+//             $(this).closest(".row").find(".tox-tinymce").css("height", +$(this).closest(".row").find("iframe").css("height").substr(0, $(this).closest(".row").find("iframe").css("height").length-2)+100 + "px")
+//         } else if ($("iframe").closest(".form-group").length)
+//         {
+//             $(this).closest(".form-group").find("iframe").css("height", +$(this).closest(".form-group").find("iframe").css("height").substr(0, $(this).closest(".form-group").find("iframe").css("height").length-2)+100 + "px")
+//         } else
+//         {
+//             $(this).closest("tr").find("iframe").css("height", +$(this).closest("tr").find("iframe").css("height").substr(0, $(this).closest("tr").find("iframe").css("height").length-2)+100 + "px")
+//         }
+        var editorBox = $(this).closest("div").prev();
+        editorBox.css("height", +editorBox.css("height").substr(0, editorBox.css("height").length-2)+100+"px");
     });
 }
 
@@ -3144,7 +3164,7 @@ function EmailFromAdvancedListGatherAndSend()
 function IncreaseDistributionGroupListBoxSize(jNode)
 {
     console.log("Function: " + arguments.callee.name)
-    jNode.css({"height": "200px", "width": "400px"});
+    jNode.css({"height": "200px"});
 }
 
 function AddUserIDsToList(jNode)
@@ -4805,6 +4825,100 @@ function FinancialAidFormsDate()
     });
 }
 
+// -----------------------------------------[INDEX050]-------------------------------------
+// ---------------------------------------EMS Process DOB----------------------------------
+// ----------------------------------------------------------------------------------------
+var processDOB;
+var processAge;
+function AddDOBCheckList(jNode)
+{
+    console.log("Function: " + arguments.callee.name);
+
+    var origOpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function() {
+        this.addEventListener('load', function() {
+            if (this.responseText.indexOf('"DOBTicks":')>0)
+            {
+                var info = JSON.parse(this.responseText);
+                processDOB = info.DOB.substr(0,info.DOB.indexOf(" "));
+                processAge = info.Years+" year"+(info.Years==1 ? "" : "s")+", "+info.Months+" month"+(info.Months==1 ? "" : "s");
+                waitForKeyElements("p:contains(Entering Grade:)", AddDOBToPageChecklist, true);
+            }
+        });
+        origOpen.apply(this, arguments);
+    };
+}
+
+function AddDOBToPageChecklist()
+{
+    if ($("#oms-dob").length)
+        $("#oms-dob").remove();
+    if ($("#oms-age").length)
+        $("#oms-age").remove();
+    $("p:contains(Entering Grade:)").after('<p id="oms-dob" class="pull-left mr-15 mb-0">DOB: <strong style="color:#000">'+processDOB+'</strong></p>');
+    $("#oms-dob").after('<p id="oms-age" class="pull-left mr-15 mb-0">Age: <strong style="color:#000">'+processAge+'</strong></p>');
+}
+
+function WaitForApplicationLoad()
+{
+    waitForKeyElements(".process-headerinfo", AddDOBToPageApplication, true);
+}
+
+function AddDOBToPageApplication()
+{
+    if ($("#oms-dob").length)
+        $("#oms-dob").remove();
+    var dob = $("#oms-dob-unformatted").text().substr(0,$("#oms-dob-unformatted").text().indexOf(" "));
+    $(".process-headerinfo").children(".pull-left").last().children(".pull-left").last().after('<p id="oms-dob" class="pull-left mr-15 mb-0">|&nbsp;&nbsp;DOB: '+dob+' ('+calcAge(dob)+')</p>');
+}
+
+function AddDOBApplication(jNode)
+{
+    console.log("Function: " + arguments.callee.name);
+    var script = document.createElement('script');
+    script.appendChild(document.createTextNode('('+ AddDOBInject +')();'));
+    (document.body || document.head || document.documentElement).appendChild(script);
+    waitForKeyElements("#oms-dob-unformatted", WaitForApplicationLoad);
+}
+
+function AddDOBInject()
+{
+    console.log("Function: " + arguments.callee.name);
+    var origOpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function() {
+        this.addEventListener('load', function() {
+            if (window.location.href.includes("#process/applications"))
+            {
+                if (this.responseText.includes('"Relationship":"Applicant"'))
+                {
+                    var info = JSON.parse(this.responseText);
+
+                    var xhr = new XMLHttpRequest();
+                    xhr.onreadystatechange = function() {
+                        if (xhr.readyState == XMLHttpRequest.DONE) {
+                            console.log(xhr.responseText);
+                            var data = JSON.parse(xhr.responseText);
+                            var el = document.createElement('div');
+                            el.style.display = 'none';
+                            el.id = "oms-dob-unformatted";
+                            el.innerHTML = data.BirthDate;
+                            var e = document.getElementById("oms-dob-unformatted");
+                            if (e != null)
+                                e.remove();
+                            document.body.appendChild(el);
+                        }
+                    }
+                    xhr.open('GET', '/api/user/'+info.Applicant[0].RelUserId+'/?propertylist=BirthDate', true);
+                    xhr.send(null);
+                }
+            }
+        });
+        origOpen.apply(this, arguments);
+    };
+
+
+}
+
 // -----------------------------------------[INDEX900]-------------------------------------
 // -----------------------------------Misc. Helper Functions-------------------------------
 // ----------------------------------------------------------------------------------------
@@ -4842,3 +4956,33 @@ function isInt(value) {
   return (x | 0) === x;
 }
 
+// ----------------------------------------------------------------------------------------
+// https://stackoverflow.com/questions/52678602/calculate-age-using-momentjs-and-get-different-output-strings
+
+const pluralize = (str, n) => n > 1 ? `${n} ${str.concat('s')}` : n == 0 ? '' :`${n} ${str}`
+
+const calcAge = (dob) => {
+  const age = moment.duration(moment().diff(moment(dob)))
+  const ageInYears = Math.floor(age.asYears())
+  const ageInMonths = Math.floor(age.asMonths())
+  const ageInDays = Math.floor(age.asDays())
+
+  if (age < 0)
+    throw 'DOB is in the future!'
+
+  let pluralYears = pluralize('year', ageInYears)
+  let pluralDays = pluralize('day', age.days())
+
+  if (ageInYears < 18) {
+    if (ageInYears >= 1) {
+      return `${pluralYears} ${pluralize('month', age.months())}`
+    } else if (ageInYears < 1 && ageInMonths >= 1) {
+      return `${pluralize('month', ageInMonths)} ${pluralDays}`
+    } else {
+      return pluralDays
+    }
+  } else {
+    return pluralYears
+  }
+
+}
