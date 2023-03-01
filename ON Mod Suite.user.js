@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.16.0
+// @version      2.17.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -88,6 +88,7 @@
 [INDEX048] Grade History
 [INDEX049] Financial Aid Misc
 [INDEX050] EMS Process DOB
+[INDEX051] Needs Checklist Sort
 [INDEX900] Misc. Helper Functions
 
 
@@ -264,7 +265,10 @@ Completed Mods:
      When recording grades, click Load Past Grades to display past quarter(s) grades for reference.
 
 43 - DOB/Age in EMS Process
-     Add date of birth and age to Enrollment Management Process (Applications/Needs Checklist) pages
+     Add date of birth and age to Enrollment Management Process (Applications/Needs Checklist/File Submissions) pages
+
+44 - Needs Checklist Sort
+     Sort the Needs Checklist process list in Admissions Management by date (most recent at the top).
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -463,9 +467,13 @@ function gmMain(){
             break;
         case "ProcessChecklist":
             AddDOBCheckList();
+            waitForKeyElements(".badge.count", SortNeedsChecklistWait, true);
             break;
         case "ProcessApplications":
             AddDOBApplication();
+            break;
+        case "ProcessFileSubmissions":
+            AddDOBFileSubmissions();
             break;
     }
 
@@ -522,6 +530,9 @@ function GetModule(strURL)
     } else if (strURL.includes("#process/applications"))
     {
         return "ProcessApplications"
+    } else if (strURL.includes("#process/files"))
+    {
+        return "ProcessFileSubmissions"
     } else if (strURL.indexOf("/app/faculty#myday/nurses-office") > 0)
     {
         return "Nurse's Office"
@@ -637,7 +648,7 @@ function AddPageFooter()
     console.log("Function: " + arguments.callee.name)
     if (window.location.href.substring(window.location.href.length-21-settingsResourceBoardID.length) != "#resourceboarddetail/"+settingsResourceBoardID)
     {
-        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2022 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
+        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2023 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
         var skipNotificationVersions = []
@@ -1220,6 +1231,7 @@ function ManualAttendanceSheet()
 function ConvertGradYearToGradeLevel()
 {
     console.log("Function: " + arguments.callee.name)
+
     if (!$("#show-menu").length)
     {
         // Add menu
@@ -4849,6 +4861,25 @@ function AddDOBCheckList(jNode)
     };
 }
 
+function AddDOBFileSubmissions(jNode)
+{
+    console.log("Function: " + arguments.callee.name);
+
+    var origOpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function() {
+        this.addEventListener('load', function() {
+            if (this.responseText.indexOf('"DOB":')>0)
+            {
+                var info = JSON.parse(this.responseText);
+                processDOB = info.DOB.substr(0,info.DOB.indexOf(" "));
+                processAge = info.Years+" year"+(info.Years==1 ? "" : "s")+", "+info.Months+" month"+(info.Months==1 ? "" : "s");
+                waitForKeyElements("p:contains(Entering Grade:)", AddDOBToPageChecklist, true);
+            }
+        });
+        origOpen.apply(this, arguments);
+    };
+}
+
 function AddDOBToPageChecklist()
 {
     if ($("#oms-dob").length)
@@ -4917,6 +4948,33 @@ function AddDOBInject()
     };
 
 
+}
+
+// -----------------------------------------[INDEX051]-------------------------------------
+// ------------------------------------Needs Checklist Sort--------------------------------
+// ----------------------------------------------------------------------------------------
+
+function SortNeedsChecklistWait(jNode)
+{
+    console.log("Function: " + arguments.callee.name);
+
+    setTimeout(SortNeedsChecklist, 1000);
+}
+
+function SortNeedsChecklist()
+{
+    console.log("Function: " + arguments.callee.name);
+
+    $(".process-sidebar-item").sort(function (a,b) {
+        var aDate = moment($(a).children("div").eq(0).text(), "M/D/YYYY");
+        var bDate = moment($(b).children("div").eq(0).text(), "M/D/YYYY");
+        console.log(aDate.format("M/D/YY")+" >= "+bDate.format("M/D/YY")+" : "+moment(aDate).isSameOrBefore(bDate));
+        return moment(aDate).isSameOrBefore(bDate) ? 1 : -1;
+    }).appendTo(".process-sidebar-content");
+
+   $(".process-sidebar-content").children(".divider").remove();
+   $(".process-sidebar-content").prepend('<hr class="divider">');
+   $(".process-sidebar-item").after('<hr class="divider">');
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
