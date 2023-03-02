@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.17.0
+// @version      2.17.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -651,7 +651,7 @@ function AddPageFooter()
         $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2023 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
-        var skipNotificationVersions = []
+        var skipNotificationVersions = ["2.17.0"]
         var oldVersion = GM_getValue("FirstRunVersionCheck")
 
         if (oldVersion != GM_info.script.version)
@@ -4968,7 +4968,6 @@ function SortNeedsChecklist()
     $(".process-sidebar-item").sort(function (a,b) {
         var aDate = moment($(a).children("div").eq(0).text(), "M/D/YYYY");
         var bDate = moment($(b).children("div").eq(0).text(), "M/D/YYYY");
-        console.log(aDate.format("M/D/YY")+" >= "+bDate.format("M/D/YY")+" : "+moment(aDate).isSameOrBefore(bDate));
         return moment(aDate).isSameOrBefore(bDate) ? 1 : -1;
     }).appendTo(".process-sidebar-content");
 
