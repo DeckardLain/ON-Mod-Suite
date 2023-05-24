@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.17.1
+// @version      2.18.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -89,6 +89,7 @@
 [INDEX049] Financial Aid Misc
 [INDEX050] EMS Process DOB
 [INDEX051] Needs Checklist Sort
+[INDEX052] Gradebook Highlight Row
 [INDEX900] Misc. Helper Functions
 
 
@@ -269,6 +270,10 @@ Completed Mods:
 
 44 - Needs Checklist Sort
      Sort the Needs Checklist process list in Admissions Management by date (most recent at the top).
+
+45 - Gradebook Highlight Row
+     When enabled in settings, the cursor position in gradebooks will highlight the entire row instead of just the
+     student name.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -475,6 +480,9 @@ function gmMain(){
         case "ProcessFileSubmissions":
             AddDOBFileSubmissions();
             break;
+        case "Gradebook":
+            waitForKeyElements(".gradebook-student-cell", GradebookHighlightRow);
+            break;
     }
 
     // People Finder Quick Select
@@ -524,6 +532,9 @@ function GetModule(strURL)
     if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.includes("/sis-gradebook/gradebook/"))
+    {
+        return "Gradebook"
     } else if (strURL.includes("#process/checklist"))
     {
         return "ProcessChecklist"
@@ -651,7 +662,7 @@ function AddPageFooter()
         $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2023 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
-        var skipNotificationVersions = ["2.17.0"]
+        var skipNotificationVersions = []
         var oldVersion = GM_getValue("FirstRunVersionCheck")
 
         if (oldVersion != GM_info.script.version)
@@ -2425,6 +2436,12 @@ function GenerateSettingsPage(jNode)
     str += '<label for="ClassAssignmentsDefaultStart">Start:&nbsp</label><input type="text" size="12" id="ClassAssignmentsDefaultStart" disabled><br>'
     str += '<label for="ClassAssignmentsDefaultEnd">End:&nbsp</label><input type="text" size="12" id="ClassAssignmentsDefaultEnd" disabled>'
 
+    // Gradebook Highlight Row
+    str += '<tr><td valign="top"><label for="GradebookHighlightRow">Gradebook Highlight Row&nbsp</label>'
+    str += '<a class="notificationIcon" title="In gradebooks, the cursor position will highlight the entire row instead of just the student name."><i class="p3icon-notification-2"></i></a></td>'
+    str += '<td><input type="checkbox" id="GradebookHighlightRow"><br>'
+    str += '</td></tr>'
+
     $("#settings-table").append(str)
 
     // ----------------------------------------------------------------------------------------
@@ -2520,6 +2537,16 @@ function GenerateSettingsPage(jNode)
             $("#ClassAssignmentsDefaultEnd").val(localStorage.getItem("ClassAssignmentsDefaultEnd"))
     }
 
+    // Gradebook Highlight Row
+    if (localStorage.getItem("GradebookHighlightRow") != null)
+    {
+        if (localStorage.getItem("GradebookHighlightRow") == "True")
+        {
+            $("#GradebookHighlightRow").prop("checked", true)
+        }
+    }
+
+
     // Save changes
     $("#ClassSortByName").unbind("click change").bind("click change", function(){
         localStorage.setItem("ClassesMenuSortOrder", "name")
@@ -2596,6 +2623,15 @@ function GenerateSettingsPage(jNode)
         localStorage.setItem("ClassAssignmentsDefaultEnd", $("#ClassAssignmentsDefaultEnd").val())
     });
 
+    $("#GradebookHighlightRow").unbind("click change").bind("click change", function(){
+        if ($("#GradebookHighlightRow").prop("checked") == true)
+        {
+            localStorage.setItem("GradebookHighlightRow", "True")
+        } else
+        {
+            localStorage.setItem("GradebookHighlightRow", "False")
+        }
+    });
 }
 
 // ----------------------------------------[INDEX018]--------------------------------------
@@ -4974,6 +5010,60 @@ function SortNeedsChecklist()
    $(".process-sidebar-content").children(".divider").remove();
    $(".process-sidebar-content").prepend('<hr class="divider">');
    $(".process-sidebar-item").after('<hr class="divider">');
+}
+
+// -----------------------------------------[INDEX052]-------------------------------------
+// ----------------------------------Gradebook Highlight Row-------------------------------
+// ----------------------------------------------------------------------------------------
+
+function GradebookHighlightRow()
+{
+    console.log("Function: " + arguments.callee.name);
+
+    if (localStorage.getItem("GradebookHighlightRow") == "True")
+    {
+        // Configuration for the MutationObserver
+        const observerConfig = {
+            attributes: true,
+            attributeFilter: ['class'],
+            subtree: true,
+        };
+
+        // Select the specific set of td elements within tr elements you want to observe
+        const elementsToObserve = $('.gradebook-student-cell');
+
+        // Create a new MutationObserver instance
+        const observer = new MutationObserver(handleClassChange);
+
+        // Start observing the elements for class changes
+        elementsToObserve.each(function () {
+            observer.observe(this, observerConfig);
+        });
+    }
+}
+
+// Helper function to check if an element has a specific class
+function hasClass(element, className) {
+  return element.classList.contains(className);
+}
+
+// Function to handle the class change event
+function handleClassChange(mutationsList, observer) {
+  mutationsList.forEach(mutation => {
+    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+      const targetElement = mutation.target;
+      if (hasClass(targetElement, 'gradebook-active-student-assignment')) {
+        // Get the index of the corresponding row in the original table
+        const rowIndex = $(targetElement).closest('tr').index();
+
+        // Get the corresponding row in the different table
+        const correspondingRow = $('.gradebook-grid tr').eq(rowIndex);
+
+          $(".onmodsuite-gradebook-highlight-row").removeClass("onmodsuite-gradebook-highlight-row gradebook-active-student-assignment");
+          $(correspondingRow).children("td").addClass("onmodsuite-gradebook-highlight-row gradebook-active-student-assignment");
+      }
+    }
+  });
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
