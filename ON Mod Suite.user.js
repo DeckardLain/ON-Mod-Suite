@@ -1,18 +1,22 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.18.0
+// @version      2.19.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
 // @grant        GM_setClipboard
+// @grant        GM.xmlHttpRequest
 // @run-at       document-end
 // @require      https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js
 // @require      https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js
+// @resource     IMPORTED_CSS https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css
+// @require      https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js
+// @connect      myschoolapp.com
 // ==/UserScript==
 
-/* Copyright (C) 2018-2022  Hanalani Schools
+/* Copyright (C) 2018-2023  Hanalani Schools
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -69,6 +73,7 @@
 [INDEX043] Update Page Title
 [INDEX044] EMS Process DOB
 [INDEX045] Gradebook Highlight Row
+[INDEX046] Course Request List Parent Emails
 [INDEX900] Misc. Helper Functions
 
 
@@ -232,6 +237,9 @@ Completed Mods:
 40 - Gradebook Highlight Row
      When enabled in settings, the cursor position in gradebooks will highlight the entire row instead of just the
      student name.
+
+41 - Course Request List Parent Emails
+     Get parent emails for listed students in the Student Course Request Worklist.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -403,6 +411,9 @@ function gmMain(){
         case "Gradebook":
             waitForKeyElements(".gradebook-student-cell", GradebookHighlightRow);
             break;
+        case "Course Request Worklist":
+            waitForKeyElements(".approve-all", CourseRequestListParentEmails);
+            break;
     }
 
     // People Finder Quick Select
@@ -444,6 +455,9 @@ function GetModule(strURL)
     if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.includes("/academics#studentcourserequestworklist/"))
+    {
+        return "Course Request Worklist"
     } else if (strURL.includes("/sis-gradebook/gradebook/"))
     {
         return "Gradebook"
@@ -3849,7 +3863,7 @@ function AddDOBInject()
 
 }
 
-// -----------------------------------------[INDEX052]-------------------------------------
+// -----------------------------------------[INDEX045]-------------------------------------
 // ----------------------------------Gradebook Highlight Row-------------------------------
 // ----------------------------------------------------------------------------------------
 
@@ -3901,6 +3915,122 @@ function handleClassChange(mutationsList, observer) {
       }
     }
   });
+}
+
+// -----------------------------------------[INDEX046]-------------------------------------
+// ------------------------------Course Request List Parent Emails-------------------------
+// ----------------------------------------------------------------------------------------
+var lastPayload = "";
+function CourseRequestListParentEmails(jNode)
+{
+    console.log("Function: " + arguments.callee.name);
+    if (!$("#on-mod-suite-parent-emails").length)
+    {
+        jNode.after('<a class="btn bb-btn-secondary" id="on-mod-suite-parent-emails" style="width:auto;">&#x2709;&nbsp;Get Parent Emails</a>');
+        $("#on-mod-suite-parent-emails").bind("click", GetCourseRequestParentEmails);
+    }
+}
+
+function GetCourseRequestParentEmails()
+{
+    console.log("Function: " + arguments.callee.name);
+    $("#on-mod-suite-parent-emails").prop("disabled",true);
+    $("#on-mod-suite-parent-emails-data").remove();
+    toastr.success("Getting parent emails... Please wait...");
+
+    (function() {
+        var origOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function() {
+            var payload;
+
+            var origSend = this.send;
+            this.send = function() {
+                payload = JSON.parse(arguments[0]);
+                payload.PageSize = 9999;
+                arguments[0] = JSON.stringify(payload);
+                origSend.apply(this, arguments);
+                this.send = origSend;
+            };
+
+            this.addEventListener('load', function() {
+                ProcessStudentListForParentEmails(JSON.parse(this.responseText), $("#__AjaxAntiForgery input").val());
+                XMLHttpRequest.prototype.open = origOpen;
+            });
+
+            origOpen.apply(this, arguments);
+        };
+    })();
+
+    var event = document.createEvent("Event")
+    event.initEvent("click", true, false)
+    $(".list-refresh-link")[0].dispatchEvent(event)
+}
+
+function ProcessStudentListForParentEmails(students, token)
+{
+    console.log("Function: " + arguments.callee.name);
+
+    try
+    {
+        var emails = [];
+        GetParentEmail(0);
+
+        function GetParentEmail(index)
+        {
+            if (index >= students.Results.length)
+            {
+                CopyParentEmailsToClipboard();
+                return;
+            }
+
+            var studentID = students.Results[index].StudentId;
+            $("#on-mod-suite-parent-emails").text("Copy Parent Emails (student "+(+index+1)+"of"+students.Results.length+")");
+
+            GM.xmlHttpRequest({
+                method: "GET",
+                url: schoolURL+"api/datadirect/studentrelationshipsget/"+studentID+"/?format=json",
+                headers: {
+                    "Content-Type": "application/json",
+                    "requestverificationtoken": token
+                },
+                onload: function(response) {
+                    var parentEmails = JSON.parse(response.responseText);
+                    for (var i = 0; i < parentEmails.length; i++)
+                    {
+                        emails.push(parentEmails[i].email);
+                    }
+
+                    // Make the next request
+                    GetParentEmail(index + 1);
+                }
+            });
+        }
+
+        function CopyParentEmailsToClipboard()
+        {
+            var uniqueEmails = [...new Set(emails)];
+            var emailString = uniqueEmails.join(";");
+            GM_setClipboard(emailString, "text");
+            toastr.success(uniqueEmails.length+" parent email(s) copied to clipboard.");
+            $("#on-mod-suite-parent-emails").prop("disabled",false);
+            $("#on-mod-suite-parent-emails").html("&#x2709;&nbsp;Get Parent Emails");
+
+            if (!$("#on-mod-suite-parent-emails-data").length)
+                $("#on-mod-suite-parent-emails").after('<a class="btn bb-btn-secondary" id="on-mod-suite-parent-emails-data" style="width:auto;">&#x1F4CB;</a>');
+
+            var dataEl = $("#on-mod-suite-parent-emails-data");
+
+            dataEl.attr("title",emails.length+" emails grabbed. Click to copy to clipboard again");
+            dataEl.data("emails", emailString);
+            dataEl.bind("click", function() {
+                GM_setClipboard($(this).data("emails"), "text");
+            });
+        }
+    } catch(e)
+    {
+        console.log(e);
+        toastr.error("Error: "+e.message);
+    }
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
