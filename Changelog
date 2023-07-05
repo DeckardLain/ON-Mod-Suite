@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.19.0] - 2023-07-05
+### Added
+- Course Request List Parent Emails - Get parent emails for listed students in the Student Course Request Worklist
+because at this time, not even Student ID can be added as a column to these lists, making it quite cumbersome
+to get parent email addresses.
+
 ## [2.18.0] - 2023-05-24
 ### Added
 - Gradebook Highlight Row - When enabled in settings, the cursor position in gradebooks will highlight
