@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.19.0
+// @version      2.19.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -92,6 +92,7 @@
 [INDEX051] Needs Checklist Sort
 [INDEX052] Gradebook Highlight Row
 [INDEX053] Course Request List Parent Emails
+[INDEX054] Facilities Request Form
 [INDEX900] Misc. Helper Functions
 
 
@@ -491,6 +492,9 @@ function gmMain(){
         case "Course Request Worklist":
             waitForKeyElements(".approve-all", CourseRequestListParentEmails);
             break;
+        case "Calendar":
+            waitForKeyElements(".calendarTitle:contains('Facilities')", FacilitiesRequestForm);
+            break;
     }
 
     // People Finder Quick Select
@@ -540,6 +544,9 @@ function GetModule(strURL)
     if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.includes("#calendar"))
+    {
+        return "Calendar"
     } else if (strURL.includes("/academics#studentcourserequestworklist/"))
     {
         return "Course Request Worklist"
@@ -2403,6 +2410,7 @@ function GenerateSettingsPage(jNode)
     localStorage.setItem("math-averages-api-url", $("#math-averages-api-url").val())
     localStorage.setItem("dialer-url", $("#dialer-url").val())
     localStorage.setItem("grade-history-url", $("#grade-history-url").val())
+    localStorage.setItem("facilities-request-form-link", $("#facilities-request-form-link").val())
 
 
     // Build Page
@@ -4595,6 +4603,11 @@ function InsertDialerInterface()
 
 function DialerCall(ext, number)
 {
+    if (localStorage.getItem("dialer-url") == undefined)
+    {
+        window.open("https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/"+settingsResourceBoardID);
+        return;
+    }
     var url = localStorage.getItem("dialer-url")+'&ext='+ext+'&number='+number+'&callerid=ONModSuite'
     GM.xmlHttpRequest({
         method: "GET",
@@ -5190,6 +5203,21 @@ function ProcessStudentListForParentEmails(students, token)
     {
         console.log(e);
         toastr.error("Error: "+e.message);
+    }
+}
+
+// -----------------------------------------[INDEX054]-------------------------------------
+// -----------------------------------Facilities Request Form------------------------------
+// ----------------------------------------------------------------------------------------
+
+function FacilitiesRequestForm(jNode)
+{
+    console.log("Function: " + arguments.callee.name);
+    if (!$("#facilities-request-form").length)
+    {
+        var link = localStorage.getItem("facilities-request-form-link");
+        if (link != null)
+            jNode.after('<span id="facilities-request-form" style="padding-left:4px;"><a title="Facilities Request Form" target="_blank" href="'+link+'">&#128221;</a></span>');
     }
 }
 
