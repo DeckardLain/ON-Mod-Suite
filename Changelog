@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.19.1] - 2023-07-26
+### Added
+- Shortcut to Facilities Request From added to calendar
+
 ## [2.19.0] - 2023-07-05
 ### Added
 - Course Request List Parent Emails - Get parent emails for listed students in the Student Course Request Worklist
