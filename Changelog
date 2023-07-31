@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.20.0] - 2023-07-31
+### Fixed
+- Select All on roster pages was causing the selected count to be one too many.
+
+### Changed
+- Email Selected Parents and Email Selected Students and Parents has been changed to use a different method
+for collecting parent email addresses, which does not require opening the relationships popup for each student.
+- Email Selected Classes has been changed to use a more reliable method for collecting email addresses, which
+does not require opening each class in the browser.
+- Email Selected Classes now copies the email addresses to the clipboard instead of launching 1 or more
+mailto links.
+- Facilities Request Form link now prefills the Name field on the form based on the logged in user.
+
 ## [2.19.1] - 2023-07-26
 ### Added
 - Shortcut to Facilities Request From added to calendar
