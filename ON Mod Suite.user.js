@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.19.1
+// @version      2.20.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -366,7 +366,6 @@ function gmMain(){
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
             waitForKeyElements(".bb-card-title",ConvertGradYearToGradeLevel)
             waitForKeyElements(".bb-btn-secondary", CreateRosterCheckboxes)
-            waitForKeyElements(".dropdown-toggle:first", SaveRosterEmails)
             waitForKeyElements("#group-header-Classes", ClassesMenuSortOrder)
             waitForKeyElements(".delimiter-btn:first", EmailDelimiterDefault)
             waitForKeyElements(".copy-addresses", EmailAdministrators)
@@ -1807,8 +1806,8 @@ function CreateRosterCheckboxes(jNode)
         $("input[type='checkbox'].Select_all").bind("click", function(){
             if ($(this).is(":checked"))
             {
-                $("input[type='checkbox']").not(".Select_all").prop("checked", true);
-                var selectedCount = $('input[type="checkbox"]:checked').not('.Select_all').length;
+                $("input[type='checkbox']").not(".Select_all, #dialer-remember").prop("checked", true);
+                var selectedCount = $('input[type="checkbox"]:checked').not('.Select_all, #dialer-remember').length;
                 var studentCount = $("#RosterCardContainer").attr("count")
                 if (selectedCount > 0 && selectedCount != studentCount)
                 {
@@ -1821,7 +1820,7 @@ function CreateRosterCheckboxes(jNode)
 
             } else
             {
-                $("input[type='checkbox']").not(".Select_all").prop("checked", false);
+                $("input[type='checkbox']").not(".Select_all, #dialer-remember").prop("checked", false);
                 $("#warning").remove()
             }
         });
@@ -1848,7 +1847,7 @@ function CreateRosterCheckboxes(jNode)
 
     // Create/update selected count after any checkbox click
     $("input[type='checkbox']").bind("click", function(){
-        selectedCount = $('input[type="checkbox"]:checked').not('.Select_all').length;
+        selectedCount = $('input[type="checkbox"]:checked').not('.Select_all, #dialer-remember').length;
         if ($("#selected-count").length)
         {
             $("#selected-count").text("  [" + selectedCount + " Selected]")
@@ -1877,58 +1876,89 @@ function EmailSelectedParents(studentsToo)
     var popupOpen = false;
     var done = false;
     var timerID = 0;
+    var count = $('input[type="checkbox"]:checked').not('.Select_all, #dialer-remember').length;
 
-    if ($('input[type="checkbox"]:checked').not('.Select_all').length) // only if there are selected students
+    if (count>0) // only if there are selected students
     {
         $("#roster-count").closest("h4").append('<span id="email-parents"> Gathering Parent Emails...</span>')
 
-        timerID = setInterval(function(){
-
-            if (!done) // prevent running on page after already done
+        try
+        {
+            var delim = ";";
+            switch (localStorage.getItem("EmailDelimiter"))
             {
-                if (currStudent < $('input[type="checkbox"]:checked').not('.Select_all').length) // loop through selected students
-                {
-                    if (!popupOpen) // if relationship popup is not open, open it
-                    {
-                        if (studentsToo)
-                        {
-                            mailtoLink = mailtoLink + $('input[type="checkbox"]:checked').not('.Select_all').eq(currStudent).closest(".roster-card").find("[href^='mailto']").text() + ";"
-                        }
-                        $('input[type="checkbox"]:checked').not('.Select_all').eq(currStudent).closest(".bb-context-menu").find("[href='#']")[0].click();
-                        popupOpen = true;
-                    } else
-                    {
-                        if ($(".roster-relationships [href^='mailto']").length && !gettingEmails) // avoid repeating loop when already running
-                        {
-                            gettingEmails = true;
-                            $(".roster-relationships [href^='mailto']").each(function(index){
-                                if ($(this).text() != lastEmail) // skip duplicate email addresses
-                                {
-                                    mailtoLink = mailtoLink + $(this).text() + ";";
-                                    lastEmail = $(this).text();
-                                }
-                            });
-
-                            $(".close")[0].click();
-                            popupOpen = false;
-                            currStudent++;
-                            gettingEmails = false;
-                        } else if (!$(".roster-relationships [href^='mailto']").length) // no parent emails
-                        {
-                            $(".close")[0].click();
-                            popupOpen = false;
-                            currStudent++;
-                        }
-                    }
-                } else  // done
-                {
-                    document.location.href = mailtoLink;
-                    $("#email-parents").remove();
-                    clearInterval(timerID);
-                    done = true;
-                }
+                case 0:
+                    delim = ",";
+                    break;
+                case 1:
+                    delim = ";";
+                    break;
+                case 2:
+                    delim = " ";
+                    break;
+                case 3:
+                    delim = "\r\n";
+                    break;
             }
-        }, 100);
+
+            var emails = [];
+            var token = $("#__AjaxAntiForgery input").val();
+            GetEmails(0);
+
+            function GetEmails(index)
+            {
+                if (index >= count)
+                {
+                    LaunchMailto();
+                    return;
+                }
+
+                var studentID = $('input[type="checkbox"]:checked').not('.Select_all').eq(index).siblings("#context-menu").find(".user-relationships-initial").data("user-id");
+                var url = "https://hanalani.myschoolapp.com/api/datadirect/studentrelationshipsget/"+studentID+"/?format=json";
+                if (studentsToo)
+                    emails.push($('input[type="checkbox"]:checked').not('.Select_all').eq(index).closest(".roster-card").find("[href^='mailto']").text());
+
+                GM.xmlHttpRequest({
+                    method: "GET",
+                    url: url,
+                    headers: {
+                        "Content-Type": "application/json",
+                        "requestverificationtoken": token
+                    },
+                    onload: function(response) {
+                        try
+                        {
+                            var relEmails = JSON.parse(response.responseText);
+                            for (var i = 0; i < relEmails.length; i++)
+                            {
+
+                                emails.push(relEmails[i].email);
+                            }
+                        } catch (e)
+                        {
+                            console.log(e);
+                            console.log(response.responseText);
+                        }
+
+                        // Make the next request
+                        GetEmails(index + 1);
+                    }
+                });
+            }
+
+            function LaunchMailto()
+            {
+                var uniqueEmails = [...new Set(emails)];
+                mailtoLink = mailtoLink + uniqueEmails.join(delim);
+                document.location.href = mailtoLink;
+                $("#email-parents").remove();
+            }
+
+        } catch (e)
+        {
+            console.log(e);
+            toastr.error("Error: "+e.message);
+        }
 
     } else
     {
@@ -1941,9 +1971,9 @@ function EmailSelectedStudents()
     console.log("Function: " + arguments.callee.name)
     var mailtoLink = "mailto:?bcc=";
 
-    if ($('input[type="checkbox"]:checked').not('.Select_all').length)
+    if ($('input[type="checkbox"]:checked').not('.Select_all, #dialer-remember').length)
     {
-        $('input[type="checkbox"]:checked').not('.Select_all').each(function(index){
+        $('input[type="checkbox"]:checked').not('.Select_all, #dialer-remember').each(function(index){
             mailtoLink = mailtoLink + $(this).closest(".roster-card").find("[href^='mailto']").text() + ";"
         });
         document.location.href = mailtoLink;
@@ -2002,7 +2032,6 @@ function CreateClassCheckboxes()
             classesInMenu.push(classURL.substring(start,end));
             classesInMenuNames.push($(this).text());
         });
-        console.log(classesInMenuNames);
 
         // Create checkboxes for each class
         $("#accordionSchedules").find("[href]").not(".all-present").each(function(index){
@@ -2031,25 +2060,28 @@ function CreateClassCheckboxes()
         $("input[type='checkbox'].Select_all").bind("click", function(){
             if ($(this).is(":checked"))
             {
-                $("input[type='checkbox']").not(".Select_all").prop("checked", true);
+                $("input[type='checkbox']").not(".Select_all, #dialer-remember").prop("checked", true);
             } else
             {
-                $("input[type='checkbox']").not(".Select_all").prop("checked", false);
+                $("input[type='checkbox']").not(".Select_all, #dialer-remember").prop("checked", false);
             }
         });
 
         // Click events for Send Communication menu items
         $("#selected-classes-students").unbind("click").bind("click", function(){
-            localStorage.setItem("SaveRosterEmailsType", "Students");
-            EmailSelectedClasses();
+            //localStorage.setItem("SaveRosterEmailsType", "Students");
+            //EmailSelectedClasses();
+            EmailSelectedClassesv2("Student");
         });
         $("#selected-classes-parents").unbind("click").bind("click", function(){
-            localStorage.setItem("SaveRosterEmailsType", "Parents");
-            EmailSelectedClasses();
+            //localStorage.setItem("SaveRosterEmailsType", "Parents");
+            //EmailSelectedClasses();
+            EmailSelectedClassesv2("Parent");
         });
         $("#selected-classes-all").unbind("click").bind("click", function(){
-            localStorage.setItem("SaveRosterEmailsType", "All");
-            EmailSelectedClasses();
+            //localStorage.setItem("SaveRosterEmailsType", "All");
+            //EmailSelectedClasses();
+            EmailSelectedClassesv2("All");
         });
 
         // Reset cookie in case process failed previously
@@ -2058,182 +2090,84 @@ function CreateClassCheckboxes()
     }
 }
 
-function EmailSelectedClasses()
+function EmailSelectedClassesv2(type)
 {
     console.log("Function: " + arguments.callee.name)
     var numSelectedClasses = $('input[type="checkbox"]:checked').not('.Select_all').length
-    var currClass = 0
-    var rosterWindow
 
-    if (numSelectedClasses && confirm("A new tab/window will be opened for each class to grab the email addresses.  Click OK when ready."))
+    if (numSelectedClasses)
     {
-        localStorage.setItem("SaveRosterEmailsActive", "1");
-        localStorage.setItem("SaveRosterEmailsFirstClass", "1");
-        localStorage.setItem("SaveRosterEmailsClassDone", "1");
-
-        switch (localStorage.getItem("EmailDelimiter"))
+        toastr.success("Getting emails... Please wait...");
+        try
         {
-            case 0:
-                var delim = ",";
-                break;
-            case 1:
-                var delim = ";";
-                break;
-            case 2:
-                var delim = " ";
-                break;
-            case 3:
-                var delim = "\r\n";
-                break;
-            default:
-                var delim = ";";
-        }
+            var delim = ";";
+            switch (localStorage.getItem("EmailDelimiter"))
+            {
+                case 0:
+                    delim = ",";
+                    break;
+                case 1:
+                    delim = ";";
+                    break;
+                case 2:
+                    delim = " ";
+                    break;
+                case 3:
+                    delim = "\r\n";
+                    break;
+            }
 
-        var timerID = setInterval(function(){
-            var url
-            var mailtoLink
-            var mailtoLinks = []
-            var emails
-            if (localStorage.getItem("SaveRosterEmailsClassDone") == 0)
+            var emails = [];
+            var token = $("#__AjaxAntiForgery input").val();
+            GetEmails(0);
+
+            function GetEmails(index)
             {
-                // wait for new window to finish saving emails
-            } else
-            {
-                if (localStorage.getItem("SaveRosterEmailsFirstClass") == 0)
+                if (index >= numSelectedClasses)
                 {
-                    currClass++
+                    CopyEmailsToClipboard();
+                    return;
                 }
 
-                if (currClass < numSelectedClasses)
-                {
-                    // Open class roster to grab email addresses
-                    url = schoolURL+"app/faculty#academicclass/" + GetID($('input[type="checkbox"]:checked').not('.Select_all').eq(currClass).next("[href]").attr("href")) + "/0/roster"
-                    localStorage.setItem("SaveRosterEmailsClassDone", "0");
-                    rosterWindow = window.open(url)
-                } else  // Done
-                {
-                    clearInterval(timerID);
-                    localStorage.setItem("SaveRosterEmailsActive", "0");
-                    emails = localStorage.getItem("SaveRosterEmailsAddresses")
+                var classID = GetID($('input[type="checkbox"]:checked').not('.Select_all').eq(index).next("[href]").attr("href"));
+                var url = "https://hanalani.myschoolapp.com/api/DataDirect/SectionEmailList/?format=json&sectionId="+classID;
 
-                    // Remove duplicates from emails
-                    var emailArray = emails.split(delim)
-                    var uniqueEmails = [];
-                    $.each(emailArray, function(i, el){
-                        if($.inArray(el, uniqueEmails) === -1) uniqueEmails.push(el);
-                    });
-
-                    // Split email group if larger than 2000 characters total
-                    var currEmail = 0
-                    emails = ""
-                    while (currEmail < uniqueEmails.length)
-                    {
-                        emails = emails + uniqueEmails[currEmail] + delim
-                        if (emails.length > 1500)
+                GM.xmlHttpRequest({
+                    method: "GET",
+                    url: url,
+                    headers: {
+                        "Content-Type": "application/json",
+                        "requestverificationtoken": token
+                    },
+                    onload: function(response) {
+                        var classEmails = JSON.parse(response.responseText);
+                        for (var i = 0; i < classEmails.length; i++)
                         {
-                            emails = emails.substring(0, emails.length - uniqueEmails[currEmail].length - 2)
-                            mailtoLink = "mailto:?bcc=" + emails
-                            mailtoLinks.push(mailtoLink)
-                            emails = ""
-                        }
-                        currEmail++
-                    }
-                    mailtoLink = "mailto:?bcc=" + emails
-                    mailtoLinks.push(mailtoLink)
-                    var CurrMailtoLink = 0
-                    var confirmPrompt = "You will be sending to " + uniqueEmails.length + " recipients."
-                    if (mailtoLinks.length > 1)
-                    {
-                        confirmPrompt += "  Due to browser limitations, your recipient list will be split into " + mailtoLinks.length + " parts and a new message window created for each."
-                    }
-
-                    if(confirm(confirmPrompt))
-                    {
-                        var timerID2 = setInterval(function() {
-                            if (CurrMailtoLink < mailtoLinks.length)
+                            if (type == "All" || type == classEmails[i].type_description)
                             {
-                                window.open(mailtoLinks[CurrMailtoLink])
-                                CurrMailtoLink++
-                            } else
-                            {
-                                clearInterval(timerID2)
+                                emails.push(classEmails[i].email);
                             }
-                        }, 500);
+                        }
+
+                        // Make the next request
+                        GetEmails(index + 1);
                     }
-                }
-
+                });
             }
-        }, 100);
-    } else if (!numSelectedClasses)
-    {
-        alert("No classes selected!");
-    }
-}
 
-function SaveRosterEmails()
-{
-    console.log("Function: " + arguments.callee.name)
-    if (localStorage.getItem("SaveRosterEmailsActive") == 1)
-    {
-        switch (localStorage.getItem("SaveRosterEmailsType"))
-        {
-            case "Students":
-                $(".send-message").eq(0)[0].click()
-                waitForKeyElements("#email-list-textarea", GrabEmails)
-                break;
-            case "Parents":
-                $(".send-message").eq(1)[0].click()
-                waitForKeyElements("#email-list-textarea", GrabEmails)
-                break;
-            case "All":
-                $(".send-message").eq(2)[0].click()
-                waitForKeyElements("#email-list-textarea", GrabEmails)
-                break;
-        }
-    }
-}
-
-function GrabEmails()
-{
-    console.log("Function: " + arguments.callee.name)
-    if (localStorage.getItem("SaveRosterEmailsActive") == 1)
-    {
-        var str;
-
-        if ($("#email-list-textarea").text().length)  // Make sure there are emails in the box
-        {
-            if (localStorage.getItem("SaveRosterEmailsFirstClass") == 1)
+            function CopyEmailsToClipboard()
             {
-                str = $("#email-list-textarea").text();
-                localStorage.setItem("SaveRosterEmailsFirstClass", "0");
-            } else
-            {
-                switch (localStorage.getItem("EmailDelimiter"))
-                {
-                    case 0:
-                        var delim = ",";
-                        break;
-                    case 1:
-                        var delim = ";";
-                        break;
-                    case 2:
-                        var delim = " ";
-                        break;
-                    case 3:
-                        var delim = "\r\n";
-                        break;
-                    default:
-                        var delim = ";";
-                }
-                str = localStorage.getItem("SaveRosterEmailsAddresses") + delim + $("#email-list-textarea").text()
+                var uniqueEmails = [...new Set(emails)];
+                var emailString = uniqueEmails.join(delim);
+                GM_setClipboard(emailString, "text");
+                toastr.clear();
+                toastr.success(uniqueEmails.length+" email(s) copied to clipboard.");
             }
-            localStorage.setItem("SaveRosterEmailsAddresses", str)
-            localStorage.setItem("SaveRosterEmailsClassDone", "1")
-            window.close()
-        } else
+        } catch (e)
         {
-            // Box of emails is empty.  Reload page to try again
-            location.reload()
+            console.log(e);
+            toastr.clear();
+            toastr.error("Error: "+e.message);
         }
     }
 }
@@ -5217,7 +5151,35 @@ function FacilitiesRequestForm(jNode)
     {
         var link = localStorage.getItem("facilities-request-form-link");
         if (link != null)
+        {
             jNode.after('<span id="facilities-request-form" style="padding-left:4px;"><a title="Facilities Request Form" target="_blank" href="'+link+'">&#128221;</a></span>');
+            GetEmailAddress();
+        }
+    }
+
+    function GetEmailAddress()
+    {
+        console.log("Function: " + arguments.callee.name);
+        GM.xmlHttpRequest({
+            method: "GET",
+            url: schoolURL+"api/webapp/context",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            onload: function(response) {
+                try
+                {
+                    var data = JSON.parse(response.responseText);
+                    var name = data.MasterUserInfo.FirstName+" "+data.MasterUserInfo.LastName;
+                    var link = localStorage.getItem("facilities-request-form-link")+"?usp=pp_url&entry.417340921="+encodeURIComponent(name);
+                    $("#facilities-request-form > a").attr("href", link);
+                } catch (e)
+                {
+                    console.log(e);
+                }
+
+            }
+        });
     }
 }
 
