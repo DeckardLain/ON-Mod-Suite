@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.20.0
+// @version      2.20.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -327,7 +327,7 @@ function gmMain(){
     switch(module)
     {
         case "Settings":
-            waitForKeyElements(".conDefault b:first", GenerateSettingsPage, true)
+            waitForKeyElements("#on-mod-suite-school-settings", GenerateSettingsPage, true)
             break;
         case "Core":
             waitForKeyElements("#userName", PostLinkCore)
