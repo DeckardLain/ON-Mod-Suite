@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.20.1] - 2023-07-31
+### Fixed
+- Load school-specific settings more reliably.
+
 ## [2.20.0] - 2023-07-31
 ### Fixed
 - Select All on roster pages was causing the selected count to be one too many.
