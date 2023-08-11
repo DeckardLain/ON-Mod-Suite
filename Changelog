@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.20.0] - 2023-08-11
+### Added
+- Display Contract Type IDs on the Manage Contract Forms page.
+### Changed
+- Email Selected Parents and Email Selected Students and Parents has been changed to use a different method
+for collecting parent email addresses, which does not require opening the relationships popup for each student.
+- Email Selected Classes has been changed to use a more reliable method for collecting email addresses, which
+does not require opening each class in the browser.
+- Email Selected Classes now copies the email addresses to the clipboard instead of launching 1 or more
+mailto links.
+
 ## [2.19.0] - 2023-07-05
 ### Added
 - Course Request List Parent Emails - Get parent emails for listed students in the Student Course Request Worklist
