@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.19.0
+// @version      2.20.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
@@ -74,6 +74,7 @@
 [INDEX044] EMS Process DOB
 [INDEX045] Gradebook Highlight Row
 [INDEX046] Course Request List Parent Emails
+[INDEX047] Contract Type ID in Manage Contract Forms
 [INDEX900] Misc. Helper Functions
 
 
@@ -241,6 +242,9 @@ Completed Mods:
 41 - Course Request List Parent Emails
      Get parent emails for listed students in the Student Course Request Worklist.
 
+42 - Contract Type ID in Manage Contract Forms
+     Displays the ID of each contract type on the Manage Contract Forms page.
+
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
 
@@ -321,7 +325,6 @@ function gmMain(){
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
             waitForKeyElements(".bb-card-title",ConvertGradYearToGradeLevel)
             waitForKeyElements(".bb-btn-secondary", CreateRosterCheckboxes)
-            waitForKeyElements(".dropdown-toggle:first", SaveRosterEmails)
             waitForKeyElements("#group-header-Classes", ClassesMenuSortOrder)
             waitForKeyElements(".delimiter-btn:first", EmailDelimiterDefault)
             EmailAllParentsOfStudent();
@@ -414,6 +417,9 @@ function gmMain(){
         case "Course Request Worklist":
             waitForKeyElements(".approve-all", CourseRequestListParentEmails);
             break;
+        case "Manage Contract Forms":
+            waitForKeyElements(".accordion-body", ContractTypeIDInManageContractForms);
+            break;
     }
 
     // People Finder Quick Select
@@ -455,6 +461,9 @@ function GetModule(strURL)
     if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.includes("/app/enrollment-management#settings/contracts"))
+    {
+        return "Manage Contract Forms"
     } else if (strURL.includes("/academics#studentcourserequestworklist/"))
     {
         return "Course Request Worklist"
@@ -1613,58 +1622,89 @@ function EmailSelectedParents(studentsToo)
     var popupOpen = false;
     var done = false;
     var timerID = 0;
+    var count = $('input[type="checkbox"]:checked').not('.Select_all, #dialer-remember').length;
 
-    if ($('input[type="checkbox"]:checked').not('.Select_all').length) // only if there are selected students
+    if (count>0) // only if there are selected students
     {
         $("#roster-count").closest("h4").append('<span id="email-parents"> Gathering Parent Emails...</span>')
 
-        timerID = setInterval(function(){
-
-            if (!done) // prevent running on page after already done
+        try
+        {
+            var delim = ";";
+            switch (localStorage.getItem("EmailDelimiter"))
             {
-                if (currStudent < $('input[type="checkbox"]:checked').not('.Select_all').length) // loop through selected students
-                {
-                    if (!popupOpen) // if relationship popup is not open, open it
-                    {
-                        if (studentsToo)
-                        {
-                            mailtoLink = mailtoLink + $('input[type="checkbox"]:checked').not('.Select_all').eq(currStudent).closest(".roster-card").find("[href^='mailto']").text() + ";"
-                        }
-                        $('input[type="checkbox"]:checked').not('.Select_all').eq(currStudent).closest(".bb-context-menu").find("[href='#']")[0].click();
-                        popupOpen = true;
-                    } else
-                    {
-                        if ($(".roster-relationships [href^='mailto']").length && !gettingEmails) // avoid repeating loop when already running
-                        {
-                            gettingEmails = true;
-                            $(".roster-relationships [href^='mailto']").each(function(index){
-                                if ($(this).text() != lastEmail) // skip duplicate email addresses
-                                {
-                                    mailtoLink = mailtoLink + $(this).text() + ";";
-                                    lastEmail = $(this).text();
-                                }
-                            });
-
-                            $(".close")[0].click();
-                            popupOpen = false;
-                            currStudent++;
-                            gettingEmails = false;
-                        } else if (!$(".roster-relationships [href^='mailto']").length) // no parent emails
-                        {
-                            $(".close")[0].click();
-                            popupOpen = false;
-                            currStudent++;
-                        }
-                    }
-                } else  // done
-                {
-                    document.location.href = mailtoLink;
-                    $("#email-parents").remove();
-                    clearInterval(timerID);
-                    done = true;
-                }
+                case 0:
+                    delim = ",";
+                    break;
+                case 1:
+                    delim = ";";
+                    break;
+                case 2:
+                    delim = " ";
+                    break;
+                case 3:
+                    delim = "\r\n";
+                    break;
             }
-        }, 100);
+
+            var emails = [];
+            var token = $("#__AjaxAntiForgery input").val();
+            GetEmails(0);
+
+            function GetEmails(index)
+            {
+                if (index >= count)
+                {
+                    LaunchMailto();
+                    return;
+                }
+
+                var studentID = $('input[type="checkbox"]:checked').not('.Select_all').eq(index).siblings("#context-menu").find(".user-relationships-initial").data("user-id");
+                var url = "https://hanalani.myschoolapp.com/api/datadirect/studentrelationshipsget/"+studentID+"/?format=json";
+                if (studentsToo)
+                    emails.push($('input[type="checkbox"]:checked').not('.Select_all').eq(index).closest(".roster-card").find("[href^='mailto']").text());
+
+                GM.xmlHttpRequest({
+                    method: "GET",
+                    url: url,
+                    headers: {
+                        "Content-Type": "application/json",
+                        "requestverificationtoken": token
+                    },
+                    onload: function(response) {
+                        try
+                        {
+                            var relEmails = JSON.parse(response.responseText);
+                            for (var i = 0; i < relEmails.length; i++)
+                            {
+
+                                emails.push(relEmails[i].email);
+                            }
+                        } catch (e)
+                        {
+                            console.log(e);
+                            console.log(response.responseText);
+                        }
+
+                        // Make the next request
+                        GetEmails(index + 1);
+                    }
+                });
+            }
+
+            function LaunchMailto()
+            {
+                var uniqueEmails = [...new Set(emails)];
+                mailtoLink = mailtoLink + uniqueEmails.join(delim);
+                document.location.href = mailtoLink;
+                $("#email-parents").remove();
+            }
+
+        } catch (e)
+        {
+            console.log(e);
+            toastr.error("Error: "+e.message);
+        }
 
     } else
     {
@@ -1726,6 +1766,18 @@ function CreateClassCheckboxes()
         // Create Select All checkbox
         $(".schedule-list table thead tr th").eq(2).append('<div align="right"><label><input type="checkbox" class="Select_all">Select All</label></div>');
 
+        var classesInGrid = [];
+        var classesInMenu = [];
+        var classesInMenuNames = [];
+
+        $("#group-header-Classes").closest("li").find(".group-page-link-1").each(function() {
+            var classURL = $(this).attr("href");
+            var start = classURL.indexOf("#academicclass/")+15;
+            var end = classURL.indexOf("/",start+1);
+            classesInMenu.push(classURL.substring(start,end));
+            classesInMenuNames.push($(this).text());
+        });
+
         // Create checkboxes for each class
         $("#accordionSchedules").find("[href]").not(".all-present").each(function(index){
             input = document.createElement("input");
@@ -1734,6 +1786,16 @@ function CreateClassCheckboxes()
             $(this).before(input);
 //            $(this).after('<a id="test" href="javascript:void(0)">Test</a>')
         });
+
+        // Add classes that aren't scheduled
+        for (var i = 0; i < classesInMenu.length; i++)
+        {
+            if (!classesInGrid.includes(classesInMenu[i]))
+            {
+                var html = '<tr><td data-heading="Time">None</td><td data-heading="Block">None</td><td data-heading="Activity"><h4><input type="checkbox" class="checkbox-class"><a href="#academicclass/'+classesInMenu[i]+'/0/bulletinboard">'+classesInMenuNames[i]+'</a></h4></td><td></td><td></td></tr>'
+                $("#accordionSchedules").append(html);
+            }
+        }
 
         // Click event for Select All, to check/uncheck all students
         $("input[type='checkbox'].Select_all").bind("click", function(){
@@ -1748,16 +1810,13 @@ function CreateClassCheckboxes()
 
         // Click events for Send Communication menu items
         $("#selected-classes-students").unbind("click").bind("click", function(){
-            localStorage.setItem("SaveRosterEmailsType", "Students");
-            EmailSelectedClasses();
+            EmailSelectedClassesv2("Student");
         });
         $("#selected-classes-parents").unbind("click").bind("click", function(){
-            localStorage.setItem("SaveRosterEmailsType", "Parents");
-            EmailSelectedClasses();
+            EmailSelectedClassesv2("Parent");
         });
         $("#selected-classes-all").unbind("click").bind("click", function(){
-            localStorage.setItem("SaveRosterEmailsType", "All");
-            EmailSelectedClasses();
+            EmailSelectedClassesv2("All");
         });
 
         // Reset cookie in case process failed previously
@@ -1766,148 +1825,84 @@ function CreateClassCheckboxes()
     }
 }
 
-function EmailSelectedClasses()
+function EmailSelectedClassesv2(type)
 {
     console.log("Function: " + arguments.callee.name)
     var numSelectedClasses = $('input[type="checkbox"]:checked').not('.Select_all').length
-    var currClass = 0
-    var rosterWindow
 
-    if (numSelectedClasses && confirm("A new tab/window will be opened for each class to grab the email addresses.  Click OK when ready."))
+    if (numSelectedClasses)
     {
-        localStorage.setItem("SaveRosterEmailsActive", "1");
-        localStorage.setItem("SaveRosterEmailsFirstClass", "1");
-        localStorage.setItem("SaveRosterEmailsClassDone", "1");
+        toastr.success("Getting emails... Please wait...");
+        try
+        {
+            var delim = ";";
+            switch (localStorage.getItem("EmailDelimiter"))
+            {
+                case 0:
+                    delim = ",";
+                    break;
+                case 1:
+                    delim = ";";
+                    break;
+                case 2:
+                    delim = " ";
+                    break;
+                case 3:
+                    delim = "\r\n";
+                    break;
+            }
 
-        var timerID = setInterval(function(){
-            var url
-            var mailtoLink
-            var mailtoLinks = []
-            var emails
-            if (localStorage.getItem("SaveRosterEmailsClassDone") == 0)
+            var emails = [];
+            var token = $("#__AjaxAntiForgery input").val();
+            GetEmails(0);
+
+            function GetEmails(index)
             {
-                // wait for new window to finish saving emails
-            } else
-            {
-                if (localStorage.getItem("SaveRosterEmailsFirstClass") == 0)
+                if (index >= numSelectedClasses)
                 {
-                    currClass++
+                    CopyEmailsToClipboard();
+                    return;
                 }
 
-                if (currClass < numSelectedClasses)
-                {
-                    // Open class roster to grab email addresses
-                    url = schoolURL+"app/faculty#academicclass/" + GetID($('input[type="checkbox"]:checked').not('.Select_all').eq(currClass).next("[href]").attr("href")) + "/0/roster"
-                    localStorage.setItem("SaveRosterEmailsClassDone", "0");
-                    rosterWindow = window.open(url)
-                } else  // Done
-                {
-                    clearInterval(timerID);
-                    localStorage.setItem("SaveRosterEmailsActive", "0");
-                    emails = localStorage.getItem("SaveRosterEmailsAddresses")
+                var classID = GetID($('input[type="checkbox"]:checked').not('.Select_all').eq(index).next("[href]").attr("href"));
+                var url = "https://hanalani.myschoolapp.com/api/DataDirect/SectionEmailList/?format=json&sectionId="+classID;
 
-                    // Remove duplicates from emails
-                    var emailArray = emails.split("|")
-                    var uniqueEmails = [];
-                    $.each(emailArray, function(i, el){
-                        if($.inArray(el, uniqueEmails) === -1) uniqueEmails.push(el);
-                    });
-
-                    // Split email group if larger than 2000 characters total
-                    var currEmail = 0
-                    emails = ""
-                    while (currEmail < uniqueEmails.length)
-                    {
-                        emails = emails + uniqueEmails[currEmail] + ";"
-                        if (emails.length > 1500)
+                GM.xmlHttpRequest({
+                    method: "GET",
+                    url: url,
+                    headers: {
+                        "Content-Type": "application/json",
+                        "requestverificationtoken": token
+                    },
+                    onload: function(response) {
+                        var classEmails = JSON.parse(response.responseText);
+                        for (var i = 0; i < classEmails.length; i++)
                         {
-                            emails = emails.substring(0, emails.length - uniqueEmails[currEmail].length - 2)
-                            mailtoLink = "mailto:?bcc=" + emails
-                            mailtoLinks.push(mailtoLink)
-                            emails = ""
-                        }
-                        currEmail++
-                    }
-                    mailtoLink = "mailto:?bcc=" + emails
-                    mailtoLinks.push(mailtoLink)
-                    var CurrMailtoLink = 0
-                    var confirmPrompt = "You will be sending to " + uniqueEmails.length + " recipients."
-                    if (mailtoLinks.length > 1)
-                    {
-                        confirmPrompt += "  Due to browser limitations, your recipient list will be split into " + mailtoLinks.length + " parts and a new message window created for each."
-                    }
-
-                    if(confirm(confirmPrompt))
-                    {
-                        var timerID2 = setInterval(function() {
-                            if (CurrMailtoLink < mailtoLinks.length)
+                            if (type == "All" || type == classEmails[i].type_description)
                             {
-                                window.open(mailtoLinks[CurrMailtoLink])
-                                CurrMailtoLink++
-                            } else
-                            {
-                                clearInterval(timerID2)
+                                emails.push(classEmails[i].email);
                             }
-                        }, 500);
+                        }
+
+                        // Make the next request
+                        GetEmails(index + 1);
                     }
-                }
-
+                });
             }
-        }, 100);
-    } else if (!numSelectedClasses)
-    {
-        alert("No classes selected!");
-    }
-}
 
-function SaveRosterEmails()
-{
-    console.log("Function: " + arguments.callee.name)
-    if (localStorage.getItem("SaveRosterEmailsActive") == 1)
-    {
-        switch (localStorage.getItem("SaveRosterEmailsType"))
-        {
-            case "Students":
-                $(".send-message").eq(0)[0].click()
-                waitForKeyElements("#email-list-textarea", GrabEmails)
-                break;
-            case "Parents":
-                $(".send-message").eq(1)[0].click()
-                waitForKeyElements("#email-list-textarea", GrabEmails)
-                break;
-            case "All":
-                $(".send-message").eq(2)[0].click()
-                waitForKeyElements("#email-list-textarea", GrabEmails)
-                break;
-        }
-    }
-}
-
-function GrabEmails()
-{
-    console.log("Function: " + arguments.callee.name)
-    if (localStorage.getItem("SaveRosterEmailsActive") == 1)
-    {
-        var str;
-
-        if ($("#email-list-textarea").text().length)  // Make sure there are emails in the box
-        {
-            if (localStorage.getItem("SaveRosterEmailsFirstClass") == 1)
+            function CopyEmailsToClipboard()
             {
-                str = $("#email-list-textarea").text();
-                localStorage.setItem("SaveRosterEmailsFirstClass", "0");
-            } else
-            {
-                str = localStorage.getItem("SaveRosterEmailsAddresses") + "| " + $("#email-list-textarea").text()
+                var uniqueEmails = [...new Set(emails)];
+                var emailString = uniqueEmails.join(delim);
+                GM_setClipboard(emailString, "text");
+                toastr.clear();
+                toastr.success(uniqueEmails.length+" email(s) copied to clipboard.");
             }
-            str = str.replace(/,/g, "|")  // Commas and semicolons are not allowed in cookie values
-            localStorage.setItem("SaveRosterEmailsAddresses", str)
-            localStorage.setItem("SaveRosterEmailsClassDone", "1")
-            window.close()
-        } else
+        } catch (e)
         {
-            // Box of emails is empty.  Reload page to try again
-            location.reload()
+            console.log(e);
+            toastr.clear();
+            toastr.error("Error: "+e.message);
         }
     }
 }
@@ -4031,6 +4026,19 @@ function ProcessStudentListForParentEmails(students, token)
         console.log(e);
         toastr.error("Error: "+e.message);
     }
+}
+
+// -----------------------------------------[INDEX047]-------------------------------------
+// --------------------------Contract Type ID in Manage Contract Forms---------------------
+// ----------------------------------------------------------------------------------------
+
+function ContractTypeIDInManageContractForms(jNode)
+{
+    console.log("Function: " + arguments.callee.name);
+    $("#contractTypeList table").each(function() {
+        if (!$(this).closest("div").prev("div").find(".oms-contract-type-id").length)
+            $(this).closest("div").prev("div").find(".lead").after('<span class="oms-contract-type-id" style="font-size:smaller;font-weight:normal;padding-left:4px;">(ID: '+$(this).attr("id").substring(4)+')</span>');
+    });
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
