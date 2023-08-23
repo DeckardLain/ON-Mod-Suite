@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.21.0]
+### Fixed
+- User Module Selector for Academics updated to the new Academics profile URL.
+- User Module links added to the new Academics profile page.
+- People Finder Quick Select now only uses number shortcuts to select from the results if non-numeric text has
+been entered in the search box. This allows user IDs to be entered into People Finder.
+- Salutation formulas were not properly detecting first names.
+### Changed
+- Feature [Show All Section Sizes] removed - implemented by Blackbaud.
+- Misc. unnecessary code and comments removed.
+
 ## [2.20.0] - 2023-08-11
 ### Added
 - Display Contract Type IDs on the Manage Contract Forms page.
