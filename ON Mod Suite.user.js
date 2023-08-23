@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.20.1
+// @version      2.21.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -75,7 +75,6 @@
 [INDEX034] Fix Immunization Requirements Collapse
 [INDEX035] Default Assignment Date Filter
 [INDEX036] Math Year Averages
-[INDEX037] Show All Section Sizes
 [INDEX038] Email Delimiter Default
 [INDEX039] Word Count for Discussion Responses
 [INDEX040] Impersonation Recent & Pinned
@@ -240,9 +239,6 @@ Completed Mods:
      From Schedule & Performance gradebooks list, for A/B math classes, launch lookup with custom external API to get the class
      students' full year averages.
 
-34 - Show All Section Sizes
-     When editing student enrollments, click a button to show section sizes on the grid next to each section number.
-
 35 - Email Delimiter Default
      When sending email to students and/or parents from a roster, remember last used delimiter option and select it by default.
 
@@ -336,7 +332,7 @@ function gmMain(){
             waitForKeyElements(".bb-tile-header:contains('General information')", SavePrefixes, true)
             break;
         case "Academics":
-            waitForKeyElements("h1.bb-tile-header", PostLinkAcademics)
+            waitForKeyElements("h1.bb-tile-header, #user-profile-full-name", PostLinkAcademics)
             waitForKeyElements(".bb-page-heading", PostLinkFaculty)
             UpdatePageTitle($("h1.bb-tile-header"))
             break;
@@ -449,9 +445,6 @@ function gmMain(){
         case "Assignments":
             waitForKeyElements(".assignment-filter-item", DefaultClassAssignmentDateFilter, true)
             waitForKeyElements("#group-header-Classes", ClassesMenuSortOrder)
-            break;
-        case "Scheduling":
-            waitForKeyElements(".sky-toolbar-items", ShowAllSectionSizes)
             break;
         case "Discussion":
             waitForKeyElements(".discussion-name", WordCount)
@@ -576,9 +569,6 @@ function GetModule(strURL)
     } else if (strURL.substring(strURL.length-12) == "#impersonate")
     {
         return "Impersonate"
-    } else if (strURL.indexOf("/sis-scheduling/") >= 0)
-    {
-        return "Scheduling"
     } else if (strURL.indexOf("#discussionsectiondetail/") >= 0)
     {
         return "Discussion"
@@ -645,7 +635,7 @@ function GetModule(strURL)
     } else if (strURL.substring(strURL.length-6, strURL.length) == "roster")
     {
         return "Other Roster";
-    } else if (strURL.substring(0, schoolURL.length+13) == schoolURL+"app/academics")
+    } else if (strURL.indexOf("/app/academics") >= 0 || strURL.indexOf("/sis-scheduling/user-profile/") >= 0)
     {
         return "Academics";
     } else if (strURL.substring(0, schoolURL.length+25) == schoolURL+"app/enrollment-management")
@@ -829,8 +819,8 @@ function GetLink(strModule, strID)
             strLinkSuffix = "/access";
             break;
         case "Academics":
-            strLinkPrefix = schoolURL+"app/academics#academicprofile/";
-            strLinkSuffix = "/attendance";
+            strLinkPrefix = schoolURL+"sis-scheduling/user-profile/";
+            strLinkSuffix = "/progress";
             break;
         case "Enrollment Management":
             strLinkPrefix = schoolURL+"app/enrollment-management#candidate/";
@@ -886,45 +876,53 @@ function PeopleFinderQuickSelect(jNode)
     console.log("Function: " + arguments.callee.name)
     $(".people-finder-userlist-link").remove()
     $(".people-finder-search-box, input[placeholder='Type a name, ID or email']").keypress(function (e){
-        switch (e.keyCode)
+        var searchInput = $(this).val();
+        if (e.keyCode == 13)
         {
-            case 13:
-            case 49:
-                $("#PeopleFinderContainer").find(".pf-user").eq(0).click();
-                $(".result").eq(0).click();
-                break;
-            case 50:
-                $("#PeopleFinderContainer").find(".pf-user").eq(1).click();
-                $(".result").eq(1).click();
-                break;
-            case 51:
-                $("#PeopleFinderContainer").find(".pf-user").eq(2).click();
-                $(".result").eq(2).click();
-                break;
-            case 52:
-                $("#PeopleFinderContainer").find(".pf-user").eq(3).click();
-                $(".result").eq(3).click();
-                break;
-            case 53:
-                $("#PeopleFinderContainer").find(".pf-user").eq(4).click();
-                $(".result").eq(4).click();
-                break;
-            case 54:
-                $("#PeopleFinderContainer").find(".pf-user").eq(5).click();
-                $(".result").eq(5).click();
-                break;
-            case 55:
-                $("#PeopleFinderContainer").find(".pf-user").eq(6).click();
-                $(".result").eq(6).click();
-                break;
-            case 56:
-                $("#PeopleFinderContainer").find(".pf-user").eq(7).click();
-                $(".result").eq(7).click();
-                break;
-            case 57:
-                $("#PeopleFinderContainer").find(".pf-user").eq(8).click();
-                $(".result").eq(8).click();
-                break;
+            $("#PeopleFinderContainer").find(".pf-user").eq(0).click();
+            $(".result").eq(0).click();
+            $("#PeopleFinderContainer, .results").hide();
+        } else if (searchInput != "" && isNaN(searchInput))
+        {
+            switch (e.keyCode)
+            {
+                case 49:
+                    $("#PeopleFinderContainer").find(".pf-user").eq(0).click();
+                    $(".result").eq(0).click();
+                    break;
+                case 50:
+                    $("#PeopleFinderContainer").find(".pf-user").eq(1).click();
+                    $(".result").eq(1).click();
+                    break;
+                case 51:
+                    $("#PeopleFinderContainer").find(".pf-user").eq(2).click();
+                    $(".result").eq(2).click();
+                    break;
+                case 52:
+                    $("#PeopleFinderContainer").find(".pf-user").eq(3).click();
+                    $(".result").eq(3).click();
+                    break;
+                case 53:
+                    $("#PeopleFinderContainer").find(".pf-user").eq(4).click();
+                    $(".result").eq(4).click();
+                    break;
+                case 54:
+                    $("#PeopleFinderContainer").find(".pf-user").eq(5).click();
+                    $(".result").eq(5).click();
+                    break;
+                case 55:
+                    $("#PeopleFinderContainer").find(".pf-user").eq(6).click();
+                    $(".result").eq(6).click();
+                    break;
+                case 56:
+                    $("#PeopleFinderContainer").find(".pf-user").eq(7).click();
+                    $(".result").eq(7).click();
+                    break;
+                case 57:
+                    $("#PeopleFinderContainer").find(".pf-user").eq(8).click();
+                    $(".result").eq(8).click();
+                    break;
+            }
         }
 
     })
@@ -1834,7 +1832,6 @@ function CreateRosterCheckboxes(jNode)
         if (!$(this).closest(".bb-card-actions").find("input[type='checkbox']").length)
         {  // Create checkbox only if doesn't already exist
             cardHeader = $(this).closest(".roster-card").find(".bb-card-title:first").text()
-            //if(!nonStudentConditions.some(el => cardHeader.includes(el)) && !$(this).closest(".roster-relationships").length)
             // Only if not a teacher and not for relationships popup (Changed to checking for View Relationships option instead)
             if($(this).next().find(".user-relationships-initial").length && !$(this).closest(".roster-relationships").length)
             {  // Only if View Relationships option exists; should handle students who are also owners of community groups
@@ -2069,24 +2066,14 @@ function CreateClassCheckboxes()
 
         // Click events for Send Communication menu items
         $("#selected-classes-students").unbind("click").bind("click", function(){
-            //localStorage.setItem("SaveRosterEmailsType", "Students");
-            //EmailSelectedClasses();
             EmailSelectedClassesv2("Student");
         });
         $("#selected-classes-parents").unbind("click").bind("click", function(){
-            //localStorage.setItem("SaveRosterEmailsType", "Parents");
-            //EmailSelectedClasses();
             EmailSelectedClassesv2("Parent");
         });
         $("#selected-classes-all").unbind("click").bind("click", function(){
-            //localStorage.setItem("SaveRosterEmailsType", "All");
-            //EmailSelectedClasses();
             EmailSelectedClassesv2("All");
         });
-
-        // Reset cookie in case process failed previously
-        localStorage.setItem("SaveRosterEmailsActive", "0");
-
     }
 }
 
@@ -2781,7 +2768,6 @@ function CreateAddToFavoritesLink()
             $(this).find(".cal2listdayitemtext").eq(1).append(link)
             // Also add shareable link
             var ListName = ListName.replace("[","-").replace("]","-")  // Can't have brackets in the URL, even if encoded
-            //var shareLink = ' | <a href="'+schoolURL+'podium/default.aspx?t=23189&id='+ListID+'&name='+ListName+'&type=Run">Link</a>'
             var shareLink = ' | <a href="javascript:void(0)" class="list-link" data="'+schoolURL+'podium/default.aspx?t=23189&id='+ListID+'&name='+ListName+'&type=Run">Copy Link to List</a>'
             $(this).find(".cal2listdayitemtext").eq(1).append(shareLink)
             // Add List ID to displayed info
@@ -2832,8 +2818,6 @@ function AddAdvancedListFavorite(listID, listName)
         localStorage.setItem("AdvancedListFavorites", JSON.stringify(favorites));
         alert(listName + " added to favorites.  View your favorites on Core->Dashboard.")
     }
-
-
 }
 
 // --------------------------------------[INDEX021]----------------------------------------
@@ -2846,7 +2830,6 @@ function EditorImprovements(jNode)
     // Default Size
     if (localStorage.getItem("EditorDefaultSize") > 0)
     {
-        //$(jNode).siblings("head").append('<style>body {font-size:' + localStorage.getItem("EditorDefaultSize") + 'px;}</style>')
         $(jNode).find("head").append('<style>body {font-size:' + localStorage.getItem("EditorDefaultSize") + 'px;}</style>')
     }
 
@@ -2859,30 +2842,10 @@ function EditorImprovements(jNode)
     // Expand Editor Size
     if (!$(jNode).siblings(".expand-editor").length)
     {
-//         if ($("iframe").closest(".row").length)
-//         {
-//             $("iframe").closest(".row").append('<div id="expand-' + $("iframe").attr("id") + '" align="right"><a href="javascript:void(0)" class="expand-editor"><font size="-1">&#9660Expand&#9660</font></a></div>')
-//         } else if ($("iframe").closest(".form-group").length)
-//         {
-//             $("iframe").closest(".form-group").append('<div id="expand-' + $("iframe").attr("id") + '" align="right"><a href="javascript:void(0)" class="expand-editor"><font size="-1">&#9660Expand&#9660</font></a></div>')
-//         } else
-//         {
-//             $("iframe").closest("tr").after('<div id="expand-' + $("iframe").attr("id") + '" align="right"><a href="javascript:void(0)" class="expand-editor"><font size="-1">&#9660Expand&#9660</font></a></div>')
-//         }
         $(jNode).after('<div align="right"><a href="javascript:void(0)" class="expand-editor"><font size="-1">&#9660Expand&#9660</font></a></div>')
     }
 
     $(".expand-editor").unbind("click").bind("click", function(){
-//         if ($(this).closest(".row").length)
-//         {
-//             $(this).closest(".row").find(".tox-tinymce").css("height", +$(this).closest(".row").find("iframe").css("height").substr(0, $(this).closest(".row").find("iframe").css("height").length-2)+100 + "px")
-//         } else if ($("iframe").closest(".form-group").length)
-//         {
-//             $(this).closest(".form-group").find("iframe").css("height", +$(this).closest(".form-group").find("iframe").css("height").substr(0, $(this).closest(".form-group").find("iframe").css("height").length-2)+100 + "px")
-//         } else
-//         {
-//             $(this).closest("tr").find("iframe").css("height", +$(this).closest("tr").find("iframe").css("height").substr(0, $(this).closest("tr").find("iframe").css("height").length-2)+100 + "px")
-//         }
         var editorBox = $(this).closest("div").prev();
         editorBox.css("height", +editorBox.css("height").substr(0, editorBox.css("height").length-2)+100+"px");
     });
@@ -2966,35 +2929,12 @@ function OfficialNotesImprovements(jNode)
         $("#filters").after(html)
     }
 
-    // Get existing settings
-    /* *Feature removed after Blackbaud's 9/18/19 update added Unread filter
-    if (localStorage.getItem("OfficialNotesUnreadAtTop") == "True")
-    {
-        $("#UnreadAtTop").prop("checked", true)
-        waitForKeyElements(".detail", OfficialNotesUnreadAtTop)
-    }
-    */
     if (localStorage.getItem("OfficialNotesRemoveAdmissionsOnly") == "True")
     {
         $("#RemoveAdmissionsOnly").prop("checked", true)
         waitForKeyElements(".bb-emphasized", OfficialNotesRemoveAdmissionsOnly)
     }
 
-    // Save settings changes
-    /* *Feature removed after Blackbaud's 9/18/19 update added Unread filter
-    $("#UnreadAtTop").unbind("click change").bind("click change", function(){
-        if ($("#UnreadAtTop").prop("checked") == true)
-        {
-            localStorage.setItem("OfficialNotesUnreadAtTop", "True")
-            OfficialNotesUnreadAtTop()
-            waitForKeyElements(".detail", OfficialNotesUnreadAtTop)
-        } else
-        {
-            localStorage.setItem("OfficialNotesUnreadAtTop", "False")
-            location.reload()
-        }
-    });
-    */
     $("#RemoveAdmissionsOnly").unbind("click change").bind("click change", function(){
         if ($("#RemoveAdmissionsOnly").prop("checked") == true)
         {
@@ -3021,31 +2961,12 @@ function OfficialNotesImprovements(jNode)
 
 }
 
-/* *Feature removed after Blackbaud's 9/18/19 update added Unread filter
-function OfficialNotesUnreadAtTop()
-{
-    console.log("Function: " + arguments.callee.name)
-    $(".message-list").prepend($(".sky-background-color-info-light"))
-
-    console.log($(".site-badge-sb-adm-notes").text() * 1)
-}
-*/
-
 function OfficialNotesRemoveAdmissionsOnly()
 {
     console.log("Function: " + arguments.callee.name)
     $(".detail").each(function(){
         if ($(this).text().includes("Admissions Only"))
         {
-            /*
-            if ($(this).closest("tr").attr("class") == " sky-background-color-info-light")
-            {
-                $(this)[0].click();
-                waitForKeyElements("[data-dismiss='modal']", function(jNode){
-                    $(jNode)[0].click();
-                }, true);
-            }
-            */
             $(this).closest("tr").remove()
         }
     });
@@ -3312,11 +3233,11 @@ function SalutationFormulas()
         $("#relationship-table").find("tr:contains('Parental Access')").each(function(index){
             if (p1name == "")
             {
-                p1name = $(this).closest("tr").find("h4").text()
+                p1name = $(this).closest("tr").find("h4").text().trim();
                 localStorage.setItem("GetPrefixesP1ID", GetID($(this).closest("tr").find("a").attr("href")))
-            } else if (p2name == "")
+            } else if (p2name == "" && p1name != $(this).closest("tr").find("h4").text().trim())
             {
-                p2name = $(this).closest("tr").find("h4").text()
+                p2name = $(this).closest("tr").find("h4").text().trim();
                 localStorage.setItem("GetPrefixesP2ID", GetID($(this).closest("tr").find("a").attr("href")))
             }
         });
@@ -3401,6 +3322,8 @@ function SalutationFormulas()
             // simple case: first and last name each one word
             salutationsInformal.push(p1names[0] + " and " + p2name)
             salutationsInformal.push(p2names[0] + " and " + p1name)
+            salutationsInformal.push(p1names[0] + " and " + p2names[0])
+            salutationsInformal.push(p2names[0] + " and " + p1names[0])
             salutationsHousehold.push(p1prefix + " and " + p2prefix + " " + p1name)
             salutationsFormal.push(p1prefix + " and " + p2prefix + " " + p1names[1])
             if (defaultPrefix)
@@ -3436,6 +3359,8 @@ function SalutationFormulas()
             // Second alternate: first word as first name, rest as last name
             salutationsInformal.push(p1names[0] + " and " + p2name)
             salutationsInformal.push(p2names[0] + " and " + p1name)
+            salutationsInformal.push(p1names[0] + " and " + p2names[0])
+            salutationsInformal.push(p2names[0] + " and " + p1names[0])
             salutationsHousehold.push(p1prefix + " and " + p2prefix + " " + p1name)
             salutationsFormal.push(p1prefix + " and " + p2prefix + " " + p1name.substr(p1names[0].length+1))
             if (defaultPrefix)
@@ -3894,66 +3819,6 @@ function MathYearAverages()
             }
         }
     });
-}
-
-// -----------------------------------------[INDEX037]-------------------------------------
-// ----------------------------------Show All Section Sizes--------------------------------
-// ----------------------------------------------------------------------------------------
-
-function ShowAllSectionSizes(jNode)
-{
-    console.log("Function: " + arguments.callee.name)
-
-    if (jNode.find($(".sky-btn:contains('Find a section')")).length)
-    {
-        $(".sky-toolbar-items").append('<sky-toolbar-item><div class="sky-toolbar-item"><button class="sky-btn sky-btn-default show-all-section-sizes"> Show all section sizes </button></div></sky-toolbar-item>')
-
-        $(".show-all-section-sizes").unbind("click").bind("click", function(){
-            GetSectionSize($(".section-link:not(:empty)"), 0)
-        });
-    }
-}
-
-function GetSectionSize(jNodes, index)
-{
-    console.log("Function: " + arguments.callee.name)
-
-    jNodes.eq(index).click()
-
-    var timeoutID = setTimeout(function()
-    {
-        console.log("timeout")
-        clearInterval(timerID)
-        $(document).click()
-        GetSectionSize(jNodes,index)
-    }, 2000);
-
-    var timerID = setInterval(function()
-    {
-        var className = $(".sky-popover-container").find(".sky-emphasized").text().trim()
-        var courseName = jNodes.eq(index).closest("tr").children("td").eq(1).find("div").text().trim()
-        var courseID = jNodes.eq(index).closest("tr").children("td").eq(1).find("div").find("span").text()
-        if (courseID.length > 0)
-        {
-            courseName = courseName.substring(0,courseName.indexOf(courseID)-1)
-        }
-        courseName += " - " + jNodes.eq(index).text()
-
-        if(courseName == className)
-        {
-            clearInterval(timerID)
-            clearTimeout(timeoutID)
-
-            var size = $(".sky-column:contains('Current size')").next().text().trim()
-            jNodes.eq(index).after('<span><small> &lt;'+size+'&gt;</small></span>')
-            $(document).click()
-
-            if (index < jNodes.length - 1)
-            {
-                GetSectionSize(jNodes, index+1)
-            }
-        }
-    }, 100);
 }
 
 // -----------------------------------------[INDEX038]-------------------------------------
