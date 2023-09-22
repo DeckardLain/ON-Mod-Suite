@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.22.0] - 2023-09-22
+### Added
+- Print Student Assessment from the assessment evaluation tab.
+
 ## [2.21.0]
 ### Fixed
 - User Module Selector for Academics updated to the new Academics profile URL.
