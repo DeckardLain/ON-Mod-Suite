@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.21.0
+// @version      2.22.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
@@ -13,6 +13,7 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js
 // @resource     IMPORTED_CSS https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css
 // @require      https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/printThis/1.15.0/printThis.min.js
 // @connect      myschoolapp.com
 // ==/UserScript==
 
@@ -74,6 +75,7 @@
 [INDEX045] Gradebook Highlight Row
 [INDEX046] Course Request List Parent Emails
 [INDEX047] Contract Type ID in Manage Contract Forms
+[INDEX048] Print Student Assessment
 [INDEX900] Misc. Helper Functions
 
 
@@ -240,6 +242,9 @@ Completed Mods:
 
 42 - Contract Type ID in Manage Contract Forms
      Displays the ID of each contract type on the Manage Contract Forms page.
+
+43 - Print Student Assessment
+     Print a student's assessment results from the assessment evaluation tab.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -413,6 +418,9 @@ function gmMain(){
         case "Manage Contract Forms":
             waitForKeyElements(".accordion-body", ContractTypeIDInManageContractForms);
             break;
+        case "StudentAssessment":
+            waitForKeyElements(".user-details", PrintStudentAssessment);
+            break;
     }
 
     // People Finder Quick Select
@@ -454,6 +462,9 @@ function GetModule(strURL)
     if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.includes("/lms-assessment-builder/assessment-evaluation/"))
+    {
+        return "StudentAssessment"
     } else if (strURL.includes("/app/enrollment-management#settings/contracts"))
     {
         return "Manage Contract Forms"
@@ -1780,7 +1791,11 @@ function CreateClassCheckboxes()
             input.type = "checkbox";
             input.className = "checkbox-class";
             $(this).before(input);
-//            $(this).after('<a id="test" href="javascript:void(0)">Test</a>')
+
+            var classURL = $(this).attr("href");
+            var start = classURL.indexOf("#academicclass/")+15;
+            var end = classURL.indexOf("/",start+1);
+            classesInGrid.push(classURL.substring(start,end));
         });
 
         // Add classes that aren't scheduled
@@ -3909,6 +3924,40 @@ function ContractTypeIDInManageContractForms(jNode)
         if (!$(this).closest("div").prev("div").find(".oms-contract-type-id").length)
             $(this).closest("div").prev("div").find(".lead").after('<span class="oms-contract-type-id" style="font-size:smaller;font-weight:normal;padding-left:4px;">(ID: '+$(this).attr("id").substring(4)+')</span>');
     });
+}
+
+// -----------------------------------------[INDEX048]-------------------------------------
+// ----------------------------------Print Student Assessment------------------------------
+// ----------------------------------------------------------------------------------------
+
+function PrintStudentAssessment(jNode)
+{
+    console.log("Function: " + arguments.callee.name);
+    if (!$("#oms-print-student-assessment").length)
+    {
+        $(".user-details").children("div:last").append('<div id="oms-print-student-assessment" style="cursor:pointer; font-size:larger; width:17px;">&#9113;</div>');
+
+        $("#oms-print-student-assessment").bind("click", function() {
+            // Function to grab all styles
+            function grabAllStyles() {
+                let styleTags = document.querySelectorAll('style, link[rel="stylesheet"]');
+                let styles = '';
+                styleTags.forEach((tag) => {
+                    styles += tag.outerHTML;
+                });
+                return styles;
+            }
+
+            // Collect all styles from the original document
+            let allStyles = grabAllStyles();
+
+            // Print the div using printThis
+            $('.evaluation-student').printThis({
+                importStyle: true, // Existing settings
+                header: allStyles,  // Insert the styles here
+            });
+        });
+    }
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
