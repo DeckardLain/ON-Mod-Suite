@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.21.0
+// @version      2.22.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -15,6 +15,7 @@
 // @require      https://code.jquery.com/ui/1.12.1/jquery-ui.min.js
 // @resource     IMPORTED_CSS https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css
 // @require      https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/printThis/1.15.0/printThis.min.js
 // @grant        GM.xmlHttpRequest
 // @connect      script.google.com
 // @connect      script.googleusercontent.com
@@ -92,6 +93,7 @@
 [INDEX052] Gradebook Highlight Row
 [INDEX053] Course Request List Parent Emails
 [INDEX054] Facilities Request Form
+[INDEX055] Print Student Assessment
 [INDEX900] Misc. Helper Functions
 
 
@@ -276,6 +278,9 @@ Completed Mods:
 
 46 - Course Request List Parent Emails
      Get parent emails for listed students in the Student Course Request Worklist.
+
+47 - Print Student Assessment
+     Print a student's assessment results from the assessment evaluation tab.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -487,6 +492,9 @@ function gmMain(){
         case "Calendar":
             waitForKeyElements(".calendarTitle:contains('Facilities')", FacilitiesRequestForm);
             break;
+        case "StudentAssessment":
+            waitForKeyElements(".user-details", PrintStudentAssessment);
+            break;
     }
 
     // People Finder Quick Select
@@ -536,6 +544,9 @@ function GetModule(strURL)
     if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.includes("/lms-assessment-builder/assessment-evaluation/"))
+    {
+        return "StudentAssessment"
     } else if (strURL.includes("#calendar"))
     {
         return "Calendar"
@@ -5044,6 +5055,40 @@ function FacilitiesRequestForm(jNode)
                 }
 
             }
+        });
+    }
+}
+
+// -----------------------------------------[INDEX055]-------------------------------------
+// ----------------------------------Print Student Assessment------------------------------
+// ----------------------------------------------------------------------------------------
+
+function PrintStudentAssessment(jNode)
+{
+    console.log("Function: " + arguments.callee.name);
+    if (!$("#oms-print-student-assessment").length)
+    {
+        $(".user-details").children("div:last").append('<div id="oms-print-student-assessment" style="cursor:pointer; font-size:larger; width:17px;">&#9113;</div>');
+
+        $("#oms-print-student-assessment").bind("click", function() {
+            // Function to grab all styles
+            function grabAllStyles() {
+                let styleTags = document.querySelectorAll('style, link[rel="stylesheet"]');
+                let styles = '';
+                styleTags.forEach((tag) => {
+                    styles += tag.outerHTML;
+                });
+                return styles;
+            }
+
+            // Collect all styles from the original document
+            let allStyles = grabAllStyles();
+
+            // Print the div using printThis
+            $('.evaluation-student').printThis({
+                importStyle: true, // Existing settings
+                header: allStyles,  // Insert the styles here
+            });
         });
     }
 }
