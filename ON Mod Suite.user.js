@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.23.1
+// @version      2.23.2
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -498,6 +498,7 @@ function gmMain(){
             waitForKeyElements(".user-details", PrintStudentAssessment);
             break;
         case "NewEMSEvents":
+            waitForKeyElements(".sky-toolbar-items", ProcessEventRegistrationsUserLinksMenu);
             waitForKeyElements(".sky-row:contains(UserId)", ProcessEventRegistrationsUserLinks);
             break;
     }
@@ -1598,109 +1599,113 @@ function GetUserLink(userID, page, newWindow)
     if (newWindow){
         strHTMLPrefix = strHTMLPrefix + 'target="_blank" '
     }
-    strHTMLPrefix = strHTMLPrefix + 'href="'+schoolURL+'app/'
+    strHTMLPrefix = strHTMLPrefix + 'href="'+schoolURL
     var strHTMLSuffix = '</a>';
 
     switch (page)
     {
         case "Core->Access":
-            moduleURL = "Core#userprofile";
+            moduleURL = "app/Core#userprofile";
             pageURL = "access";
             break;
         case "Core->Enrollment":
-            moduleURL = "Core#userprofile";
+            moduleURL = "app/Core#userprofile";
             pageURL = "enrollment";
             break;
         case "Core->Settings":
-            moduleURL = "Core#userprofile";
+            moduleURL = "app/Core#userprofile";
             pageURL = "settings";
             break;
         case "Core->Files & Forms":
-            moduleURL = "Core#userprofile";
+            moduleURL = "app/Core#userprofile";
             pageURL = "files";
             break;
         case "Core->Contact Card":
-            moduleURL = "Core#userprofile";
+            moduleURL = "app/Core#userprofile";
             pageURL = "contactcard";
             break;
-        case "Academics->Attendance":
-            moduleURL = "academics#academicprofile";
-            pageURL = "attendance";
+        case "Academics->Progress":
+            moduleURL = "sis-scheduling/user-profile";
+            pageURL = "progress";
+            break;
+        case "Academics->Performance":
+            moduleURL = "sis-grading/user-profile";
+            pageURL = "performance";
+            break;
+        case "Academics->Official Notes":
+            moduleURL = "sis-communications/user-profile";
+            pageURL = "officialnotes";
             break;
         case "Academics->Conduct":
-            moduleURL = "academics#academicprofile";
+            moduleURL = "sis-conduct/user-profile";
             pageURL = "conduct";
             break;
-        case "Academics->Enrollment":
-            moduleURL = "academics#academicprofile";
-            pageURL = "enrollment";
-            break;
-        case "Academics->Rank":
-            moduleURL = "academics#academicprofile";
-            pageURL = "grades";
+        case "Academics->Schedule":
+            moduleURL = "sis-scheduling/user-profile";
+            pageURL = "schedule";
             break;
         case "Academics->Course Requests":
-            moduleURL = "academics#academicprofile";
+            moduleURL = "sis-scheduling/user-profile";
             pageURL = "courserequests";
             break;
         case "Academics->Contact Card":
-            moduleURL = "academics#academicprofile";
+            moduleURL = "esc-profile/user-profile";
             pageURL = "contactcard";
             break;
         case "Enrollment Management->Record":
-            moduleURL = "enrollment-management#candidate";
+            moduleURL = "app/enrollment-management#candidate";
             pageURL = "record";
             break;
         case "Enrollment Management->Checklist":
-            moduleURL = "enrollment-management#candidate";
+            moduleURL = "app/enrollment-management#candidate";
             pageURL = "checklist";
             break;
         case "Enrollment Management->Schools":
-            moduleURL = "enrollment-management#candidate";
+            moduleURL = "app/enrollment-management#candidate";
             pageURL = "schools";
             break;
         case "Enrollment Management->Financial Aid":
-            moduleURL = "enrollment-management#candidate";
+            moduleURL = "app/enrollment-management#candidate";
             pageURL = "financialaid";
             break;
         case "Enrollment Management->Contracts":
-            moduleURL = "enrollment-management#candidate";
+            moduleURL = "app/enrollment-management#candidate";
             pageURL = "contracts";
             break;
         case "Enrollment Management->Contact Card":
-            moduleURL = "enrollment-management#candidate";
+            moduleURL = "app/enrollment-management#candidate";
             pageURL = "contactcard";
             break;
         case "Enrollment Management->Connections":
-            moduleURL = "enrollment-management#candidate";
+            moduleURL = "app/enrollment-management#candidate";
             pageURL = "connections";
             break;
         case "Faculty->Progress":
-            moduleURL = "faculty#profile";
+            moduleURL = "app/faculty#profile";
             pageURL = "progress";
             break;
         case "Faculty->Schedule":
-            moduleURL = "faculty#profile";
+            moduleURL = "app/faculty#profile";
             pageURL = "schedule";
             break;
         case "Faculty->Assignments":
-            moduleURL = "faculty#profile";
+            moduleURL = "app/faculty#profile";
             pageURL = "assignments";
             break;
         case "Faculty->Conduct":
-            moduleURL = "faculty#profile";
+            moduleURL = "app/faculty#profile";
             pageURL = "conduct";
             break;
         case "Faculty->Official Notes":
-            moduleURL = "faculty#profile";
+            moduleURL = "app/faculty#profile";
             pageURL = "officialnotes";
             break;
         case "Faculty->Contact Card":
-            moduleURL = "faculty#profile";
+            moduleURL = "app/faculty#profile";
             pageURL = "contactcard";
             break;
         case "Faculty->Medical":
-            moduleURL = "faculty#profile";
+            moduleURL = "app/faculty#profile";
             pageURL = "medical";
             break;
     }
@@ -1726,10 +1731,11 @@ function GeneratePageMenu(label, location)
             "Core->Settings",
             "Core->Files and Forms",
             "Core->Contact Card",
-            "Academics->Attendance",
+            "Academics->Progress",
+            "Academics->Performance",
+            "Academics->Official Notes",
             "Academics->Conduct",
-            "Academics->Enrollment",
-            "Academics->Rank",
+            "Academics->Schedule",
             "Academics->Course Requests",
             "Academics->Contact Card",
             "Enrollment Management->Record",
@@ -1761,6 +1767,7 @@ function GeneratePageMenu(label, location)
         pages.forEach(function(value){
             id = value.replace(">", "");
             id = "#" + id.replace(/\s/g, "_");
+
             $(id).bind("click", function(){
                 SetAdvancedListIDLinkSetting(GetListName(), value);
                 WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions("L$c1i0$cb143420$ct143420$ctl04", "", true, "", "", false, true))
@@ -5006,13 +5013,107 @@ function PrintStudentAssessment(jNode)
 // ---------------------------Process Event Registrations User Links-----------------------
 // ----------------------------------------------------------------------------------------
 
+function ProcessEventRegistrationsUserLinksMenu(jNode)
+{
+    console.log("Function: " + arguments.callee.name);
+
+    if ($("#openin-menu").length)
+        return;
+
+    var pages = [
+        "Core->Access",
+        "Core->Enrollment",
+        "Core->Settings",
+        "Core->Files and Forms",
+        "Core->Contact Card",
+        "Academics->Progress",
+        "Academics->Performance",
+        "Academics->Official Notes",
+        "Academics->Conduct",
+        "Academics->Schedule",
+        "Academics->Course Requests",
+        "Academics->Contact Card",
+        "Enrollment Management->Record",
+        "Enrollment Management->Checklist",
+        "Enrollment Management->Schools",
+        "Enrollment Management->Financial Aid",
+        "Enrollment Management->Contracts",
+        "Enrollment Management->Contact Card",
+        "Enrollment Management->Connections",
+        "Faculty->Progress",
+        "Faculty->Schedule",
+        "Faculty->Assignments",
+        "Faculty->Conduct",
+        "Faculty->Official Notes",
+        "Faculty->Contact Card",
+        "Faculty->Medical"
+    ];
+
+    // Get saved value from local storage or use default value
+    var savedValue = localStorage.getItem("EventRegistrationIDLinkPage") || "Enrollment Management->Contact Card";
+
+    // Create a dropdown element
+    var dropdown = $('<select id="openin-menu"></select>');
+
+    // Populate dropdown with options based on the pages array
+    for (var i = 0; i < pages.length; i++) {
+        var option = $('<option></option>');
+        option.val(pages[i]);
+        option.text(pages[i]);
+        dropdown.append(option);
+    }
+
+    // Function to update the text of the selected option
+    function updateSelectedOptionText() {
+        var selectedValue = dropdown.val();
+        dropdown.find('option').each(function() {
+            $(this).text($(this).val());
+        });
+        dropdown.find('option:selected').text("Open ID Links in " + selectedValue);
+    }
+
+    // Set the dropdown's value to the saved or default value
+    dropdown.val(savedValue);
+    updateSelectedOptionText();
+
+    // Add event listener for value change
+    dropdown.on('change', function() {
+        var selectedValue = $(this).val();
+
+        // Save to local storage
+        localStorage.setItem("EventRegistrationIDLinkPage", selectedValue);
+
+        // Update the text of the selected option
+        updateSelectedOptionText();
+
+        var existingLink = $(".sky-row:contains(UserId)").find("a");
+        if (existingLink.length)
+        {
+            existingLink.each(function() {
+                $(this).closest("sky-column").html(GetUserLink($(this).text(), selectedValue, true));
+            });
+        }
+
+    });
+
+    // Append dropdown to the target element
+    $(".sky-toolbar-items > sky-toolbar-item:last").after(dropdown);
+
+}
+
 function ProcessEventRegistrationsUserLinks(jNode)
 {
     console.log("Function: " + arguments.callee.name);
+
+    var savedSetting = localStorage.getItem("EventRegistrationIDLinkPage");
+    if (savedSetting == null)
+        savedSetting = "Enrollment Management->Contact Card";
+
+
     var idNode = $(jNode).children("sky-column:last");
     if (idNode.html().length < 10)
     {
-        idNode.html('<a href="'+schoolURL+'app/enrollment-management#userprofile/'+idNode.text()+'/contactcard" target="_blank">'+idNode.text()+'</a>');
+        idNode.html(GetUserLink(idNode.text(), savedSetting, true));
     }
 }
 
