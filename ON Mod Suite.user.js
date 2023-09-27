@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.22.0
+// @version      2.23.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -94,6 +94,7 @@
 [INDEX053] Course Request List Parent Emails
 [INDEX054] Facilities Request Form
 [INDEX055] Print Student Assessment
+[INDEX056] Process Event Registrations User Links
 [INDEX900] Misc. Helper Functions
 
 
@@ -281,6 +282,9 @@ Completed Mods:
 
 47 - Print Student Assessment
      Print a student's assessment results from the assessment evaluation tab.
+
+48 - Process Event Registrations User Links
+     User IDs in Process (New) Event Registrations link to the user profile page.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -495,6 +499,9 @@ function gmMain(){
         case "StudentAssessment":
             waitForKeyElements(".user-details", PrintStudentAssessment);
             break;
+        case "NewEMSEvents":
+            waitForKeyElements(".sky-row:contains(UserId)", ProcessEventRegistrationsUserLinks);
+            break;
     }
 
     // People Finder Quick Select
@@ -544,6 +551,9 @@ function GetModule(strURL)
     if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.includes("/ems-events/manage"))
+    {
+        return "NewEMSEvents"
     } else if (strURL.includes("/lms-assessment-builder/assessment-evaluation/"))
     {
         return "StudentAssessment"
@@ -5090,6 +5100,20 @@ function PrintStudentAssessment(jNode)
                 header: allStyles,  // Insert the styles here
             });
         });
+    }
+}
+
+// -----------------------------------------[INDEX056]-------------------------------------
+// ---------------------------Process Event Registrations User Links-----------------------
+// ----------------------------------------------------------------------------------------
+
+function ProcessEventRegistrationsUserLinks(jNode)
+{
+    console.log("Function: " + arguments.callee.name);
+    var idNode = $(jNode).children("sky-column:last");
+    if (idNode.html().length < 10)
+    {
+        idNode.html('<a href="'+schoolURL+'app/enrollment-management#userprofile/'+idNode.text()+'/contactcard" target="_blank">'+idNode.text()+'</a>');
     }
 }
 
