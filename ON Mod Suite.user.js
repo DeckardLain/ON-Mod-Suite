@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.23.0
+// @version      2.23.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -88,7 +88,7 @@
 [INDEX047] Dialer
 [INDEX048] Grade History
 [INDEX049] Financial Aid Misc
-[INDEX050] EMS Process DOB
+[INDEX050] EMS Process Age
 [INDEX051] Needs Checklist Sort
 [INDEX052] Gradebook Highlight Row
 [INDEX053] Course Request List Parent Emails
@@ -267,8 +267,8 @@ Completed Mods:
 42 - Grade History
      When recording grades, click Load Past Grades to display past quarter(s) grades for reference.
 
-43 - DOB/Age in EMS Process
-     Add date of birth and age to Enrollment Management Process (Applications/Needs Checklist/File Submissions) pages
+43 - Age in EMS Process
+     Add age to Enrollment Management Process (Inquiry/Applications/Needs Checklist/File Submissions) pages
 
 44 - Needs Checklist Sort
      Sort the Needs Checklist process list in Admissions Management by date (most recent at the top).
@@ -478,14 +478,12 @@ function gmMain(){
             DialerInterval()
             break;
         case "ProcessChecklist":
-            AddDOBCheckList();
             waitForKeyElements(".badge.count", SortNeedsChecklistWait, true);
             break;
         case "ProcessApplications":
-            AddDOBApplication();
-            break;
+        case "ProcessInquiries":
         case "ProcessFileSubmissions":
-            AddDOBFileSubmissions();
+            waitForKeyElements(":contains(Birth Date:)", AddAgeApplication);
             break;
         case "Gradebook":
             waitForKeyElements(".gradebook-student-cell", GradebookHighlightRow);
@@ -572,6 +570,9 @@ function GetModule(strURL)
     } else if (strURL.includes("#process/applications"))
     {
         return "ProcessApplications"
+    } else if (strURL.includes("#process/inquiries"))
+    {
+        return "ProcessInquiries"
     } else if (strURL.includes("#process/files"))
     {
         return "ProcessFileSubmissions"
@@ -4718,116 +4719,14 @@ function FinancialAidFormsDate()
 }
 
 // -----------------------------------------[INDEX050]-------------------------------------
-// ---------------------------------------EMS Process DOB----------------------------------
+// ---------------------------------------EMS Process Age----------------------------------
 // ----------------------------------------------------------------------------------------
-var processDOB;
-var processAge;
-function AddDOBCheckList(jNode)
+
+function AddAgeApplication(jNode)
 {
     console.log("Function: " + arguments.callee.name);
-
-    var origOpen = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function() {
-        this.addEventListener('load', function() {
-            if (this.responseText.indexOf('"DOBTicks":')>0)
-            {
-                var info = JSON.parse(this.responseText);
-                processDOB = info.DOB.substr(0,info.DOB.indexOf(" "));
-                processAge = info.Years+" year"+(info.Years==1 ? "" : "s")+", "+info.Months+" month"+(info.Months==1 ? "" : "s");
-                waitForKeyElements("p:contains(Entering Grade:)", AddDOBToPageChecklist, true);
-            }
-        });
-        origOpen.apply(this, arguments);
-    };
-}
-
-function AddDOBFileSubmissions(jNode)
-{
-    console.log("Function: " + arguments.callee.name);
-
-    var origOpen = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function() {
-        this.addEventListener('load', function() {
-            if (this.responseText.indexOf('"DOB":')>0)
-            {
-                var info = JSON.parse(this.responseText);
-                processDOB = info.DOB.substr(0,info.DOB.indexOf(" "));
-                processAge = info.Years+" year"+(info.Years==1 ? "" : "s")+", "+info.Months+" month"+(info.Months==1 ? "" : "s");
-                waitForKeyElements("p:contains(Entering Grade:)", AddDOBToPageChecklist, true);
-            }
-        });
-        origOpen.apply(this, arguments);
-    };
-}
-
-function AddDOBToPageChecklist()
-{
-    if ($("#oms-dob").length)
-        $("#oms-dob").remove();
-    if ($("#oms-age").length)
-        $("#oms-age").remove();
-    $("p:contains(Entering Grade:)").after('<p id="oms-dob" class="pull-left mr-15 mb-0">DOB: <strong style="color:#000">'+processDOB+'</strong></p>');
-    $("#oms-dob").after('<p id="oms-age" class="pull-left mr-15 mb-0">Age: <strong style="color:#000">'+processAge+'</strong></p>');
-}
-
-function WaitForApplicationLoad()
-{
-    waitForKeyElements(".process-headerinfo", AddDOBToPageApplication, true);
-}
-
-function AddDOBToPageApplication()
-{
-    if ($("#oms-dob").length)
-        $("#oms-dob").remove();
-    var dob = $("#oms-dob-unformatted").text().substr(0,$("#oms-dob-unformatted").text().indexOf(" "));
-    $(".process-headerinfo").children(".pull-left").last().children(".pull-left").last().after('<p id="oms-dob" class="pull-left mr-15 mb-0">|&nbsp;&nbsp;DOB: '+dob+' ('+calcAge(dob)+')</p>');
-}
-
-function AddDOBApplication(jNode)
-{
-    console.log("Function: " + arguments.callee.name);
-    var script = document.createElement('script');
-    script.appendChild(document.createTextNode('('+ AddDOBInject +')();'));
-    (document.body || document.head || document.documentElement).appendChild(script);
-    waitForKeyElements("#oms-dob-unformatted", WaitForApplicationLoad);
-}
-
-function AddDOBInject()
-{
-    console.log("Function: " + arguments.callee.name);
-    var origOpen = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function() {
-        this.addEventListener('load', function() {
-            if (window.location.href.includes("#process/applications"))
-            {
-                if (this.responseText.includes('"Relationship":"Applicant"'))
-                {
-                    var info = JSON.parse(this.responseText);
-
-                    var xhr = new XMLHttpRequest();
-                    xhr.onreadystatechange = function() {
-                        if (xhr.readyState == XMLHttpRequest.DONE) {
-                            console.log(xhr.responseText);
-                            var data = JSON.parse(xhr.responseText);
-                            var el = document.createElement('div');
-                            el.style.display = 'none';
-                            el.id = "oms-dob-unformatted";
-                            el.innerHTML = data.BirthDate;
-                            var e = document.getElementById("oms-dob-unformatted");
-                            if (e != null)
-                                e.remove();
-                            document.body.appendChild(el);
-                        }
-                    }
-                    xhr.open('GET', '/api/user/'+info.Applicant[0].RelUserId+'/?propertylist=BirthDate', true);
-                    xhr.send(null);
-                }
-            }
-        });
-        origOpen.apply(this, arguments);
-    };
-
-
+    var age = calcAge(moment(jNode.children("strong").text()));
+    jNode.children("strong").append(' ('+age+')');
 }
 
 // -----------------------------------------[INDEX051]-------------------------------------
@@ -5173,14 +5072,14 @@ const calcAge = (dob) => {
 
   if (ageInYears < 18) {
     if (ageInYears >= 1) {
-      return `${pluralYears} ${pluralize('month', age.months())}`
+      return (`${pluralYears} ${pluralize('month', age.months())}`).trim();
     } else if (ageInYears < 1 && ageInMonths >= 1) {
-      return `${pluralize('month', ageInMonths)} ${pluralDays}`
+      return (`${pluralize('month', ageInMonths)} ${pluralDays}`).trim();
     } else {
-      return pluralDays
+      return pluralDays.trim();
     }
   } else {
-    return pluralYears
+    return pluralYears.trim();
   }
 
 }
