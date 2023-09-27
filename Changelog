@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.23.2] - 2023-09-27
+### Added
+- Ability to select which profile page ID links on the Event Registration Process page open to.
+### Changed
+- Profile page options for Advanced List ID links have been updated to match the new Academics profile pages.
+
 ## [2.23.1] - 2023-09-26
 ### Added
 - User IDs in Process (New) Event Registrations link to the user profile page.
