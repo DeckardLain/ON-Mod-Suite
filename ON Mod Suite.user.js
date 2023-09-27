@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.22.0
+// @version      2.23.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
@@ -71,11 +71,12 @@
 [INDEX041] Fix Classes Menu Off Screen
 [INDEX042] Fix Gradebook Link
 [INDEX043] Update Page Title
-[INDEX044] EMS Process DOB
+[INDEX044] EMS Process Age
 [INDEX045] Gradebook Highlight Row
 [INDEX046] Course Request List Parent Emails
 [INDEX047] Contract Type ID in Manage Contract Forms
 [INDEX048] Print Student Assessment
+[INDEX049] Process Event Registrations User Links
 [INDEX900] Misc. Helper Functions
 
 
@@ -230,8 +231,8 @@ Completed Mods:
      When viewing a user profile page in Core, Academics, or Enrollment Management, set the page title in the browser to include the
      name and tab you're on, so you can actually use the browser history to see and navigate where you've been.
 
-39 - DOB/Age in EMS Process
-     Add date of birth and age to Enrollment Management Process (Applications/Needs Checklist/File Submissions) pages
+39 - Age in EMS Process
+     Add age to Enrollment Management Process (Inquiry/Applications/Needs Checklist/File Submissions) pages
 
 40 - Gradebook Highlight Row
      When enabled in settings, the cursor position in gradebooks will highlight the entire row instead of just the
@@ -245,6 +246,9 @@ Completed Mods:
 
 43 - Print Student Assessment
      Print a student's assessment results from the assessment evaluation tab.
+
+44 - Process Event Registrations User Links
+     User IDs in Process (New) Event Registrations link to the user profile page.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -401,13 +405,10 @@ function gmMain(){
             //waitForKeyElements("#sky-tab-4-nav-btn", FixGradebookLink, true)
             break;
         case "ProcessChecklist":
-            AddDOBCheckList();
-            break;
         case "ProcessApplications":
-            AddDOBApplication();
-            break;
+        case "ProcessInquiries":
         case "ProcessFileSubmissions":
-            AddDOBFileSubmissions();
+            waitForKeyElements(":contains(Birth Date:)", AddAgeApplication);
             break;
         case "Gradebook":
             waitForKeyElements(".gradebook-student-cell", GradebookHighlightRow);
@@ -420,6 +421,9 @@ function gmMain(){
             break;
         case "StudentAssessment":
             waitForKeyElements(".user-details", PrintStudentAssessment);
+            break;
+        case "NewEMSEvents":
+            waitForKeyElements(".sky-row:contains(UserId)", ProcessEventRegistrationsUserLinks);
             break;
     }
 
@@ -462,6 +466,9 @@ function GetModule(strURL)
     if (strURL == schoolURL+"podium/default.aspx?t=1691&wapp=1&ch=1&_pd=gm_fv&pk=359")
     {
         return "Manual Attendance Sheet Report";
+    } else if (strURL.includes("/ems-events/manage"))
+    {
+        return "NewEMSEvents"
     } else if (strURL.includes("/lms-assessment-builder/assessment-evaluation/"))
     {
         return "StudentAssessment"
@@ -480,6 +487,9 @@ function GetModule(strURL)
     } else if (strURL.includes("#process/applications"))
     {
         return "ProcessApplications"
+    } else if (strURL.includes("#process/inquiries"))
+    {
+        return "ProcessInquiries"
     } else if (strURL.includes("#process/files"))
     {
         return "ProcessFileSubmissions"
@@ -3632,115 +3642,11 @@ function UpdatePageTitle(jNode)
 // -----------------------------------------[INDEX044]-------------------------------------
 // ---------------------------------------EMS Process DOB----------------------------------
 // ----------------------------------------------------------------------------------------
-var processDOB;
-var processAge;
-function AddDOBCheckList(jNode)
+function AddAgeApplication(jNode)
 {
     console.log("Function: " + arguments.callee.name);
-
-    var origOpen = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function() {
-        this.addEventListener('load', function() {
-            if (this.responseText.indexOf('"DOBTicks":')>0)
-            {
-                var info = JSON.parse(this.responseText);
-                processDOB = info.DOB.substr(0,info.DOB.indexOf(" "));
-                processAge = info.Years+" year"+(info.Years==1 ? "" : "s")+", "+info.Months+" month"+(info.Months==1 ? "" : "s");
-                waitForKeyElements("p:contains(Entering Grade:)", AddDOBToPageChecklist, true);
-            }
-        });
-        origOpen.apply(this, arguments);
-    };
-}
-
-function AddDOBFileSubmissions(jNode)
-{
-    console.log("Function: " + arguments.callee.name);
-
-    var origOpen = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function() {
-        this.addEventListener('load', function() {
-            if (this.responseText.indexOf('"DOB":')>0)
-            {
-                var info = JSON.parse(this.responseText);
-                processDOB = info.DOB.substr(0,info.DOB.indexOf(" "));
-                processAge = info.Years+" year"+(info.Years==1 ? "" : "s")+", "+info.Months+" month"+(info.Months==1 ? "" : "s");
-                waitForKeyElements("p:contains(Entering Grade:)", AddDOBToPageChecklist, true);
-            }
-        });
-        origOpen.apply(this, arguments);
-    };
-}
-
-
-function AddDOBToPageChecklist()
-{
-    if ($("#oms-dob").length)
-        $("#oms-dob").remove();
-    if ($("#oms-age").length)
-        $("#oms-age").remove();
-    $("p:contains(Entering Grade:)").after('<p id="oms-dob" class="pull-left mr-15 mb-0">DOB: <strong style="color:#000">'+processDOB+'</strong></p>');
-    $("#oms-dob").after('<p id="oms-age" class="pull-left mr-15 mb-0">Age: <strong style="color:#000">'+processAge+'</strong></p>');
-}
-
-function WaitForApplicationLoad()
-{
-    waitForKeyElements(".process-headerinfo", AddDOBToPageApplication, true);
-}
-
-function AddDOBToPageApplication()
-{
-    if ($("#oms-dob").length)
-        $("#oms-dob").remove();
-    var dob = $("#oms-dob-unformatted").text().substr(0,$("#oms-dob-unformatted").text().indexOf(" "));
-    $(".process-headerinfo").children(".pull-left").last().children(".pull-left").last().after('<p id="oms-dob" class="pull-left mr-15 mb-0">|&nbsp;&nbsp;DOB: '+dob+' ('+calcAge(dob)+')</p>');
-}
-
-function AddDOBApplication(jNode)
-{
-    console.log("Function: " + arguments.callee.name);
-    var script = document.createElement('script');
-    script.appendChild(document.createTextNode('('+ AddDOBInject +')();'));
-    (document.body || document.head || document.documentElement).appendChild(script);
-    waitForKeyElements("#oms-dob-unformatted", WaitForApplicationLoad);
-}
-
-function AddDOBInject()
-{
-    console.log("Function: " + arguments.callee.name);
-    var origOpen = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function() {
-        this.addEventListener('load', function() {
-            if (window.location.href.includes("#process/applications"))
-            {
-                if (this.responseText.includes('"Relationship":"Applicant"'))
-                {
-                    var info = JSON.parse(this.responseText);
-
-                    var xhr = new XMLHttpRequest();
-                    xhr.onreadystatechange = function() {
-                        if (xhr.readyState == XMLHttpRequest.DONE) {
-                            console.log(xhr.responseText);
-                            var data = JSON.parse(xhr.responseText);
-                            var el = document.createElement('div');
-                            el.style.display = 'none';
-                            el.id = "oms-dob-unformatted";
-                            el.innerHTML = data.BirthDate;
-                            var e = document.getElementById("oms-dob-unformatted");
-                            if (e != null)
-                                e.remove();
-                            document.body.appendChild(el);
-                        }
-                    }
-                    xhr.open('GET', '/api/user/'+info.Applicant[0].RelUserId+'/?propertylist=BirthDate', true);
-                    xhr.send(null);
-                }
-            }
-        });
-        origOpen.apply(this, arguments);
-    };
-
-
+    var age = calcAge(moment(jNode.children("strong").text()));
+    jNode.children("strong").append(' ('+age+')');
 }
 
 // -----------------------------------------[INDEX045]-------------------------------------
@@ -3960,6 +3866,20 @@ function PrintStudentAssessment(jNode)
     }
 }
 
+// -----------------------------------------[INDEX049]-------------------------------------
+// ---------------------------Process Event Registrations User Links-----------------------
+// ----------------------------------------------------------------------------------------
+
+function ProcessEventRegistrationsUserLinks(jNode)
+{
+    console.log("Function: " + arguments.callee.name);
+    var idNode = $(jNode).children("sky-column:last");
+    if (idNode.html().length < 10)
+    {
+        idNode.html('<a href="'+schoolURL+'app/enrollment-management#userprofile/'+idNode.text()+'/contactcard" target="_blank">'+idNode.text()+'</a>');
+    }
+}
+
 // -----------------------------------------[INDEX900]-------------------------------------
 // -----------------------------------Misc. Helper Functions-------------------------------
 // ----------------------------------------------------------------------------------------
@@ -4016,14 +3936,14 @@ const calcAge = (dob) => {
 
   if (ageInYears < 18) {
     if (ageInYears >= 1) {
-      return `${pluralYears} ${pluralize('month', age.months())}`
+      return (`${pluralYears} ${pluralize('month', age.months())}`).trim();
     } else if (ageInYears < 1 && ageInMonths >= 1) {
-      return `${pluralize('month', ageInMonths)} ${pluralDays}`
+      return (`${pluralize('month', ageInMonths)} ${pluralDays}`).trim();
     } else {
-      return pluralDays
+      return pluralDays.trim();
     }
   } else {
-    return pluralYears
+    return pluralYears.trim();
   }
 
 }
