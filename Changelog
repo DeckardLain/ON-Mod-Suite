@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.23.0] - 2023-09-26
+### Added
+- User IDs in Process (New) Event Registrations link to the user profile page.
+
 ## [2.22.0] - 2023-09-22
 ### Added
 - Print Student Assessment from the assessment evaluation tab.
