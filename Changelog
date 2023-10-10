@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.23.3] - 2023-10-10
+### Fixed
+- Grade level display on profile pages is fixed. The new name pronunciation feature from Blackbaud had changed
+the structure of the page.
+- Page titles for profie pages were also broken because of the new name pronunciation feature. This is now fixed.
+
 ## [2.23.2] - 2023-09-27
 ### Added
 - Ability to select which profile page ID links on the Event Registration Process page open to.
