@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.23.2
+// @version      2.23.3
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -743,15 +743,15 @@ function PostLinkCore(jNode)
     if (window.location.href.indexOf("contactcard") > 0)
     {
         waitForKeyElements("#contact-relationship", function (){
-            UpdatePageTitle($("#userName"))
+            UpdatePageTitle($("#userName h1 a").eq(0))
         });
     } else
     {
-        UpdatePageTitle($("#userName"))
+        UpdatePageTitle($("#userName h1 a").eq(0))
     }
 
     // Add grade level to name display
-    $("#userName h1").append(GetGradeLevel($("#userName h1").text()));
+    $("#userName h1 a").append(GetGradeLevel($("#userName h1 a").text()));
     return;
 }
 
@@ -771,9 +771,10 @@ function PostLinkAcademics(jNode)
     jNode.after(strLinks);
 
     // Add grade level to name display
-    $("h1.bb-tile-header").append(GetGradeLevel($("h1.bb-tile-header").text()));
+    var nameDisplay = $("#user-profile-full-name").find("a");
+    nameDisplay.append(GetGradeLevel(nameDisplay.text()));
 
-    UpdatePageTitle($("h1.bb-tile-header"))
+    UpdatePageTitle();
 
     return;
 }
@@ -792,7 +793,10 @@ function PostLinkEnrollmentManagement(jNode)
     strLinks = strLinks.concat(GetLink("Academics", GetID(strURL)));
     strLinks = strLinks.concat(GetLink("Faculty", strID));
 
-    UpdatePageTitle(jNode)
+    var nameDisplayNode = $("#userName a h1").contents().filter(function() {
+        return this.nodeType === 3;
+    });
+    UpdatePageTitle(nameDisplayNode.eq(0))
 
     if (strURL.substring(0, schoolURL.length+33) == schoolURL+"app/enrollment-management#profile")
     {
