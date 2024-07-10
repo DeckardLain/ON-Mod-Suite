@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.23.3
+// @version      2.24.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -22,7 +22,7 @@
 // @connect      hanalani.myschoolapp.com
 // ==/UserScript==
 
-/* Copyright (C) 2018-2023  Hanalani Schools
+/* Copyright (C) 2018-2024  Hanalani Schools
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -95,6 +95,7 @@
 [INDEX054] Facilities Request Form
 [INDEX055] Print Student Assessment
 [INDEX056] Process Event Registrations User Links
+[INDEX057] Lower School Injury Report Official Note Template
 [INDEX900] Misc. Helper Functions
 
 
@@ -285,6 +286,9 @@ Completed Mods:
 
 48 - Process Event Registrations User Links
      User IDs in Process (New) Event Registrations link to the user profile page.
+
+49 - Lower School Injury Report Official Note Template
+     Builds official note summary from Injury Report fields.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -540,6 +544,9 @@ function gmMain(){
     waitForKeyElements(".userprofile", DialerInterval)
     waitForKeyElements(".candidate-header", DialerInterval)
     waitForKeyElements(".student-header", DialerInterval)
+
+    // Injury Reports
+    waitForKeyElements(".bb-dialog-header:contains('Compose official note')", InjuryReportInit, true)
 }
 
 
@@ -689,7 +696,7 @@ function AddPageFooter()
     console.log("Function: " + arguments.callee.name)
     if (window.location.href.substring(window.location.href.length-21-settingsResourceBoardID.length) != "#resourceboarddetail/"+settingsResourceBoardID)
     {
-        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2023 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
+        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2024 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
         var skipNotificationVersions = []
@@ -5118,6 +5125,258 @@ function ProcessEventRegistrationsUserLinks(jNode)
     if (idNode.html().length < 10)
     {
         idNode.html(GetUserLink(idNode.text(), savedSetting, true));
+    }
+}
+
+// -----------------------------------------[INDEX057]-------------------------------------
+// ----------------------------------------Injury Report-----------------------------------
+// ----------------------------------------------------------------------------------------
+
+function InjuryReportInit(jNode)
+{
+    console.log("Function: " + arguments.callee.name);
+    waitForKeyElements(".comment-types-detail>.control-group", InjuryReportCreateFields, true);
+}
+
+function InjuryReportCreateFields(jNode)
+{
+    console.log("Function: " + arguments.callee.name);
+    if ($("#comment-type").val() == "7379")
+    {
+        // Define the HTML structure for the input controls
+        var formControls = `
+        <div class="incident-report-controls"><br>
+    <label class="control-label">Time: <input type="text" id="time" value="${new Date().toLocaleTimeString()}"></label><br>
+    <label class="control-label">Location:
+        <select id="location">
+            <option value="Classroom">Classroom</option>
+            <option value="Field">Field</option>
+            <option value="Park">Park</option>
+            <option value="Playground">Playground</option>
+            <option value="Other">Other</option>
+        </select>
+    </label>
+    <input type="text" id="location-other" placeholder="Specify other location" style="display:none;"><br><br>
+    <label class="control-label">Describe what caused the incident and how it happened -- BE SPECIFIC:<br>
+        <textarea id="incident-description" style="width:480px; height:120px;"></textarea>
+    </label><br><br>
+    <div class="control-label">Type of Injury:</div>
+    <div id="injury-group">
+        <label class="control-label"><input type="checkbox" name="injury" value="Bruise"> Bruise</label><br>
+        <label class="control-label"><input type="checkbox" name="injury" value="Broken Bone"> Broken Bone</label><br>
+        <label class="control-label"><input type="checkbox" name="injury" value="Cut"> Cut</label><br>
+        <label class="control-label"><input type="checkbox" name="injury" value="Eye Injury"> Eye Injury</label><br>
+        <label class="control-label"><input type="checkbox" name="injury" value="Head Injury"> Head Injury</label><br>
+        <label class="control-label"><input type="checkbox" name="injury" value="Nose Bleed"> Nose Bleed</label><br>
+        <label class="control-label"><input type="checkbox" name="injury" value="Scratch"> Scratch</label><br>
+        <label class="control-label"><input type="checkbox" name="injury" value="Splinter"> Splinter</label><br>
+        <label class="control-label"><input type="checkbox" name="injury" value="Sting"> Sting</label><br>
+        <label class="control-label"><input type="checkbox" name="injury" value="Other"> Other</label>
+        <input type="text" id="injury-other" placeholder="Specify other injury" style="display:none;"><br>
+        <label class="control-label"><input type="checkbox" name="injury" value="Allergic Reaction"> Allergic Reaction</label>
+        <input type="text" id="injury-allergic-reaction" placeholder="Specify allergic reaction" style="display:none;"><br>
+        <label class="control-label"><input type="checkbox" name="injury" value="Equipment Injury"> Equipment Injury</label>
+        <input type="text" id="injury-equipment-injury" placeholder="Specify equipment injury" style="display:none;"><br>
+    </div><br>
+    <div class="control-label">What type of treatment was required?</div>
+    <div id="treatment-group">
+        <label class="control-label"><input type="checkbox" name="treatment" value="Band-aid"> Band-aid</label><br>
+        <label class="control-label"><input type="checkbox" name="treatment" value="Ice Pack"> Ice Pack</label><br>
+        <label class="control-label"><input type="checkbox" name="treatment" value="Sent to the nurse as emergency"> Sent to the nurse as emergency</label><br>
+        <label class="control-label"><input type="checkbox" name="treatment" value="Wash with soap and water"> Wash with soap and water</label><br>
+        <label class="control-label"><input type="checkbox" name="treatment" value="Other"> Other</label>
+        <input type="text" id="treatment-other" placeholder="Specify other treatment" style="display:none;"><br>
+    </div><br>
+    <div class="control-label">Who witnessed the injury?</div>
+    <div id="witness-group">
+        <label class="control-label"><input type="checkbox" name="witness" value="Student"> Student</label>
+        <input type="text" id="witness-student" placeholder="Specify student" style="display:none;"><br>
+        <label class="control-label"><input type="checkbox" name="witness" value="Teacher"> Teacher</label>
+        <input type="text" id="witness-teacher" placeholder="Specify teacher" style="display:none;"><br>
+        <label class="control-label"><input type="checkbox" name="witness" value="Chaperone"> Chaperone</label>
+        <input type="text" id="witness-chaperone" placeholder="Specify chaperone" style="display:none;"><br>
+        <label class="control-label"><input type="checkbox" name="witness" value="Other"> Other</label>
+        <input type="text" id="witness-other" placeholder="Specify other witness" style="display:none;"><br>
+    </div><br>
+    <div class="control-label">Notified Parent/Guardian:</div>
+    <div id="notified-group">
+        <label class="control-label"><input type="checkbox" name="notified" value="Phone call"> Phone call</label><br>
+        <label class="control-label"><input type="checkbox" name="notified" value="Note"> Note</label><br>
+        <label class="control-label"><input type="checkbox" name="notified" value="Sent to the nurse as emergency"> Sent to the nurse as emergency</label><br>
+        <label class="control-label"><input type="checkbox" name="notified" value="None"> None</label><br>
+    </div><br>
+    <label class="control-label">Injury Details:<br>
+        <textarea id="intentional-injury-details" style="width:480px; height:120px;"></textarea>
+    </label><br>
+    <button id="insert-button">Insert Summary Below</button><br><hr>
+</div>`;
+
+        // Append the form controls to the specified container
+        $('.comment-types-detail').next('.form-group').prepend(formControls);
+
+        // Add event listeners for dynamic input displays
+        $('#location').change(function() {
+            if ($(this).val() === 'Other') {
+                $('#location-other').show();
+            } else {
+                $('#location-other').hide();
+            }
+        });
+
+        $('input[name="injury"]').change(function() {
+            if ($(this).val() === 'Other' && $(this).is(':checked')) {
+                $('#injury-other').show();
+            } else if ($(this).val() === 'Allergic Reaction' && $(this).is(':checked')) {
+                $('#injury-allergic-reaction').show();
+            } else if ($(this).val() === 'Equipment Injury' && $(this).is(':checked')) {
+                $('#injury-equipment-injury').show();
+            } else {
+                if ($(this).val() === 'Other') $('#injury-other').hide();
+                if ($(this).val() === 'Allergic Reaction') $('#injury-allergic-reaction').hide();
+                if ($(this).val() === 'Equipment Injury') $('#injury-equipment-injury').hide();
+            }
+        });
+
+        $('input[name="treatment"]').change(function() {
+            if ($(this).val() === 'Other' && $(this).is(':checked')) {
+                $('#treatment-other').show();
+            } else {
+                if ($(this).val() === 'Other') $('#treatment-other').hide();
+            }
+        });
+
+        $('input[name="witness"]').change(function() {
+            if ($(this).val() === 'Student' && $(this).is(':checked')) {
+                $('#witness-student').show();
+            } else if ($(this).val() === 'Teacher' && $(this).is(':checked')) {
+                $('#witness-teacher').show();
+            } else if ($(this).val() === 'Chaperone' && $(this).is(':checked')) {
+                $('#witness-chaperone').show();
+            } else if ($(this).val() === 'Other' && $(this).is(':checked')) {
+                $('#witness-other').show();
+            } else {
+                if ($(this).val() === 'Student') $('#witness-student').hide();
+                if ($(this).val() === 'Teacher') $('#witness-teacher').hide();
+                if ($(this).val() === 'Chaperone') $('#witness-chaperone').hide();
+                if ($(this).val() === 'Other') $('#witness-other').hide();
+            }
+        });
+
+        // Handle the insert button click event
+        $('#insert-button').click(function(event) {
+            event.preventDefault();
+
+            // Reset previous validation styles
+            $('.incident-report-controls input, .incident-report-controls textarea, .incident-report-controls select').css('border', '');
+            $('#injury-group, #treatment-group, #witness-group, #notified-group').css('border', '');
+
+            var isValid = true;
+            var firstInvalidElement = null;
+
+            // Validate required fields
+            function validateField(selector, condition) {
+                if (!condition) {
+                    $(selector).css('border', '2px solid red');
+                    if (isValid) {
+                        firstInvalidElement = $(selector);
+                        isValid = false;
+                    }
+                }
+            }
+
+            // Check for required text inputs based on checkboxes
+            $('input[name="injury"]:checked').each(function() {
+                var injuryValue = $(this).val();
+                if (injuryValue === 'Other' || injuryValue === 'Allergic Reaction' || injuryValue === 'Equipment Injury') {
+                    validateField('#injury-' + injuryValue.toLowerCase().replace(' ', '-'), $('#injury-' + injuryValue.toLowerCase().replace(' ', '-')).val().trim() !== '');
+                }
+            });
+
+            $('input[name="treatment"]:checked').each(function() {
+                var treatmentValue = $(this).val();
+                if (treatmentValue === 'Other') {
+                    validateField('#treatment-other', $('#treatment-other').val().trim() !== '');
+                }
+            });
+
+            $('input[name="witness"]:checked').each(function() {
+                var witnessValue = $(this).val();
+                validateField('#witness-' + witnessValue.toLowerCase(), $('#witness-' + witnessValue.toLowerCase()).val().trim() !== '');
+            });
+
+            // Check that at least one checkbox in each group is selected
+            validateField('#injury-group', $('input[name="injury"]:checked').length > 0);
+            validateField('#treatment-group', $('input[name="treatment"]:checked').length > 0);
+            validateField('#witness-group', $('input[name="witness"]:checked').length > 0);
+            validateField('#notified-group', $('input[name="notified"]:checked').length > 0);
+
+            // Check non-checkbox fields
+            validateField('#time', $('#time').val().trim() !== '');
+            validateField('#location', $('#location').val().trim() !== '');
+            if ($('#location').val() === 'Other') {
+                validateField('#location-other', $('#location-other').val().trim() !== '');
+            }
+            validateField('#incident-description', $('#incident-description').val().trim() !== '');
+
+            if (!isValid) {
+                // Scroll to the first invalid element
+                $('.modal-body').animate({
+                    scrollTop: $('.modal-body').scrollTop() + firstInvalidElement.offset().top - $('.modal-body').offset().top - 100
+                }, 500);
+                return;
+            }
+
+            var reportText = '';
+
+            var time = $('#time').val();
+            var location = $('#location').val() === 'Other' ? $('#location-other').val() : $('#location').val();
+            var description = $('#incident-description').val();
+
+            if (time) reportText += '<b>Time:</b> ' + time + '<br>';
+            if (location) reportText += '<b>Location:</b> ' + location + '<br>';
+            if (description) reportText += '<b>Description:</b> ' + description + '<br>';
+
+            var injuries = '';
+            $('input[name="injury"]:checked').each(function() {
+                var injuryValue = $(this).val();
+                var injuryDetail = '';
+                if (injuryValue === 'Other' || injuryValue === 'Allergic Reaction' || injuryValue === 'Equipment Injury') {
+                    injuryDetail = $('#injury-' + injuryValue.toLowerCase().replace(' ', '-')).val();
+                }
+                injuries += injuryDetail ? injuryDetail + ', ' : injuryValue + ', ';
+            });
+            if (injuries) reportText += '<b>Injuries:</b> ' + injuries.slice(0, -2) + '<br>';
+
+            var treatments = '';
+            $('input[name="treatment"]:checked').each(function() {
+                var treatmentValue = $(this).val();
+                var treatmentDetail = treatmentValue === 'Other' ? $('#treatment-other').val() : '';
+                treatments += treatmentDetail ? treatmentDetail + ', ' : treatmentValue + ', ';
+            });
+            if (treatments) reportText += '<b>Treatments:</b> ' + treatments.slice(0, -2) + '<br>';
+
+            var witnesses = '';
+            $('input[name="witness"]:checked').each(function() {
+                var witnessValue = $(this).val();
+                var witnessDetail = $('#witness-' + witnessValue.toLowerCase()).val();
+                witnesses += witnessDetail ? witnessValue + ': ' + witnessDetail + ', ' : witnessValue + ', ';
+            });
+            if (witnesses) reportText += '<b>Witnesses:</b> ' + witnesses.slice(0, -2) + '<br>';
+
+            var notified = '';
+            $('input[name="notified"]:checked').each(function() {
+                notified += $(this).val() + ', ';
+            });
+            if (notified) reportText += '<b>Notification:</b> ' + notified.slice(0, -2) + '<br>';
+
+            var details = $('#intentional-injury-details').val();
+            if (details) reportText += '<b>Details:</b> ' + details;
+
+            // Retrieve TinyMCE editor for the comment box
+            let editor = tinymce.get('comment-text');
+            editor.setContent(reportText);
+        });
+
     }
 }
 
