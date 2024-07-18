@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.24.0
+// @version      2.24.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -546,7 +546,8 @@ function gmMain(){
     waitForKeyElements(".student-header", DialerInterval)
 
     // Injury Reports
-    waitForKeyElements(".bb-dialog-header:contains('Compose official note')", InjuryReportInit, true)
+    waitForKeyElements(".bb-dialog-header:contains('Compose official note')", InjuryReportInit, true);
+    waitForKeyElements(".sky-modal-heading:contains('Add official note')", InjuryReportInit, true);
 }
 
 
@@ -5157,7 +5158,7 @@ function InjuryReportCreateFields(jNode)
         </select>
     </label>
     <input type="text" id="location-other" placeholder="Specify other location" style="display:none;"><br><br>
-    <label class="control-label">Describe what caused the incident and how it happened -- BE SPECIFIC:<br>
+    <label class="control-label">Describe what caused the incident and how it happened -- BE SPECIFIC, do not name other students involved:<br>
         <textarea id="incident-description" style="width:480px; height:120px;"></textarea>
     </label><br><br>
     <div class="control-label">Type of Injury:</div>
@@ -5178,19 +5179,17 @@ function InjuryReportCreateFields(jNode)
         <label class="control-label"><input type="checkbox" name="injury" value="Equipment Injury"> Equipment Injury</label>
         <input type="text" id="injury-equipment-injury" placeholder="Specify equipment injury" style="display:none;"><br>
     </div><br>
-    <div class="control-label">What type of treatment was required?</div>
+    <div class="control-label">What type of treatment was provided?</div>
     <div id="treatment-group">
         <label class="control-label"><input type="checkbox" name="treatment" value="Band-aid"> Band-aid</label><br>
         <label class="control-label"><input type="checkbox" name="treatment" value="Ice Pack"> Ice Pack</label><br>
-        <label class="control-label"><input type="checkbox" name="treatment" value="Sent to the nurse as emergency"> Sent to the nurse as emergency</label><br>
+        <label class="control-label"><input type="checkbox" name="treatment" value="Sent to the nurse"> Sent to the nurse</label><br>
         <label class="control-label"><input type="checkbox" name="treatment" value="Wash with soap and water"> Wash with soap and water</label><br>
         <label class="control-label"><input type="checkbox" name="treatment" value="Other"> Other</label>
         <input type="text" id="treatment-other" placeholder="Specify other treatment" style="display:none;"><br>
     </div><br>
     <div class="control-label">Who witnessed the injury?</div>
     <div id="witness-group">
-        <label class="control-label"><input type="checkbox" name="witness" value="Student"> Student</label>
-        <input type="text" id="witness-student" placeholder="Specify student" style="display:none;"><br>
         <label class="control-label"><input type="checkbox" name="witness" value="Teacher"> Teacher</label>
         <input type="text" id="witness-teacher" placeholder="Specify teacher" style="display:none;"><br>
         <label class="control-label"><input type="checkbox" name="witness" value="Chaperone"> Chaperone</label>
@@ -5202,7 +5201,7 @@ function InjuryReportCreateFields(jNode)
     <div id="notified-group">
         <label class="control-label"><input type="checkbox" name="notified" value="Phone call"> Phone call</label><br>
         <label class="control-label"><input type="checkbox" name="notified" value="Note"> Note</label><br>
-        <label class="control-label"><input type="checkbox" name="notified" value="Sent to the nurse as emergency"> Sent to the nurse as emergency</label><br>
+        <label class="control-label"><input type="checkbox" name="notified" value="Sent to the nurse"> Sent to the nurse</label><br>
         <label class="control-label"><input type="checkbox" name="notified" value="None"> None</label><br>
     </div><br>
     <label class="control-label">Injury Details:<br>
