@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.25.0] - 2024-08-13
+### Added
+- Manage Student Enrollments - Multiple students can be selected for withdrawal at once by pasting in
+a list of ID numbers.
+### Fixed
+- Advanced list favorites on Core Home don't show until the tiles load, in order to avoid breaking
+the page.
+
 ## [2.23.3] - 2023-10-10
 ### Fixed
 - Grade level display on profile pages is fixed. The new name pronunciation feature from Blackbaud had changed
