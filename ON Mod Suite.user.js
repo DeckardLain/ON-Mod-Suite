@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.24.1
+// @version      2.25.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -221,7 +221,8 @@ Completed Mods:
 
 28 - Manage Student Enrollments Shortcuts
      When in Manage Student Enrollments, hover over a student and press a keyboard shortcut to select Promote, Repeat, Withdraw,
-     or No Change without needing to click the radio button.
+     or No Change without needing to click the radio button. Student ID numbers are displayed with their names. Multiple students
+     can be selected for withdrawal at once by pasting in a list of ID numbers.
 
 29 - List Role Access Shortcuts
      When editing advanced list role access, hover over a role and press a keyboard shortcut to select Run, Copy, or No Access
@@ -419,7 +420,7 @@ function gmMain(){
             waitForKeyElements("[data-gradebook]", MathYearAverages, true)
             break;
         case "Core Dashboard":
-            waitForKeyElements(".core-dashboard", AdvancedListFavorites)
+            waitForKeyElements(".tasks-tile", AdvancedListFavorites)
             break;
         case "Student Attendance":
             waitForKeyElements(".inline-edit:first", HighlightInvalidAttendance)
@@ -3663,8 +3664,53 @@ function ManageStudentEnrollmentsShortcuts()
     });
 
     // Add note to top
-    $(".tbl:first:not(.onMod)").find("br:eq(3)").before(" Hover over a row and use one of the following keyboard shortcuts to select the corresponding option: R=Promote / E=Repeat / W=Withdraw  / N=No Change")
-    $(".tbl:first").addClass("onMod")
+    $(".tbl:first:not(.onMod)").find("br:eq(3)").before(' Hover over a row and use one of the following keyboard shortcuts to select the corresponding option: R=Promote / E=Repeat / W=Withdraw  / N=No Change<br><span id="withdraw-multiple-clickable" style="cursor:pointer;"><i><u>Withdraw Multiple</i></u></span><div id="withdraw-multiple-container" style="display:none;"><textarea id="withdraw-multiple-input" rows="4" cols="50" placeholder="Paste User ID numbers to select for withdrawal, one per line"></textarea><button id="withdraw-multiple-submit">Select</button></div>');
+    $(".tbl:first").addClass("onMod");
+
+    // Select multiple students for withdrawal
+    $("#withdraw-multiple-clickable").on("click", function() {
+        $("#withdraw-multiple-container").show().find("#withdraw-multiple-input").focus();
+    });
+
+    $("#withdraw-multiple-submit").on("click", function() {
+        event.preventDefault();
+        const textareaValue = $('#withdraw-multiple-input').val();
+        const ids = textareaValue.split('\n').map(id => id.trim()).filter(id => id.length > 0);
+        ids.forEach(id => {
+            // Find the span with the attribute pk=id and f="withdraw"
+            const spanElement = $(`span[pk='${id}'][f='withdraw']`);
+
+            // Check if the span element exists
+            if (spanElement.length > 0) {
+                // Find the radio input element that is a child of the span
+                const radioInput = spanElement.find('input[type="radio"]');
+
+                // Check if the radio input element exists
+                if (radioInput.length > 0) {
+                    // Simulate a click/select on the radio input element
+                    radioInput.prop('checked', true).trigger('click');
+                } else {
+                    console.log(`Radio input not found for ID: ${id}`);
+                }
+            } else {
+                console.log(`Span element not found for ID: ${id}`);
+            }
+        });
+        $('#withdraw-multiple-input').val("");
+        $("#withdraw-multiple-container").hide()
+    });
+
+    // Show User IDs
+    $(".tblrow").each(function() {
+        var elName = $(this).children("td:first");
+        var name = elName.text();
+        if (name.substring(name.length - 1) != "]")
+        {
+            var id = $(this).children("td").eq(1).children("span").attr("pk");
+            if (id)
+                elName.text(name+" ["+$(this).children("td").eq(1).children("span").attr("pk")+"]")
+        }
+    });
 }
 
 // -----------------------------------------[INDEX032]-------------------------------------
