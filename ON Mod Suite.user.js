@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.25.0
+// @version      2.25.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
@@ -1893,7 +1893,7 @@ function EmailSelectedClassesv2(type)
                 }
 
                 var classID = GetID($('input[type="checkbox"]:checked').not('.Select_all').eq(index).next("[href]").attr("href"));
-                var url = "https://hanalani.myschoolapp.com/api/DataDirect/SectionEmailList/?format=json&sectionId="+classID;
+                var url = schoolURL+"api/DataDirect/SectionEmailList/?format=json&sectionId="+classID;
 
                 GM.xmlHttpRequest({
                     method: "GET",
