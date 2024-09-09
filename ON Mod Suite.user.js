@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.25.1
+// @version      2.25.2
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
@@ -1688,7 +1688,7 @@ function EmailSelectedParents(studentsToo)
                 }
 
                 var studentID = $('input[type="checkbox"]:checked').not('.Select_all').eq(index).siblings("#context-menu").find(".user-relationships-initial").data("user-id");
-                var url = "https://hanalani.myschoolapp.com/api/datadirect/studentrelationshipsget/"+studentID+"/?format=json";
+                var url = schoolURL+"api/datadirect/studentrelationshipsget/"+studentID+"/?format=json";
                 if (studentsToo)
                     emails.push($('input[type="checkbox"]:checked').not('.Select_all').eq(index).closest(".roster-card").find("[href^='mailto']").text());
 
