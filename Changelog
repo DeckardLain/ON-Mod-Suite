@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.25.1] - 2024-10-30
+### Fixed
+- Family info in Process Applications disappearing on page click
+
 ## [2.25.0] - 2024-08-13
 ### Added
 - Manage Student Enrollments - Multiple students can be selected for withdrawal at once by pasting in
