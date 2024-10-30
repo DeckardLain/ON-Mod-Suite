@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.25.0
+// @version      2.25.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -701,7 +701,7 @@ function AddPageFooter()
         $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2024 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
-        var skipNotificationVersions = []
+        var skipNotificationVersions = ["2.25.0"]
         var oldVersion = GM_getValue("FirstRunVersionCheck")
 
         if (oldVersion != GM_info.script.version)
@@ -917,7 +917,7 @@ function PeopleFinderQuickSelect(jNode)
         {
             $("#PeopleFinderContainer").find(".pf-user").eq(0).click();
             $(".result").eq(0).click();
-            $("#PeopleFinderContainer, .results").hide();
+            $("#PeopleFinderContainer").hide();
         } else if (searchInput != "" && isNaN(searchInput))
         {
             switch (e.keyCode)
@@ -966,7 +966,7 @@ function PeopleFinderQuickSelect(jNode)
     $(".people-finder-search-box, input[placeholder='Type a name, ID or email']").keyup(function (e){
         if (e.key ==="Escape")
         {
-            $("#PeopleFinderContainer, .results").hide();
+            $("#PeopleFinderContainer").hide();
         }
     });
 
@@ -988,11 +988,11 @@ function PeopleFinderQuickSelect(jNode)
     });
 
     $(".site-main-wrap").bind("click", function(){
-        $("#PeopleFinderContainer, .results").hide();
+        $("#PeopleFinderContainer").hide();
     });
 
     $("#lPg").bind("click", function(){
-        $("#PeopleFinderContainer, .results").hide();
+        $("#PeopleFinderContainer").hide();
     });
 
 
