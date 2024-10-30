@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.25.3] - 2024-10-30
+### Fixed
+- Family info in Process Applications disappearing on page click
+
 ## [2.25.2] - 2024-09-09
 ### Fixed
 - Another hard-coded URL.
