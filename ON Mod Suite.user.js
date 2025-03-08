@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.25.1
+// @version      2.25.2
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -22,7 +22,7 @@
 // @connect      hanalani.myschoolapp.com
 // ==/UserScript==
 
-/* Copyright (C) 2018-2024  Hanalani Schools
+/* Copyright (C) 2018-2025  Hanalani Schools
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -698,7 +698,7 @@ function AddPageFooter()
     console.log("Function: " + arguments.callee.name)
     if (window.location.href.substring(window.location.href.length-21-settingsResourceBoardID.length) != "#resourceboarddetail/"+settingsResourceBoardID)
     {
-        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2024 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
+        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2025 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
         var skipNotificationVersions = ["2.25.0"]
@@ -2362,7 +2362,7 @@ function GenerateSettingsPage(jNode)
     var str
 
     // Check for first run
-    if (GM_info.script.version != localStorage.getItem("FirstRunVersionCheck"))
+    if (GM_info.script.version != localStorage.getItem("FirstRunVersionCheck") || localStorage.getItem("new-event-form-link") === null)
     {
         $(".conDefault").eq(1).prepend('<p><b>Script updated to version '+GM_info.script.version+'! See what changed <a href="https://raw.githubusercontent.com/DeckardLain/ON-Mod-Suite/master/Changelog" target="_blank">here</a>.</b>')
         localStorage.setItem("FirstRunVersionCheck", GM_info.script.version)
@@ -2374,7 +2374,7 @@ function GenerateSettingsPage(jNode)
     localStorage.setItem("dialer-url", $("#dialer-url").val())
     localStorage.setItem("grade-history-url", $("#grade-history-url").val())
     localStorage.setItem("facilities-request-form-link", $("#facilities-request-form-link").val())
-
+    localStorage.setItem("new-event-form-link", $("#new-event-form-link").val())
 
     // Build Page
     document.title = "ON Mod Suite Settings"
@@ -5004,6 +5004,12 @@ function FacilitiesRequestForm(jNode)
         {
             jNode.after('<span id="facilities-request-form" style="padding-left:4px;"><a title="Facilities Request Form" target="_blank" href="'+link+'">&#128221;</a></span>');
             GetEmailAddress();
+        }
+
+        var eventFormLink = localStorage.getItem("new-event-form-link");
+        if (eventFormLink != null && !$("#new-event-form").length)
+        {
+            $(".calendarTitle:contains('Faculty')").after('<span id="new-event-form" style="padding-left:4px;"><a title="New Event Form" target="_blank" href="'+eventFormLink+'">&#128221;</a></span>');
         }
     }
 
