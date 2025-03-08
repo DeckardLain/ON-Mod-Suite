@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.25.2] - 2025-03-07
+### Added
+- New event form link shortcut in calendar.
+
 ## [2.25.1] - 2024-10-30
 ### Fixed
 - Family info in Process Applications disappearing on page click
