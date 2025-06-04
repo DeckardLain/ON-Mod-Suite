@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.25.3
+// @version      2.25.4
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -719,7 +719,7 @@ function AddPageFooter()
 
 function fixURL()
 {
-    if (window.location.href.indexOf("//0/") >= 0)
+    if (window.location.href.includes("//0/"))
     {
         window.location.href = window.location.href.replace("//0/","/0/")
     }
@@ -749,7 +749,7 @@ function PostLinkCore(jNode)
 
     jNode.after(strLinks);
 
-    if (window.location.href.indexOf("contactcard") > 0)
+    if (window.location.href.includes("contactcard"))
     {
         waitForKeyElements("#contact-relationship", function (){
             UpdatePageTitle($("#userName h1 a").eq(0))
@@ -1806,7 +1806,7 @@ function CreateRosterCheckboxes(jNode)
     {
 
         // Add menu items to Send Communication
-        if (window.location.href.indexOf("communitypage") > 0)
+        if (window.location.href.includes("communitypage"))
         {
             $("#rosterManageButton").next().find("li:eq(1)").after('<li><a id="selected-students" href="javascript:void(0)">Selected Students</a></li>');
             $("#rosterManageButton").next().find("li:eq(2)").after('<li><a id="selected-parents" href="javascript:void(0)">Selected Students\x27 Parents</a></li>');
@@ -3765,7 +3765,7 @@ function FixImmunizationCollapse(jNode)
 {
     console.log("Function: " + arguments.callee.name)
 
-    if ($(jNode).parent().find("h3").text().indexOf("immunization") >= 0)
+    if ($(jNode).parent().find("h3").text().includes("immunization"))
     {
         $(jNode).attr("id", "tile-body-immunizations")
         $(jNode).prev(".bb-tile-title").attr("data-target", "#tile-body-immunizations")
