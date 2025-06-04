@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.25.2
+// @version      2.25.3
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -586,67 +586,67 @@ function GetModule(strURL)
     } else if (strURL.includes("#process/files"))
     {
         return "ProcessFileSubmissions"
-    } else if (strURL.indexOf("/app/faculty#myday/nurses-office") > 0)
+    } else if (strURL.includes("/app/faculty#myday/nurses-office"))
     {
         return "Nurse's Office"
-    } else if (strURL.indexOf("medical-contactcard-group/") > 0)
+    } else if (strURL.includes("medical-contactcard-group/"))
     {
         return "Medical Contact Card Group"
-    } else if (strURL.indexOf("#directory/") > 0)
+    } else if (strURL.includes("#directory/"))
     {
         return "Directory"
-    } else if (strURL.indexOf("lms-assignment/assignment-center/") > 0)
+    } else if (strURL.includes("lms-assignment/assignment-center/"))
     {
         return "New Assignments Page"
-    } else if (strURL.substring(strURL.length-12) == "#impersonate")
+    } else if (strURL.includes("#impersonate"))
     {
         return "Impersonate"
-    } else if (strURL.indexOf("#discussionsectiondetail/") >= 0)
+    } else if (strURL.includes("#discussionsectiondetail/"))
     {
         return "Discussion"
-    } else if (strURL.substring(strURL.length-11) == "assignments")
+    } else if (strURL.includes("assignments"))
     {
         return "Assignments";
     } else if (strURL.substring(0, schoolURL.length+19) == schoolURL+"app/faculty#profile" && strURL.substring(schoolURL.length+28, schoolURL.length+35) == "medical")
     {
         return "Medical Profile";
-    } else if (strURL.indexOf("/app/faculty#profile/") > 0 && strURL.indexOf("/contactcard") > 0)
+    } else if (strURL.includes("/app/faculty#profile/") && strURL.includes("/contactcard"))
     {
         return "Medical Contact Card";
-    } else if (strURL.indexOf("/faculty#gradesrecord/") >= 0)
+    } else if (strURL.includes("/faculty#gradesrecord/"))
     {
         return "Record Grades";
-    } else if (strURL == schoolURL+"podium/default.aspx?t=35230")
+    } else if (strURL.includes("podium/default.aspx?t=35230"))
     {
         return "Enter Grades By Class";
-    } else if (strURL == schoolURL+"app/enrollment-management#lists/contracts")
+    } else if (strURL.includes("app/enrollment-management#lists/contracts"))
     {
         return "Contracts List"
-    } else if (strURL == schoolURL+"podium/default.aspx?t=23193")
+    } else if (strURL.includes(schoolURL+"podium/default.aspx?t=23193"))
     {
         return "List Role Access"
-    } else if (strURL == schoolURL+"podium/default.aspx?t=2948")
+    } else if (strURL.includes("podium/default.aspx?t=2948"))
     {
         return "Manage Student Enrollments Promote"
-    } else if (strURL == schoolURL+"podium/default.aspx?t=36655")
+    } else if (strURL.includes("podium/default.aspx?t=36655"))
     {
         return "Edit Registry";
-    } else if (strURL == schoolURL+"podium/default.aspx?t=52800" || strURL == schoolURL+"podium/default.aspx?t=52801" || strURL == schoolURL+"podium/default.aspx?t=52802")
+    } else if (strURL.includes("podium/default.aspx?t=52800") || strURL.includes("podium/default.aspx?t=52801") || strURL.includes("podium/default.aspx?t=52802"))
     {
         return "Create Distribution Group";
-    } else if (strURL.substring(strURL.length-25, strURL.length) == "#message/admofficialnotes")
+    } else if (strURL.includes("#message/admofficialnotes"))
     {
         return "Official Notes Admissions";
-    } else if (strURL == schoolURL+"app/academics#studentattendance")
+    } else if (strURL.includes("app/academics#studentattendance"))
     {
         return "Student Attendance";
-    } else if (strURL == schoolURL+"edu-core/dashboard")
+    } else if (strURL.includes("edu-core/dashboard"))
     {
         return "Core Dashboard";
     } else if (strURL.substring(strURL.length-21-settingsResourceBoardID.length) == "#resourceboarddetail/"+settingsResourceBoardID)
     {
         return "Settings";
-    } else if (strURL == schoolURL+"app/faculty#myday/schedule-performance")
+    } else if (strURL.includes("app/faculty#myday/schedule-performance"))
     {
         return "Schedule and Performance";
     } else if (strURL.substring(0, schoolURL.length+8).toLowerCase() == schoolURL+"app/core")
@@ -661,13 +661,13 @@ function GetModule(strURL)
     } else if (strURL.substring(0, schoolURL.length+25) == schoolURL+"app/faculty#academicclass" && strURL.substring(schoolURL.length+38, schoolURL.length+44) == "roster")
     {
         return "Faculty-Roster";
-    } else if (strURL.substring(schoolURL.length+20, schoolURL.length+32) == "athleticteam" && strURL.substring(strURL.length-6, strURL.length) == "roster")
+    } else if (strURL.substring(schoolURL.length+20, schoolURL.length+32) == "athleticteam" && strURL.includes("roster"))
     {
         return "Team Roster";
-    } else if (strURL.substring(strURL.length-6, strURL.length) == "roster")
+    } else if (strURL.includes("roster"))
     {
         return "Other Roster";
-    } else if (strURL.indexOf("/app/academics") >= 0 || strURL.indexOf("/sis-scheduling/user-profile/") >= 0)
+    } else if (strURL.includes("/app/academics") || strURL.includes("/sis-scheduling/user-profile/"))
     {
         return "Academics";
     } else if (strURL.substring(0, schoolURL.length+25) == schoolURL+"app/enrollment-management")
@@ -679,10 +679,10 @@ function GetModule(strURL)
     } else if (strURL.substring(0, schoolURL.length+19) == schoolURL+"app/extracurricular")
     {
         return "Extracurricular";
-    } else if (strURL == schoolURL+"podium/default.aspx?t=52586")
+    } else if (strURL.includes("podium/default.aspx?t=52586"))
     {
         return "Advanced List - Run";
-    } else if (strURL == schoolURL+"podium/default.aspx?t=52568")
+    } else if (strURL.includes("podium/default.aspx?t=52568"))
     {
         return "Advanced List - CopyEdit";
     } else if (strURL.substring(0, schoolURL.length+27) == schoolURL+"podium/default.aspx?t=23189")
