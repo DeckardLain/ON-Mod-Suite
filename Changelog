@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.25.4] - 2025-06-03
+### Fixed
+- Fixed URL detection to handle portions added by the omnibar.
+
 ## [2.25.2] - 2025-03-07
 ### Added
 - New event form link shortcut in calendar.
