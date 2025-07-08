@@ -1,5 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [2.25.4] - 2025-07-08
+### Fixed
+- People Finder quick select by number wasn't working.
+- URL detection updated to handle changes resulting from omnibar.
 
 ## [2.25.3] - 2024-10-30
 ### Fixed
