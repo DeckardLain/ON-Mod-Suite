@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.25.4
+// @version      2.25.5
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -655,10 +655,10 @@ function GetModule(strURL)
     } else if (strURL.substring(0, schoolURL.length+37) == schoolURL+"app/academics#managestudentenrollment")
     {
         return "Manage Student Enrollment";
-    } else if (strURL.substring(0, schoolURL.length+27) == schoolURL+"app/academics#academicclass" && strURL.substring(schoolURL.length+40, schoolURL.length+46) == "roster")
+    } else if (strURL.includes("#academicclass") && strURL.includes("/academics") && strURL.includes("/roster"))
     {
         return "Academics-Roster";
-    } else if (strURL.substring(0, schoolURL.length+25) == schoolURL+"app/faculty#academicclass" && strURL.substring(schoolURL.length+38, schoolURL.length+44) == "roster")
+    } else if (strURL.includes("#academicclass") && strURL.includes("/faculty") && strURL.includes("/roster"))
     {
         return "Faculty-Roster";
     } else if (strURL.substring(schoolURL.length+20, schoolURL.length+32) == "athleticteam" && strURL.includes("roster"))
@@ -719,7 +719,7 @@ function AddPageFooter()
 
 function fixURL()
 {
-    if (window.location.href.includes("//0/"))
+    if (window.location.href.indexOf("//0/") >= 0)
     {
         window.location.href = window.location.href.replace("//0/","/0/")
     }
@@ -749,7 +749,7 @@ function PostLinkCore(jNode)
 
     jNode.after(strLinks);
 
-    if (window.location.href.includes("contactcard"))
+    if (window.location.href.indexOf("contactcard") > 0)
     {
         waitForKeyElements("#contact-relationship", function (){
             UpdatePageTitle($("#userName h1 a").eq(0))
@@ -1806,7 +1806,7 @@ function CreateRosterCheckboxes(jNode)
     {
 
         // Add menu items to Send Communication
-        if (window.location.href.includes("communitypage"))
+        if (window.location.href.indexOf("communitypage") > 0)
         {
             $("#rosterManageButton").next().find("li:eq(1)").after('<li><a id="selected-students" href="javascript:void(0)">Selected Students</a></li>');
             $("#rosterManageButton").next().find("li:eq(2)").after('<li><a id="selected-parents" href="javascript:void(0)">Selected Students\x27 Parents</a></li>');
@@ -2671,11 +2671,12 @@ function ReverseAttendanceDefault(jNode)
 
 function CopyPageNumberNavigation(jNode)
 {
-    console.log("Function: " + arguments.callee.name)
-    if (window.location.href == schoolURL+"podium/default.aspx?t=12200" || window.location.href == schoolURL+"podium/default.aspx?t=52555&wapp=1")
+    if (window.location.href.includes("podium/default.aspx?t=12200") || window.location.href.includes("podium/default.aspx?t=52555&wapp=1"))
     {
         return;
     }
+
+    console.log("Function: " + arguments.callee.name)
     if (!$("#bottom-page-navigation").length)
     {
         $("#lPg").append(jNode.closest("table").clone().attr("id", "bottom-page-navigation"));
@@ -3765,7 +3766,7 @@ function FixImmunizationCollapse(jNode)
 {
     console.log("Function: " + arguments.callee.name)
 
-    if ($(jNode).parent().find("h3").text().includes("immunization"))
+    if ($(jNode).parent().find("h3").text().indexOf("immunization") >= 0)
     {
         $(jNode).attr("id", "tile-body-immunizations")
         $(jNode).prev(".bb-tile-title").attr("data-target", "#tile-body-immunizations")
@@ -4259,7 +4260,7 @@ function DirectoryMedicalLink(jNode)
 function EmailAdministrators(jNode)
 {
     console.log("Function: " + arguments.callee.name)
-    var adminEmails = ";blee@hanalani.org;mlemon@hanalani.org"
+    var adminEmails = ";blee@hanalani.org;cjones@hanalani.org"
 
     var timer = setInterval(function() {
         if ($("#email-list-textarea").text() != "")
@@ -4268,7 +4269,7 @@ function EmailAdministrators(jNode)
 
             if (!$("#email-administrators").length)
             {
-                $("#copy-message").before('<div id="email-administrators"><input type="checkbox" id="email-administrators-checkbox"><label style="padding-left:4px;" for="email-administrators-checkbox">Also email LS administrators (blee/mlemon)</label></div>')
+                $("#copy-message").before('<div id="email-administrators"><input type="checkbox" id="email-administrators-checkbox"><label style="padding-left:4px;" for="email-administrators-checkbox">Also email LS administrators (blee/cjones)</label></div>')
             }
 
             $("#email-administrators").data("original-mailto", $("#email-list-launch-mail").attr("href"))
@@ -4427,23 +4428,24 @@ function SaveParentEmails()
 // -------------------------------------------Dialer---------------------------------------
 // ----------------------------------------------------------------------------------------
 
-function LoadDialer()
-{
-    console.log("Function: " + arguments.callee.name)
+function LoadDialer() {
+    console.log("Function: " + arguments.callee.name);
     $(":not(:has(*)):not(.phone-link):not(#dialer-number)").each(function() {
-        var rxNumber = $(this).text().match(/(\d{3}[-\.\s]??\d{3}[-\.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-\.\s]??\d{4}|\d{3}[-\.\s]??\d{4})/)
-        if ($(this).text().length < 35 && rxNumber)
-        {
-            $(this).addClass("phone-link")
-            $(this).css("color","#007ca6")
-            $(this).css("text-decoration","underline")
-            $(this).css("cursor","pointer")
+        // Updated regex: added word boundaries and negative lookahead for school years
+        var rxNumber = $(this).text().match(/\b(?!20\d{2}[-\.\s]?20\d{2}\b)(\d{3}[-.\s]?\d{3}[-.\s]?\d{4}|\(\d{3}\)\s*\d{3}[-.\s]?\d{4}|\d{3}[-.\s]?\d{4})\b/);
+
+        if ($(this).text().length < 35 && rxNumber) {
+            $(this).addClass("phone-link");
+            $(this).css("color", "#007ca6");
+            $(this).css("text-decoration", "underline");
+            $(this).css("cursor", "pointer");
         }
     });
-    waitForKeyElements("#on-mod-suite-footer", InsertDialerInterface)
+
+    waitForKeyElements("#on-mod-suite-footer", InsertDialerInterface);
 
     $(".phone-link").unbind().bind("click", function() {
-        ShowDialer(this)
+        ShowDialer(this);
     });
 }
 
@@ -4509,9 +4511,14 @@ function DialerCall(ext, number)
                         $("#dialer-call").text("Call").prop("disabled", false)
                         $("#dialer-container").hide(2000)
                         return;
+                    } else
+                    {
+                        console.log(url);
+                        console.log(this.response.Text);
                     }
                 }
                 toastr.error("Dialer error")
+                console.log("Error "+response.status);
                 $("#dialer-call").text("Call").prop("disabled", false)
             }
         }
