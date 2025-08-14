@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.25.5] - 2025-08-14
+### Fixed
+- Email Administrators checkbox not appearing. Also updated emails to send to.
+- Dialer no longer identifies school years as phone numbers.
+
 ## [2.25.4] - 2025-06-03
 ### Fixed
 - Fixed URL detection to handle portions added by the omnibar.
