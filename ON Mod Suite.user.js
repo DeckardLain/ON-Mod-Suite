@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.25.5
+// @version      2.25.6
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -96,6 +96,7 @@
 [INDEX055] Print Student Assessment
 [INDEX056] Process Event Registrations User Links
 [INDEX057] Lower School Injury Report Official Note Template
+[INDEX058] Show User IDs in Directory
 [INDEX900] Misc. Helper Functions
 
 
@@ -291,6 +292,9 @@ Completed Mods:
 49 - Lower School Injury Report Official Note Template
      Builds official note summary from Injury Report fields.
 
+50 - Show User IDs in Directory
+     Display User ID for each person show in directories, for easy reference or copy/paste
+
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
 
@@ -472,6 +476,7 @@ function gmMain(){
             break;
         case "Directory":
             waitForKeyElements("#directory-items-container", DirectoryMedicalLink)
+            waitForKeyElements(".additional-info-button", ShowUserIDsInDirectory)
             break;
         case "Nurse's Office":
             waitForKeyElements("#Invalid", EmailMedicalVisit)
@@ -5435,6 +5440,22 @@ function InjuryReportCreateFields(jNode)
             editor.setContent(reportText);
         });
 
+    }
+}
+
+// -----------------------------------------[INDEX058]-------------------------------------
+// --------------------------------Show User IDs in Directory------------------------------
+// ----------------------------------------------------------------------------------------
+
+function ShowUserIDsInDirectory(jNode)
+{
+    console.log("Function: " + arguments.callee.name);
+    var id = $(jNode).attr("data-id");
+    var elID = "OMS-userID-"+id;
+
+    if ($("#"+elID).length == 0)
+    {
+        $(jNode).parent().parent().children(".lead").eq(0).after('<p class="lead" id="'+elID+'">User ID: '+id+'</p>');
     }
 }
 
