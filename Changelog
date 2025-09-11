@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.25.6] - 2025-09-11
+### Added
+- Display User ID for each person shown in directories, for easy reference or copy/paste.
+
 ## [2.25.5] - 2025-08-14
 ### Fixed
 - Email Administrators checkbox not appearing. Also updated emails to send to.
