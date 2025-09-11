@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.25.4
+// @version      2.25.6
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
@@ -77,6 +77,7 @@
 [INDEX047] Contract Type ID in Manage Contract Forms
 [INDEX048] Print Student Assessment
 [INDEX049] Process Event Registrations User Links
+[INDEX050] Show User IDs in Directory
 [INDEX900] Misc. Helper Functions
 
 
@@ -250,6 +251,9 @@ Completed Mods:
 
 44 - Process Event Registrations User Links
      User IDs in Process (New) Event Registrations link to the user profile page.
+
+45 - Show User IDs in Directory
+     Display User ID for each person shown in directories, for easy reference or copy/paste.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -427,6 +431,9 @@ function gmMain(){
             waitForKeyElements(".sky-toolbar-items", ProcessEventRegistrationsUserLinksMenu);
             waitForKeyElements(".sky-row:contains(UserId)", ProcessEventRegistrationsUserLinks);
             break;
+        case "Directory":
+            waitForKeyElements(".additional-info-button", ShowUserIDsInDirectory)
+            break;
     }
 
     // People Finder Quick Select
@@ -495,6 +502,9 @@ function GetModule(strURL)
     } else if (strURL.includes("#process/files"))
     {
         return "ProcessFileSubmissions"
+    } else if (strURL.includes("#directory/"))
+    {
+        return "Directory"
     } else if (strURL.includes("lms-assignment/assignment-center/"))
     {
         return "New Assignments Page"
@@ -4028,6 +4038,22 @@ function ProcessEventRegistrationsUserLinks(jNode)
     if (idNode.html().length < 10)
     {
         idNode.html(GetUserLink(idNode.text(), savedSetting, true));
+    }
+}
+
+// -----------------------------------------[INDEX050]-------------------------------------
+// --------------------------------Show User IDs in Directory------------------------------
+// ----------------------------------------------------------------------------------------
+
+function ShowUserIDsInDirectory(jNode)
+{
+    console.log("Function: " + arguments.callee.name);
+    var id = $(jNode).attr("data-id");
+    var elID = "OMS-userID-"+id;
+
+    if ($("#"+elID).length == 0)
+    {
+        $(jNode).parent().parent().children(".lead").eq(0).after('<p class="lead" id="'+elID+'">User ID: '+id+'</p>');
     }
 }
 
