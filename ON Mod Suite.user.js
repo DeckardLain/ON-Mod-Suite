@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.25.6
+// @version      2.25.7
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -293,7 +293,7 @@ Completed Mods:
      Builds official note summary from Injury Report fields.
 
 50 - Show User IDs in Directory
-     Display User ID for each person show in directories, for easy reference or copy/paste
+     Display User ID for each person shown in directories, for easy reference or copy/paste.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -651,7 +651,7 @@ function GetModule(strURL)
     } else if (strURL.substring(strURL.length-21-settingsResourceBoardID.length) == "#resourceboarddetail/"+settingsResourceBoardID)
     {
         return "Settings";
-    } else if (strURL.includes("app/faculty#myday/schedule-performance"))
+    } else if (strURL.includes("#myday/schedule-performance"))
     {
         return "Schedule and Performance";
     } else if (strURL.substring(0, schoolURL.length+8).toLowerCase() == schoolURL+"app/core")
