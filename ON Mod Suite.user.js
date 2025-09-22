@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.25.7
+// @version      2.26.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -706,7 +706,7 @@ function AddPageFooter()
         $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2025 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
-        var skipNotificationVersions = ["2.25.0"]
+        var skipNotificationVersions = []
         var oldVersion = GM_getValue("FirstRunVersionCheck")
 
         if (oldVersion != GM_info.script.version)
@@ -1054,7 +1054,44 @@ function EmailAllParentsOfStudent()
     console.log("Function: " + arguments.callee.name)
     setInterval(function(){
     waitForKeyElements(".roster-relationships", CreateEmailLink);}, 1000);
+
+    setInterval(function(){
+    waitForKeyElements(".user-relationships-initial", CreateEmailMenuOption);}, 1000);
 }
+
+function CreateEmailMenuOption(jNode)
+{
+    console.log("Function: " + arguments.callee.name)
+    var userID = $(jNode).attr("data-user-id");
+    var elID = "oms-email-all-"+userID;
+    if ($("#"+elID).length == 0)
+    {
+        $(jNode).closest("div").after('<div class="bb-dropdown-item" id="'+elID+'"><a style="cursor:pointer"> Email student and parents </a></div>');
+        $("#"+elID).on("click", function() {
+            var studentEmail = $(jNode).closest(".roster-card").find(".contactCardP").text().trim();
+
+            DataDirectGet("https://hanalani.myschoolapp.com/api/datadirect/studentrelationshipsget/"+userID+"/?format=json", function(relationshipsJSON) {
+                EmailStudentAndParents(studentEmail, relationshipsJSON);
+            });
+        });
+
+    }
+}
+
+function EmailStudentAndParents(studentEmail, relationshipsJSON)
+{
+    var emails = [];
+    emails.push(studentEmail);
+    relationshipsJSON.forEach((parent) => {
+        if (parent.email != null)
+            emails.push(parent.email);
+    });
+
+    var emailsText = emails.join(";");
+    console.log(emailsText);
+    window.open("mailto:"+emailsText);
+}
+
 
 function CreateEmailLink(jNode)
 {
@@ -4498,8 +4535,7 @@ function DialerCall(ext, number)
 {
     if (localStorage.getItem("dialer-url") == undefined)
     {
-        window.open("https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/"+settingsResourceBoardID);
-        return;
+        LoadSettingsAndReload();
     }
     var url = localStorage.getItem("dialer-url")+'&ext='+ext+'&number='+number+'&callerid=ONModSuite'
     GM.xmlHttpRequest({
@@ -4739,6 +4775,9 @@ function LoadStandardGrades()
 
 function GetGradeHistory(groupID, type)
 {
+    if (localStorage.getItem("grade-history-url") == null)
+        LoadSettingsAndReload();
+
     var url = localStorage.getItem("grade-history-url")+"&groupID="+groupID+"&type="+type
 
     GM.xmlHttpRequest({
@@ -5016,6 +5055,9 @@ function FacilitiesRequestForm(jNode)
         {
             jNode.after('<span id="facilities-request-form" style="padding-left:4px;"><a title="Facilities Request Form" target="_blank" href="'+link+'">&#128221;</a></span>');
             GetEmailAddress();
+        } else
+        {
+            LoadSettingsAndReload();
         }
 
         var eventFormLink = localStorage.getItem("new-event-form-link");
@@ -5525,4 +5567,40 @@ const calcAge = (dob) => {
     return pluralYears.trim();
   }
 
+}
+
+// ----------------------------------------------------------------------------------------
+
+function DataDirectGet(url, callback)
+{
+    var token = $("#__AjaxAntiForgery input").val();
+    GM.xmlHttpRequest({
+        method: "GET",
+        url: url,
+        headers: {
+            "Content-Type": "application/json",
+            "requestverificationtoken": token
+        },
+        onload: function(response) {
+            try
+            {
+                var responseJSON = JSON.parse(response.responseText);
+                if (typeof callback === "function") {
+                    callback(responseJSON); // pass JSON to your function
+                }
+            } catch (e)
+            {
+                console.log(e);
+                console.log(response.responseText);
+            }
+        }
+    });
+}
+
+function LoadSettingsAndReload()
+{
+    window.open("https://hanalani.myschoolapp.com/app/faculty#resourceboarddetail/"+settingsResourceBoardID);
+    setTimeout(function() {
+        window.reload();
+    }, 2000);
 }
