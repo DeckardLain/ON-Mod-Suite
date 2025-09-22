@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.26.0] - 2025-09-22
+### Added
+- Roster card menu option to email student and parents (opens in system email client)
+### Changed
+- Automatically open Settings page and reload when certain school-specific settings are missing
+from local storage
+
 ## [2.25.7] - 2025-09-16
 ### Fixed
 - Detection of Schedule and Performance page.
