@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.26.0
+// @version      2.27.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -97,6 +97,7 @@
 [INDEX056] Process Event Registrations User Links
 [INDEX057] Lower School Injury Report Official Note Template
 [INDEX058] Show User IDs in Directory
+[INDEX059] Email All Teachers of Student
 [INDEX900] Misc. Helper Functions
 
 
@@ -294,6 +295,9 @@ Completed Mods:
 
 50 - Show User IDs in Directory
      Display User ID for each person shown in directories, for easy reference or copy/paste.
+
+51 - Email All Teachers of Student
+     Adds a link to student progress pages for emailing all teachers of that student.
 
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
@@ -554,6 +558,12 @@ function gmMain(){
     // Injury Reports
     waitForKeyElements(".bb-dialog-header:contains('Compose official note')", InjuryReportInit, true);
     waitForKeyElements(".sky-modal-heading:contains('Add official note')", InjuryReportInit, true);
+
+    // Student progress page
+    if (strURL.includes("/progress"))
+    {
+        waitForKeyElements("#coursesContainer", EmailAllTeachersOfStudent)
+    }
 }
 
 
@@ -5498,6 +5508,44 @@ function ShowUserIDsInDirectory(jNode)
     if ($("#"+elID).length == 0)
     {
         $(jNode).parent().parent().children(".lead").eq(0).after('<p class="lead" id="'+elID+'">User ID: '+id+'</p>');
+    }
+}
+
+// -----------------------------------------[INDEX059]-------------------------------------
+// ------------------------------Email All Teachers of Student-----------------------------
+// ----------------------------------------------------------------------------------------
+
+function EmailAllTeachersOfStudent(jNode)
+{
+    console.log("Function: " + arguments.callee.name);
+
+    if ($('#combinedEmailLink').length) return;
+
+    const emails = new Set();
+
+    // Collect all mailto links within #coursesContainer
+    $('#coursesContainer a[href^="mailto:"]').each(function() {
+        const href = $(this).attr('href');
+        const email = href.replace(/^mailto:/i, '').trim();
+        if (email) emails.add(email);
+    });
+
+    if (emails.size === 0) return;
+
+    // Create a single mailto link
+    const combinedMailto = 'mailto:' + Array.from(emails).join(',');
+
+    // Append to the first .bb-tile-header-with-content within #courses
+    const target = $('#coursesCollapse').find(".row").first().children().first();
+    if (target.length) {
+        $('<a>')
+            .attr({
+            id: 'combinedEmailLink',
+            href: combinedMailto
+        })
+            .text('Email All Teachers')
+            .css({ marginLeft: '10px' })
+            .appendTo(target);
     }
 }
 
