@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.27.0] - 2025-11-12
+### Added
+- New link on student progress pages for emailing all teachers of that student.
+
 ## [2.26.0] - 2025-09-22
 ### Added
 - Roster card menu option to email student and parents (opens in system email client)
