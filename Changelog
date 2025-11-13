@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.27.1] - 2025-11-13
+### Changed
+- Email all teachers of student now separates email addresses by semicolons instead of commas, for
+compatibility with Outlook.
+### Fixed
+- Email all teachers of student now works on Academics progress pages.
+
 ## [2.27.0] - 2025-11-12
 ### Added
 - New link on student progress pages for emailing all teachers of that student.
