@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite (Generic)
 // @namespace    http://www.hanalani.org/
-// @version      2.27.0
+// @version      2.27.1
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://*.myschoolapp.com/*
@@ -474,7 +474,17 @@ function gmMain(){
     // Student progress page
     if (strURL.includes("/progress"))
     {
-        waitForKeyElements("#coursesContainer", EmailAllTeachersOfStudent)
+        if (strURL.includes("/sis-scheduling/"))
+        {
+            // Academics
+            setTimeout(() => {
+                EmailAllTeachersOfStudentAcademics($("[_sky-tile-dashboard-tile-id='classesTile']"));
+            }, 1000);
+        } else
+        {
+            // Faculty
+            waitForKeyElements("#coursesContainer", EmailAllTeachersOfStudentFaculty)
+        }
     }
 }
 
@@ -4071,7 +4081,7 @@ function ShowUserIDsInDirectory(jNode)
 // ------------------------------Email All Teachers of Student-----------------------------
 // ----------------------------------------------------------------------------------------
 
-function EmailAllTeachersOfStudent(jNode)
+function EmailAllTeachersOfStudentFaculty(jNode)
 {
     console.log("Function: " + arguments.callee.name);
 
@@ -4089,7 +4099,7 @@ function EmailAllTeachersOfStudent(jNode)
     if (emails.size === 0) return;
 
     // Create a single mailto link
-    const combinedMailto = 'mailto:' + Array.from(emails).join(',');
+    const combinedMailto = 'mailto:' + Array.from(emails).join(';');
 
     // Append to the first .bb-tile-header-with-content within #courses
     const target = $('#coursesCollapse').find(".row").first().children().first();
@@ -4103,6 +4113,74 @@ function EmailAllTeachersOfStudent(jNode)
             .css({ marginLeft: '10px' })
             .appendTo(target);
     }
+}
+
+async function EmailAllTeachersOfStudentAcademics(jNode) {
+    console.log("Function: " + arguments.callee.name);
+    if ($('#combinedEmailLinkAcademics').length) return;
+    const $root = $(jNode).is('[_sky-tile-dashboard-tile-id="classesTile"]')
+    ? $(jNode)
+    : $(jNode).closest('[_sky-tile-dashboard-tile-id="classesTile"]');
+    const classes = $($root).find(".sky-repeater-item-content");
+    if (!classes.length)
+    {
+        setTimeout(() => {
+            EmailAllTeachersOfStudentAcademics($("[_sky-tile-dashboard-tile-id='classesTile']"));
+        }, 1000);
+        return;
+    }
+
+    const linkId = 'combinedEmailLinkAcademics';
+    const emails = new Set();
+
+    // Helper: wait for the popup email link to appear after a click
+    const waitForEmailLinks = (timeout = 2500) => new Promise((resolve) => {
+        const start = Date.now();
+        (function poll() {
+            const $links = $('.group-leader-email[href^="mailto:"]');
+            if ($links.length) return resolve($links);
+            if (Date.now() - start >= timeout) return resolve($()); // timeout, resolve empty
+            setTimeout(poll, 50);
+        }());
+    });
+
+    // Click each teacher name to reveal the email popup and collect emails
+    const $names = $root.find('.teacher-name');
+    for (let i = 0; i < $names.length; i++) {
+        const $name = $($names[i]);
+        $name.trigger('click');
+
+        const $links = await waitForEmailLinks();
+        $links.each(function () {
+            const href = $(this).attr('href') || '';
+            const email = href.replace(/^mailto:/i, '').trim();
+            if (email) emails.add(email);
+        });
+    }
+
+    if (emails.size === 0) return;
+
+    // Outlook-friendly semicolon-separated list
+    const combinedMailto = 'mailto:' + Array.from(emails).join(';');
+
+    // Append or update the link
+    const $target = $root.find('sky-row:eq(1)');
+    const $existing = $('#' + linkId);
+
+    if ($existing.length) {
+        $existing.attr('href', combinedMailto);
+    } else {
+        $('<a>')
+            .attr({ id: linkId, href: combinedMailto })
+            .text('Email All Teachers')
+            .css({ marginLeft: '10px' })
+            .appendTo($target);
+    }
+
+    // Close all popups
+    setTimeout(() => {
+        $('.sky-field-label').eq(0).trigger('click');
+    }, 1000);
 }
 
 // -----------------------------------------[INDEX900]-------------------------------------
