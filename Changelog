@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.28.0] - 2026-07-30
+### Added
+- Spreadsheet Table Navigation - Navigate up and down spreadsheet style input fields (such as Advanced
+List Display Fields) using Up Arrow or Shift+Enter and Down Arrow or Enter keys.
+
 ## [2.27.1] - 2025-11-13
 ### Changed
 - Email all teachers of student now separates email addresses by semicolons instead of commas, for
