@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ON Mod Suite
 // @namespace    http://www.hanalani.org/
-// @version      2.27.1
+// @version      2.28.0
 // @description  Collection of mods for Blackbaud ON system
 // @author       Scott Yoshimura
 // @match        https://hanalani.myschoolapp.com/*
@@ -22,7 +22,7 @@
 // @connect      hanalani.myschoolapp.com
 // ==/UserScript==
 
-/* Copyright (C) 2018-2025  Hanalani Schools
+/* Copyright (C) 2018-2026  Hanalani Schools
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -98,6 +98,7 @@
 [INDEX057] Lower School Injury Report Official Note Template
 [INDEX058] Show User IDs in Directory
 [INDEX059] Email All Teachers of Student
+[INDEX060] Spreadsheet Table Navigation
 [INDEX900] Misc. Helper Functions
 
 
@@ -299,6 +300,10 @@ Completed Mods:
 51 - Email All Teachers of Student
      Adds a link to student progress pages for emailing all teachers of that student.
 
+52 - Spreadsheet Table Navigation
+     Navigate up and down spreadsheet style input fields (such as Advanced List Display Fields)
+     using Up Arrow or Shift+Enter and Down Arrow or Enter keys.
+
 Notes:
 - Also removes Connect5 emergency contact info from contact cards
 
@@ -396,6 +401,7 @@ function gmMain(){
             waitForKeyElements(".btn-contact-card:first", AddLinkToFacultyProgress)
             waitForKeyElements(".delimiter-btn:first", EmailDelimiterDefault)
             DialerInterval()
+            break;
         case "Other Roster":
             waitForKeyElements(".bb-card-actions:first", AddRosterStudentCount)
             waitForKeyElements(".bb-card-title",ConvertGradYearToGradeLevel)
@@ -723,7 +729,7 @@ function AddPageFooter()
     console.log("Function: " + arguments.callee.name)
     if (window.location.href.substring(window.location.href.length-21-settingsResourceBoardID.length) != "#resourceboarddetail/"+settingsResourceBoardID)
     {
-        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2025 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
+        $("body").append('<div align="center" id="on-mod-suite-footer" style="font-size:12px">This site experience enhanced by ON Mod Suite v' + GM_info.script.version + '. | Copyright © 2018-2026 Hanalani Schools | Click <a href="'+schoolURL+'app/faculty#resourceboarddetail/'+settingsResourceBoardID+'" target="_blank">here</a> to change settings.</div>')
 
         // Check if first run of this version of the script--if so, open Settings page to load school-specific settings
         var skipNotificationVersions = []
@@ -5626,6 +5632,359 @@ async function EmailAllTeachersOfStudentAcademics(jNode) {
         $('.sky-field-label').eq(0).trigger('click');
     }, 1000);
 }
+
+// -----------------------------------------[INDEX060]-------------------------------------
+// -------------------------------Spreadsheet Table Navigation-----------------------------
+// ----------------------------------------------------------------------------------------
+
+(function enableSpreadsheetTableNavigation() {
+  'use strict';
+
+  /*
+   * Input types that should participate in spreadsheet-style navigation.
+   * Checkboxes, radio buttons, buttons, file inputs, etc. are intentionally
+   * excluded.
+   */
+  const NAVIGABLE_INPUT_SELECTOR = [
+    'input[type="text"]',
+    'input[type="number"]',
+    'input[type="email"]',
+    'input[type="tel"]',
+    'input[type="url"]',
+    'input[type="search"]',
+    'input[type="password"]',
+    'input[type="date"]',
+    'input[type="time"]',
+    'input[type="datetime-local"]',
+    'input:not([type])'
+  ].join(',');
+
+  document.addEventListener('keydown', handleTableNavigation, true);
+
+  function handleTableNavigation(event) {
+    if (event.defaultPrevented || event.isComposing) {
+      return;
+    }
+
+    // Preserve browser or Blackbaud shortcuts that use modifier keys.
+    if (event.ctrlKey || event.altKey || event.metaKey) {
+      return;
+    }
+
+    const input = event.target;
+
+    if (
+      !(input instanceof HTMLInputElement) ||
+      !input.matches(NAVIGABLE_INPUT_SELECTOR) ||
+      !isUsableInput(input)
+    ) {
+      return;
+    }
+
+    let direction;
+
+    switch (event.key) {
+      case 'ArrowUp':
+        direction = -1;
+        break;
+
+      case 'ArrowDown':
+        direction = 1;
+        break;
+
+      case 'Enter':
+        // Enter moves downward. Shift+Enter moves upward.
+        direction = event.shiftKey ? -1 : 1;
+        break;
+
+      default:
+        return;
+    }
+
+    const destination = findVerticalDestination(input, direction);
+
+    /*
+     * Do nothing when no corresponding input exists. In particular, this
+     * leaves Enter's normal behavior intact when the input is not part of
+     * a navigable multirow table.
+     */
+    if (!destination) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    focusAndSelect(destination);
+  }
+
+  /**
+   * Searches outward through the input's ancestor tables.
+   *
+   * This is important because Blackbaud sometimes puts an input inside a
+   * small one-row formatting table within the actual data table. The nearest
+   * table is therefore not necessarily the table through which we should
+   * navigate.
+   */
+  function findVerticalDestination(input, direction) {
+    const ancestorTables = getAncestorTables(input);
+
+    for (const table of ancestorTables) {
+      const location = getInputLocationInTable(input, table);
+
+      if (!location) {
+        continue;
+      }
+
+      const destination = findInputInAnotherRow(
+        table,
+        location,
+        direction
+      );
+
+      if (destination) {
+        return destination;
+      }
+    }
+
+    return null;
+  }
+
+  function getAncestorTables(element) {
+    const tables = [];
+    let current = element.parentElement;
+
+    while (current) {
+      if (current.tagName === 'TABLE') {
+        tables.push(current);
+      }
+
+      current = current.parentElement;
+    }
+
+    return tables;
+  }
+
+  /**
+   * Locates the input's row, cell, and position within that cell relative
+   * to a particular ancestor table.
+   */
+  function getInputLocationInTable(input, table) {
+    const row = findOwningRow(input, table);
+    const cell = findOwningCell(input, table);
+
+    if (!row || !cell) {
+      return null;
+    }
+
+    const fieldsInCell = getNavigableInputsInCell(cell, table);
+    const fieldIndex = fieldsInCell.indexOf(input);
+
+    if (fieldIndex === -1) {
+      return null;
+    }
+
+    return {
+      row,
+      cell,
+      cellIndex: getLogicalCellIndex(row, cell),
+      fieldIndex
+    };
+  }
+
+  /**
+   * Finds the TR that belongs directly to the specified table rather than
+   * to a nested table.
+   */
+  function findOwningRow(element, table) {
+    let current = element.parentElement;
+
+    while (current && current !== table) {
+      if (
+        current.tagName === 'TR' &&
+        current.closest('table') === table
+      ) {
+        return current;
+      }
+
+      current = current.parentElement;
+    }
+
+    return null;
+  }
+
+  /**
+   * Finds the TD/TH belonging directly to the specified table.
+   */
+  function findOwningCell(element, table) {
+    let current = element.parentElement;
+
+    while (current && current !== table) {
+      if (
+        (current.tagName === 'TD' || current.tagName === 'TH') &&
+        current.closest('table') === table
+      ) {
+        return current;
+      }
+
+      current = current.parentElement;
+    }
+
+    return null;
+  }
+
+  function findInputInAnotherRow(table, source, direction) {
+    const rows = getDirectRows(table);
+    const sourceRowIndex = rows.indexOf(source.row);
+
+    if (sourceRowIndex === -1) {
+      return null;
+    }
+
+    for (
+      let rowIndex = sourceRowIndex + direction;
+      rowIndex >= 0 && rowIndex < rows.length;
+      rowIndex += direction
+    ) {
+      const targetRow = rows[rowIndex];
+      const targetCell = getCellAtLogicalIndex(
+        targetRow,
+        source.cellIndex
+      );
+
+      if (!targetCell) {
+        continue;
+      }
+
+      const targetInputs = getNavigableInputsInCell(targetCell, table);
+
+      if (targetInputs.length === 0) {
+        continue;
+      }
+
+      /*
+       * Usually there is one input per cell. If a cell contains multiple
+       * inputs, use the input in the same position as the source input.
+       */
+      return (
+        targetInputs[source.fieldIndex] ||
+        targetInputs[targetInputs.length - 1]
+      );
+    }
+
+    return null;
+  }
+
+  /**
+   * Returns only rows belonging directly to this table. Rows inside nested
+   * tables are excluded.
+   */
+  function getDirectRows(table) {
+    return Array.from(table.querySelectorAll('tr')).filter(
+      row => row.closest('table') === table
+    );
+  }
+
+  /**
+   * Calculates the visual column where a cell begins, accounting for
+   * preceding colspan values.
+   */
+  function getLogicalCellIndex(row, targetCell) {
+    let logicalIndex = 0;
+
+    for (const cell of row.cells) {
+      if (cell === targetCell) {
+        return logicalIndex;
+      }
+
+      logicalIndex += cell.colSpan || 1;
+    }
+
+    return -1;
+  }
+
+  /**
+   * Finds the cell occupying the requested visual column, accounting for
+   * colspan.
+   */
+  function getCellAtLogicalIndex(row, requestedIndex) {
+    let logicalIndex = 0;
+
+    for (const cell of row.cells) {
+      const span = cell.colSpan || 1;
+
+      if (
+        requestedIndex >= logicalIndex &&
+        requestedIndex < logicalIndex + span
+      ) {
+        return cell;
+      }
+
+      logicalIndex += span;
+    }
+
+    return null;
+  }
+
+  /**
+   * Gets usable inputs contained in a cell. Inputs can be inside nested
+   * formatting tables, but must not belong to a separate higher-level cell.
+   */
+  function getNavigableInputsInCell(cell, table) {
+    return Array.from(
+      cell.querySelectorAll(NAVIGABLE_INPUT_SELECTOR)
+    ).filter(input => {
+      return (
+        isUsableInput(input) &&
+        findOwningCell(input, table) === cell
+      );
+    });
+  }
+
+  function isUsableInput(input) {
+    if (input.disabled || input.readOnly || input.hidden) {
+      return false;
+    }
+
+    if (input.getAttribute('aria-hidden') === 'true') {
+      return false;
+    }
+
+    const style = window.getComputedStyle(input);
+
+    return (
+      style.display !== 'none' &&
+      style.visibility !== 'hidden' &&
+      input.getClientRects().length > 0
+    );
+  }
+
+  function focusAndSelect(input) {
+    input.focus({
+      preventScroll: true
+    });
+
+    input.scrollIntoView({
+      block: 'nearest',
+      inline: 'nearest'
+    });
+
+    /*
+     * Waiting until the next animation frame helps when the site's own
+     * focus handlers reposition the caret.
+     */
+    requestAnimationFrame(() => {
+      try {
+        input.select();
+      } catch (error) {
+        /*
+         * Some specialized input types do not support select(). Focus still
+         * succeeds, so no further action is required.
+         */
+      }
+    });
+  }
+})();
 
 // -----------------------------------------[INDEX900]-------------------------------------
 // -----------------------------------Misc. Helper Functions-------------------------------
