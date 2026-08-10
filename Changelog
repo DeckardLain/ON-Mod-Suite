@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.28.1] - 2026-08-10
+### Changed
+- Roster student count now works for community groups, operating under the assumption that no group
+leaders are students.
+
 ## [2.28.0] - 2026-07-30
 ### Added
 - Spreadsheet Table Navigation - Navigate up and down spreadsheet style input fields (such as Advanced
